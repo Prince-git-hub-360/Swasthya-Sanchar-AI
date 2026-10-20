@@ -2,29 +2,66 @@ import React, { useState } from 'react';
 import { HospitalIcon, CheckIcon, AlertIcon } from '../../../shared/icons/Icons';
 
 export const CreateReferralModal = ({ isOpen, onClose, onCreateReferral, showToast }) => {
-  const [patientName, setPatientName] = useState('Meena Devi');
+  const [patientName, setPatientName] = useState('');
   const [referredFacility, setReferredFacility] = useState('Mandya PHC #2 (Dr. Vikram Sharma)');
-  const [reason, setReason] = useState('ANC 3rd Trimester Ultrasound & Hb Evaluation');
+  const [reason, setReason] = useState('Specialist Clinical Evaluation');
   const [priority, setPriority] = useState('Urgent');
-  const [transportNeeded, setTransportNeeded] = useState(true);
+  const [transportNeeded, setTransportNeeded] = useState(false);
+
+  // Load real registered patients from localStorage
+  const [registeredPatients, setRegisteredPatients] = useState([]);
+  React.useEffect(() => {
+    try {
+      const stored = JSON.parse(localStorage.getItem('swasthya_asha_patients') || '[]');
+      setRegisteredPatients(stored);
+      if (stored.length > 0 && !patientName) {
+        setPatientName(stored[0].full_name);
+      }
+    } catch {}
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    const effectivePatientName = patientName || (registeredPatients[0]?.full_name) || 'Registered Citizen';
     const referral = {
-      id: `REF-${Math.floor(1000 + Math.random() * 9000)}`,
-      patientName,
-      referredFacility,
+      id: `REF-2026-${Math.floor(100 + Math.random() * 900)}`,
+      patient_name: effectivePatientName,
+      age_gender: registeredPatients.find(p => p.full_name === effectivePatientName)?.gender_code || '45 F',
+      village: 'Gejjalagere',
+      referred_to: 'Dr. Vikram Sharma, MBBS',
+      facility: referredFacility,
       reason,
-      priority,
-      transportNeeded,
-      date: 'Today',
-      status: 'Pending Review',
+      urgency: priority.toUpperCase(),
+      status: 'UNDER_REVIEW',
+      status_label: '🟡 Under Doctor Review',
+      created_at: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
+      ambulance_108: transportNeeded,
     };
 
+    // Save into localStorage
+    try {
+      const existingRefs = JSON.parse(localStorage.getItem('swasthya_asha_referrals') || '[]');
+      localStorage.setItem('swasthya_asha_referrals', JSON.stringify([referral, ...existingRefs]));
+
+      // Create activity entry
+      const activities = JSON.parse(localStorage.getItem('swasthya_asha_activities') || '[]');
+      const newAct = {
+        time: referral.created_at,
+        icon: '🏥',
+        title: 'PHC Referral Slip Created',
+        desc: `${effectivePatientName} → ${referredFacility}`,
+        village: 'Gejjalagere'
+      };
+      localStorage.setItem('swasthya_asha_activities', JSON.stringify([newAct, ...activities]));
+
+      window.dispatchEvent(new Event('swasthya_asha_updated'));
+      window.dispatchEvent(new Event('storage'));
+    } catch {}
+
     if (onCreateReferral) onCreateReferral(referral);
-    if (showToast) showToast(`✅ PHC Referral Slip Issued for ${patientName}! Dispatched to Dr. Vikram Sharma.`, 'success');
+    if (showToast) showToast(`✅ PHC Referral Slip Issued for ${effectivePatientName}! Sent to Dr. Vikram Sharma.`, 'success');
     onClose();
   };
 
@@ -62,10 +99,15 @@ export const CreateReferralModal = ({ isOpen, onClose, onCreateReferral, showToa
               onChange={(e) => setPatientName(e.target.value)}
               className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3 py-2 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-[#0B3B74]"
             >
-              <option value="Meena Devi">Meena Devi (28 / F • ANC Pregnancy)</option>
-              <option value="Lakshmi Devi">Lakshmi Devi (54 / F • High BP)</option>
-              <option value="Ravi Kumar">Ravi Kumar (60 / M • Type-2 DM)</option>
-              <option value="Basavaraj Patil">Basavaraj Patil (42 / M • TB DOTS)</option>
+              {registeredPatients.length > 0 ? (
+                registeredPatients.map((p, idx) => (
+                  <option key={idx} value={p.full_name}>
+                    {p.full_name} ({p.gender_code || `${p.age} / ${p.gender}`} • {p.village || 'Mandya'})
+                  </option>
+                ))
+              ) : (
+                <option value="">No patients registered yet — Register citizen first</option>
+              )}
             </select>
           </div>
 

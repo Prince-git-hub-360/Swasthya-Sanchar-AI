@@ -124,6 +124,9 @@ export const PatientHomePage = ({ setCurrentView, onOpenChat }) => {
   /* ── data loading ── */
   const loadData = async () => {
     setLoadingReminders(true);
+    let combinedReminders = [];
+    let combinedDocs = [];
+
     try {
       const [remData, docsData] = await Promise.allSettled([
         api.getReminders(),
@@ -151,20 +154,63 @@ export const PatientHomePage = ({ setCurrentView, onOpenChat }) => {
               is_taken: r.is_taken || r.dose_status === 'taken',
             };
           });
-          setReminders(mapped);
-        } else {
-          setReminders([]);
+          combinedReminders = [...mapped];
         }
       }
 
       if (docsData.status === 'fulfilled') {
         const docList = Array.isArray(docsData.value) ? docsData.value : docsData.value?.results || [];
-        setMedicalDocuments(docList);
+        combinedDocs = [...docList];
       }
     } catch {
-      setReminders([]);
-      setMedicalDocuments([]);
+      // ignore
     }
+
+    // Merge with locally scheduled pillbox reminders
+    try {
+      const localReminders = JSON.parse(localStorage.getItem('swasthya_pillbox_reminders') || '[]');
+      const localMeds = JSON.parse(localStorage.getItem('swasthya_medications') || '[]');
+      const localCombined = [...localReminders, ...localMeds];
+
+      const mappedLocal = localCombined.map((r, idx) => ({
+        id: r.id || `local-${idx}`,
+        medication_name: r.medication_name || r.name || r.title || 'Prescribed Medicine',
+        scheduled_time: r.scheduled_time || r.time || '08:00 AM',
+        instructions: r.instructions || r.purpose || `${r.dosage || '1 Tablet'} (${r.mealRule || 'After Food'})`,
+        is_taken: !!(r.is_taken || r.taken),
+      }));
+
+      const seenRemNames = new Set(combinedReminders.map(c => (c.medication_name || '').trim().toLowerCase()));
+      for (const loc of mappedLocal) {
+        const norm = (loc.medication_name || '').trim().toLowerCase();
+        if (norm && !seenRemNames.has(norm)) {
+          seenRemNames.add(norm);
+          combinedReminders.push(loc);
+        }
+      }
+    } catch (e) {
+      console.warn('PatientHome local reminder merge error:', e);
+    }
+
+    // Merge with locally stored health records
+    try {
+      const vaultRecords = JSON.parse(localStorage.getItem('swasthya_vault_records') || '[]');
+      const patientPrescriptions = JSON.parse(localStorage.getItem('swasthya_patient_prescriptions') || '[]');
+      const localVaultCombined = [...vaultRecords, ...patientPrescriptions];
+
+      const seenDocIds = new Set(combinedDocs.map(d => String(d.id)));
+      for (const loc of localVaultCombined) {
+        if (!seenDocIds.has(String(loc.id))) {
+          seenDocIds.add(String(loc.id));
+          combinedDocs.push(loc);
+        }
+      }
+    } catch (e) {
+      console.warn('PatientHome local vault merge error:', e);
+    }
+
+    setReminders(combinedReminders);
+    setMedicalDocuments(combinedDocs);
     setLoadingReminders(false);
   };
 
@@ -751,9 +797,6 @@ export const PatientHomePage = ({ setCurrentView, onOpenChat }) => {
 
       </div>
     </div>
-    <EmergencySOS showToast={showToast} onSosSent={(sosData) => {
-      console.log('SOS triggered:', sosData);
-    }} />
   </>
 );
 };

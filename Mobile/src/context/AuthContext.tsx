@@ -124,12 +124,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           id: 1,
           username: cleanUser,
           email: `${cleanUser}@swasthya.ai`,
-          first_name: extraProfile.first_name || 'Prince Kumar',
+          first_name: extraProfile.first_name || cleanUser,
           last_name: extraProfile.last_name || '',
-          role: 'PATIENT',
+          role: (extraProfile.role?.toUpperCase() || 'PATIENT') as any,
           phone_number: extraProfile.phone_number || cleanUser,
           preferred_language: extraProfile.preferred_language || 'hi',
-          abha_id: '91-4820-9921-7740',
+          abha_id: extraProfile.abha_id || '91-4820-9921-7740',
           village_or_town: extraProfile.village_or_town || 'Rampur Gram',
           district: extraProfile.district || 'Varanasi',
           state: extraProfile.state || 'Uttar Pradesh',
@@ -207,7 +207,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     const target = demoCredentials[demoRole];
-    return login(target.u, target.p);
+    if (!target) return false;
+
+    try {
+      const ok = await login(target.u, target.p, target.fallback);
+      if (ok) return true;
+    } catch {}
+
+    await SafeStorage.setItem(STORAGE_KEYS.USER_PROFILE, JSON.stringify(target.fallback));
+    setUser(target.fallback);
+    return true;
   };
 
   const sendOtp = async (phone: string): Promise<string> => {
@@ -221,8 +230,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const verifyOtp = async (phone: string, otp: string, role: string): Promise<boolean> => {
     setIsLoading(true);
+    const cleanPhone = phone.trim();
+
     try {
-      const data = await authApi.verifyOtp(phone, otp, role);
+      // 1. Check if user already registered on device
+      const storedUserJson = await SafeStorage.getItem(`@swasthya_user_${cleanPhone}`);
+      if (storedUserJson) {
+        const storedUser = JSON.parse(storedUserJson);
+        await SafeStorage.setItem(STORAGE_KEYS.USER_PROFILE, JSON.stringify(storedUser));
+        setUser(storedUser);
+        return true;
+      }
+
+      // 2. Verify with backend API
+      const data = await authApi.verifyOtp(cleanPhone, otp, role);
       const accessToken = data?.tokens?.access || data?.access;
       const refreshToken = data?.tokens?.refresh || data?.refresh;
 

@@ -25,6 +25,9 @@ export const RemindersPage = () => {
 
   const fetchReminders = async () => {
     setLoading(true);
+    let combined = [];
+
+    // 1. Fetch from backend API
     try {
       const data = await api.getReminders();
       let rawList = Array.isArray(data) ? data : data?.results || [];
@@ -62,13 +65,55 @@ export const RemindersPage = () => {
             timeSlot: r.timeSlot || r.dose_slot,
           };
         });
-        setReminders(mapped);
-      } else {
-        setReminders([]);
+        combined = [...mapped];
       }
     } catch (err) {
-      setReminders([]);
+      console.warn('Backend reminders fetch warning:', err);
     }
+
+    // 2. Merge with locally saved prescription extraction reminders
+    try {
+      const localReminders = JSON.parse(localStorage.getItem('swasthya_pillbox_reminders') || '[]');
+      const localMeds = JSON.parse(localStorage.getItem('swasthya_medications') || '[]');
+      const localCombined = [...localReminders, ...localMeds];
+
+      const mappedLocal = localCombined.map((r, idx) => {
+        let timeVal = r.scheduled_time || r.time || '08:00 AM';
+        if (timeVal.includes(':') && !timeVal.includes(' AM') && !timeVal.includes(' PM')) {
+          const parts = timeVal.split(':');
+          const h = parseInt(parts[0], 10);
+          const m = parts[1] || '00';
+          const ampm = h >= 12 ? 'PM' : 'AM';
+          const h12 = h % 12 || 12;
+          timeVal = `${h12.toString().padStart(2, '0')}:${m} ${ampm}`;
+        }
+        return {
+          id: r.id || `local-${idx}`,
+          medication_name: r.medication_name || r.name || r.title || 'Prescribed Medicine',
+          title: r.title || r.name || r.medication_name || 'Prescribed Medicine',
+          scheduled_time: timeVal,
+          time: timeVal,
+          instructions: r.instructions || r.purpose || r.dosage_note || `${r.dosage || '1 Tablet'} (${r.mealRule || 'After Food'})`,
+          is_taken: !!(r.is_taken || r.taken),
+          duration_days: r.duration_days || r.durationDays || 5,
+          timeSlot: r.timeSlot || r.mealTiming,
+        };
+      });
+
+      // Merge avoiding duplicate titles/medication names
+      const seenNames = new Set(combined.map(c => (c.medication_name || c.title || '').trim().toLowerCase()));
+      for (const loc of mappedLocal) {
+        const normName = (loc.medication_name || loc.title || '').trim().toLowerCase();
+        if (normName && !seenNames.has(normName)) {
+          seenNames.add(normName);
+          combined.push(loc);
+        }
+      }
+    } catch (localErr) {
+      console.warn('Local pillbox reminders parse error:', localErr);
+    }
+
+    setReminders(combined);
     setLoading(false);
   };
 
@@ -121,8 +166,24 @@ export const RemindersPage = () => {
     }
   };
 
-  const handleDeleteReminder = (id) => {
-    setReminders((prev) => prev.filter((r) => r.id !== id));
+  const handleDeleteReminder = async (id) => {
+    try {
+      if (typeof id === 'number' || (typeof id === 'string' && !id.startsWith('local-') && !id.startsWith('rx-'))) {
+        await api.deleteReminder(id);
+      }
+    } catch (e) {
+      console.warn('Backend delete reminder warning:', e);
+    }
+    setReminders((prev) => {
+      const updated = prev.filter((r) => r.id !== id);
+      try {
+        const localPillbox = JSON.parse(localStorage.getItem('swasthya_pillbox_reminders') || '[]');
+        const updatedLocal = localPillbox.filter(r => r.id !== id);
+        localStorage.setItem('swasthya_pillbox_reminders', JSON.stringify(updatedLocal));
+        localStorage.setItem('swasthya_medications', JSON.stringify(updatedLocal));
+      } catch {}
+      return updated;
+    });
     if (showToast) showToast('Medication reminder removed.', 'info');
   };
 
@@ -214,78 +275,63 @@ export const RemindersPage = () => {
         </button>
       </div>
 
-      {/* 📊 TODAY'S ADHERENCE SUMMARY CARD (NEW) */}
+      {/* 📊 SLEEK COMPACT MEDICATION ADHERENCE BANNER */}
       {reminders.length > 0 && (
-        <div className="bg-gradient-to-r from-teal-50 to-emerald-50 dark:from-teal-950/30 dark:to-emerald-950/30 border border-teal-200 dark:border-teal-900/60 rounded-2xl p-6 shadow-sm">
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-extrabold uppercase tracking-wider text-teal-900 dark:text-teal-300">
-                📊 TODAY'S MEDICATION ADHERENCE
+        <div className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border border-teal-200/80 dark:border-teal-900/50 rounded-xl p-4 shadow-sm transition-all">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-2.5">
+            <div className="flex items-center gap-2.5">
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="text-[11px] font-extrabold uppercase tracking-wider text-teal-900 dark:text-teal-300">
+                Today's Adherence
               </span>
-              <span className="text-xs font-bold text-teal-800 dark:text-teal-300">
-                {new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+              <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+                • {new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
               </span>
             </div>
 
-            {/* Progress Bar */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-extrabold text-slate-900 dark:text-white">
-                  {completedReminders.length} of {reminders.length} doses taken
-                </span>
-                <span className="text-sm font-bold text-emerald-700 dark:text-emerald-300">
-                  {reminders.length > 0 ? Math.round((completedReminders.length / reminders.length) * 100) : 0}%
-                </span>
-              </div>
-              <div className="w-full bg-slate-200 dark:bg-slate-700 h-3 rounded-full overflow-hidden">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                {completedReminders.length} of {reminders.length} taken ({reminders.length > 0 ? Math.round((completedReminders.length / reminders.length) * 100) : 0}%)
+              </span>
+              {reminders.length > 8 && (
+                <button
+                  onClick={() => {
+                    if (window.confirm('Clear older mock test doses and keep only today\'s active prescription medicines?')) {
+                      localStorage.removeItem('swasthya_pillbox_reminders');
+                      localStorage.removeItem('swasthya_medications');
+                      fetchReminders();
+                      showToast?.('Cleared older mock doses!', 'info');
+                    }
+                  }}
+                  className="text-[10px] font-bold text-slate-400 hover:text-red-500 hover:underline px-2 py-0.5 cursor-pointer"
+                >
+                  Clear Old Mock
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Inline Compact Progress & Mini-Badges */}
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
+            <div className="md:col-span-7">
+              <div className="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
                 <div
-                  className="bg-gradient-to-r from-emerald-500 to-teal-500 h-full rounded-full transition-all duration-500"
+                  className="bg-gradient-to-r from-teal-500 to-emerald-500 h-full rounded-full transition-all duration-500"
                   style={{ width: `${reminders.length > 0 ? (completedReminders.length / reminders.length) * 100 : 0}%` }}
                 />
               </div>
             </div>
 
-            {/* Status Breakdown */}
-            <div className="grid grid-cols-3 gap-2">
-              <div className="bg-white/60 dark:bg-slate-800/60 rounded-lg p-2.5 text-center space-y-1">
-                <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">✓</div>
-                <div className="text-[10px] font-bold text-slate-700 dark:text-slate-300">Completed</div>
-                <div className="text-sm font-extrabold text-slate-900 dark:text-white">{completedReminders.length}</div>
-              </div>
-              <div className="bg-white/60 dark:bg-slate-800/60 rounded-lg p-2.5 text-center space-y-1">
-                <div className="text-2xl font-bold text-amber-600 dark:text-amber-400">⏳</div>
-                <div className="text-[10px] font-bold text-slate-700 dark:text-slate-300">Pending</div>
-                <div className="text-sm font-extrabold text-slate-900 dark:text-white">{pendingReminders.length}</div>
-              </div>
-              <div className="bg-white/60 dark:bg-slate-800/60 rounded-lg p-2.5 text-center space-y-1">
-                <div className="text-2xl font-bold text-sky-600 dark:text-sky-400">📅</div>
-                <div className="text-[10px] font-bold text-slate-700 dark:text-slate-300">Total</div>
-                <div className="text-sm font-extrabold text-slate-900 dark:text-white">{reminders.length}</div>
-              </div>
-            </div>
-
-            {/* Quick Status Message */}
-            <div className="bg-white/80 dark:bg-slate-800/80 rounded-lg p-3 text-center">
-              {completedReminders.length === 0 && pendingReminders.length > 0 && (
-                <p className="text-xs font-medium text-slate-700 dark:text-slate-300">
-                  👋 You have <span className="font-bold text-amber-700 dark:text-amber-300">{pendingReminders.length} dose{pendingReminders.length > 1 ? 's' : ''}</span> pending today. Don't forget to take your medication!
-                </p>
-              )}
-              {completedReminders.length > 0 && pendingReminders.length > 0 && (
-                <p className="text-xs font-medium text-slate-700 dark:text-slate-300">
-                  👏 Great start! <span className="font-bold text-emerald-700 dark:text-emerald-300">{pendingReminders.length} dose{pendingReminders.length > 1 ? 's' : ''}</span> still pending.
-                </p>
-              )}
-              {completedReminders.length === reminders.length && reminders.length > 0 && (
-                <p className="text-xs font-medium text-emerald-700 dark:text-emerald-300">
-                  🎉 <span className="font-bold">Perfect!</span> All doses completed for today. Excellent adherence!
-                </p>
-              )}
-              {reminders.length === 0 && (
-                <p className="text-xs font-medium text-slate-700 dark:text-slate-300">
-                  📝 No reminders scheduled yet. Add your first medication to get started!
-                </p>
-              )}
+            <div className="md:col-span-5 flex items-center justify-start md:justify-end gap-2 text-[11px] font-bold">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/40">
+                ✓ Taken: {completedReminders.length}
+              </span>
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 border border-amber-100 dark:border-amber-900/40">
+                ⏳ Pending: {pendingReminders.length}
+              </span>
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                📋 Total: {reminders.length}
+              </span>
             </div>
           </div>
         </div>

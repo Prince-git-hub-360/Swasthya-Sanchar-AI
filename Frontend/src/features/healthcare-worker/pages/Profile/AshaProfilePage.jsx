@@ -11,24 +11,40 @@ export const AshaProfilePage = ({ setCurrentView }) => {
   const { user, showToast } = useAuth();
   const [activeTab, setActiveTab] = useState('accreditation'); // 'accreditation', 'assignments', 'achievements'
 
+  const userName = user?.first_name 
+    ? `${user.first_name} ${user.last_name || ''}`.trim() 
+    : user?.username || 'ASHA Worker';
+  
+  const userAshaId = user?.profile?.asha_id || user?.asha_id || `ASHA-${user?.profile?.state?.slice(0,2).toUpperCase() || 'KA'}-${user?.id || '2026'}`;
+  const userSubCentre = user?.profile?.sub_centre || user?.sub_centre || `${user?.profile?.village_or_town || 'Community'} Sub-Centre`;
+  const userDistrict = user?.profile?.district || user?.district || 'Bengaluru Urban';
+  const userState = user?.profile?.state || user?.state || 'Karnataka';
+  const userVillage = user?.profile?.village_or_town || user?.village_or_town || 'Local Area';
+  const userPhone = user?.profile?.phone_number || user?.phone_number || '+91 98000 00000';
+
+  // Live real data counts
+  const livePatients = JSON.parse(localStorage.getItem('swasthya_asha_patients') || '[]');
+  const liveVisits = JSON.parse(localStorage.getItem('swasthya_asha_visits') || '[]');
+  const liveReferrals = JSON.parse(localStorage.getItem('swasthya_asha_referrals') || '[]');
+
   const ashaDetails = {
-    name: 'Sister Sunita Bai',
-    nameRegional: 'ಸುನೀತಾ ಬಾಯಿ (सुनीता बाई)',
-    roleTitle: 'Accredited Social Health Activist (ASHA) Sister',
-    registrationId: 'ASHA-KA-8821',
-    assignedPhc: 'Mandya Primary Health Centre #2',
-    catchmentVillage: 'Gejjalagere, Mandya District',
-    blockTaluk: 'Maddur Taluk',
-    district: 'Mandya (Karnataka)',
-    phone: '+91 98765 00111',
-    experienceYears: '7+ Years of Dedicated Field Service',
-    languages: 'Kannada (Native), Hindi (Fluent), English (Working)',
+    name: userName,
+    nameRegional: `${userName} (आशा कार्यकर्ता)`,
+    roleTitle: 'Accredited Social Health Activist (ASHA) Frontline Worker',
+    registrationId: userAshaId,
+    assignedPhc: `${userSubCentre}, ${userDistrict}`,
+    catchmentVillage: `${userVillage}, ${userDistrict} District`,
+    blockTaluk: `${userDistrict} Sector`,
+    district: `${userDistrict} (${userState})`,
+    phone: userPhone,
+    experienceYears: 'Frontline Field Service',
+    languages: 'Kannada, Hindi, English',
     stats: {
-      householdsCovered: '1,248',
-      immunizationRate: '98.4%',
-      doorstepVisits: '480',
-      ancMothersTracked: '42',
-      highRiskRecoveries: '28',
+      householdsCovered: livePatients.length.toString(),
+      immunizationRate: '100%',
+      doorstepVisits: liveVisits.length.toString(),
+      ancMothersTracked: livePatients.filter(p => p.program === 'anc').length.toString(),
+      highRiskRecoveries: livePatients.filter(p => p.triage_type === 'high_risk').length.toString(),
     },
     certifications: [
       'MoHFW Certified Maternal & Child Health (RCH) Counselor',
@@ -63,7 +79,7 @@ export const AshaProfilePage = ({ setCurrentView }) => {
               Swasthya Sanchar Frontline Health Accreditation
             </h1>
             <p className="text-xs text-blue-100/90 font-medium max-w-2xl">
-              Official Government Portal for Frontline ASHA Sister Profile, Catchment Area Accreditation, and Verified Service Badges.
+              Official Government Portal for Frontline ASHA Worker Profile, Catchment Area Accreditation, and Verified Service Badges.
             </p>
           </div>
 
@@ -73,7 +89,7 @@ export const AshaProfilePage = ({ setCurrentView }) => {
               <div className="text-[10px] text-sky-200 font-mono">ID: {ashaDetails.registrationId}</div>
             </div>
             <div className="w-10 h-10 rounded-full bg-emerald-500 border-2 border-white flex items-center justify-center font-black text-white text-sm">
-              SB
+              {userName.charAt(0).toUpperCase()}
             </div>
           </div>
         </div>
@@ -132,11 +148,9 @@ export const AshaProfilePage = ({ setCurrentView }) => {
             {/* Profile Row */}
             <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 pt-2">
               <div className="relative">
-                <img
-                  src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=300&auto=format&fit=crop&q=80"
-                  alt="Sister Sunita Bai"
-                  className="w-28 h-28 rounded-2xl object-cover border-4 border-white/90 shadow-xl"
-                />
+                <div className="w-28 h-28 rounded-2xl bg-gradient-to-tr from-emerald-700 to-teal-500 border-4 border-white/90 shadow-xl flex items-center justify-center text-white font-black text-4xl">
+                  {userName.charAt(0).toUpperCase()}
+                </div>
                 <div className="absolute -bottom-2 -right-2 bg-emerald-500 text-white p-1 rounded-full border-2 border-white shadow-md">
                   <CheckIcon size={14} />
                 </div>

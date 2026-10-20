@@ -21,7 +21,7 @@ export const GovtHeaderBanner = ({
       {/* 🏛️ 1. TOP OFFICIAL GOVERNMENT LOGOS STRIP */}
       <div className="max-w-7xl mx-auto px-4 md:px-6 py-2.5 flex flex-wrap items-center justify-between gap-4">
         
-        {/* Left: 3 Official Government Logos (NHA / MoHFW, NHM, Ayushman Bharat PM-JAY) */}
+        {/* Left: 3 Official Government Logos + Swasthya Sanchar Dedicated Brand Logo */}
         <div className="flex items-center gap-4 sm:gap-6 flex-wrap">
           
           {/* Logo 1: National Health Authority & Ministry of Health & Family Welfare (with Ashoka Lion) */}
@@ -29,29 +29,51 @@ export const GovtHeaderBanner = ({
             <img
               src="/images/nha_logo.jpg"
               alt="National Health Authority, Ministry of Health and Family Welfare, Government of India"
-              className="h-12 w-auto object-contain"
+              style={{ height: '64px' }}
+              className="w-auto object-contain drop-shadow-xs"
             />
           </div>
 
-          <div className="hidden sm:block h-9 w-[1.5px] bg-slate-200 dark:bg-slate-700" />
+          <div className="hidden sm:block h-12 w-[1.5px] bg-slate-200 dark:bg-slate-700" />
 
           {/* Logo 2: National Health Mission (NHM) */}
           <div className="flex items-center gap-2">
             <img
               src="/images/nhm_logo.png"
               alt="National Health Mission - राष्ट्रीय स्वास्थ्य मिशन"
-              className="h-12 w-auto object-contain"
+              style={{ height: '64px' }}
+              className="w-auto object-contain drop-shadow-xs"
             />
           </div>
 
-          <div className="hidden sm:block h-9 w-[1.5px] bg-slate-200 dark:bg-slate-700" />
+          <div className="hidden sm:block h-12 w-[1.5px] bg-slate-200 dark:bg-slate-700" />
 
-          {/* Logo 3: Ayushman Bharat PM-JAY */}
-          <div className="flex items-center gap-2">
+          {/* Logo 3: Dedicated Swasthya Sanchar Brand Logo */}
+          <div className="flex items-center gap-2.5">
             <img
-              src="/images/pmjay_logo.png"
-              alt="Ayushman Bharat PM-JAY - प्रधानमंत्री जन आरोग्य योजना"
-              className="h-12 w-auto object-contain"
+              src="/assets/branding/swasthya-sanchar-mark.png"
+              alt="Swasthya Sanchar Emblem"
+              style={{ height: '50px', width: 'auto' }}
+              className="object-contain drop-shadow-xs transition-transform hover:scale-105"
+            />
+            <div className="hidden md:block leading-tight">
+              <div className="flex items-center gap-1.5">
+                <span className="font-extrabold text-base text-[#0B3B74] dark:text-sky-300 tracking-tight">Swasthya Sanchar</span>
+                <span className="text-[10px] font-black bg-emerald-100 text-emerald-800 px-1.5 py-0.2 rounded border border-emerald-300">AI</span>
+              </div>
+              <div className="text-[10px] text-slate-500 font-bold">स्वास्थ संचार • National Health Portal</div>
+            </div>
+          </div>
+
+          <div className="hidden lg:block h-12 w-[1.5px] bg-slate-200 dark:bg-slate-700" />
+
+          {/* Logo 4: Ayushman Bharat PM-JAY / Digital India */}
+          <div className="hidden sm:flex items-center gap-2">
+            <img
+              src="/images/digital_india_logo.svg"
+              alt="Digital India - Power to Empower"
+              style={{ height: '54px' }}
+              className="w-auto object-contain"
             />
           </div>
 

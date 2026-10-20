@@ -20,17 +20,41 @@ class GroqVisionOCRService:
     """Multimodal Vision & Prescription Extraction Service utilizing Groq API."""
 
     ENDPOINT = "https://api.groq.com/openai/v1/chat/completions"
-    DEFAULT_API_KEY = "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"
+
+    LANG_NAMES = {
+        'hi': 'Hindi (हिंदी)',
+        'kn': 'Kannada (ಕನ್ನಡ)',
+        'te': 'Telugu (తెలుగు)',
+        'ta': 'Tamil (தமிழ்)',
+        'mr': 'Marathi (मराठी)',
+        'bn': 'Bengali (বাংলা)',
+        'gu': 'Gujarati (ગુજરાતી)',
+        'ml': 'Malayalam (മലയാളം)',
+        'pa': 'Punjabi (ਪੰਜਾਬੀ)',
+        'or': 'Odia (ଓଡ଼ିଆ)',
+        'ur': 'Urdu (اردو)',
+        'as': 'Assamese (অসমীয়া)',
+        'mai': 'Maithili (मैथिली)',
+        'sat': 'Santali (ᱥᱟᱱᱛᱟᱲᱤ)',
+        'ks': 'Kashmiri (کٲشُر)',
+        'ne': 'Nepali (नेपाली)',
+        'sd': 'Sindhi (سنڌي)',
+        'kok': 'Konkani (कोंकणी)',
+        'doi': 'Dogri (डोगरी)',
+        'mni': 'Manipuri (মৈতৈলোন্)',
+        'brx': 'Bodo (बड़ो)',
+        'sa': 'Sanskrit (संस्कृतम्)',
+        'en': 'English',
+    }
 
     @classmethod
     def get_api_key(cls) -> str:
-        return os.getenv('GROQ_API_KEY', cls.DEFAULT_API_KEY).strip()
+        return os.getenv('GROQ_API_KEY', '').strip()
 
     @classmethod
     def clean_json_response(cls, text: str) -> Dict[str, Any]:
         """Extracts and parses JSON object from text that may contain markdown code fences."""
         text = text.strip()
-        # Remove ```json ... ``` fences if present
         if text.startswith("```"):
             lines = text.splitlines()
             if lines[0].startswith("```"):
@@ -39,7 +63,6 @@ class GroqVisionOCRService:
                 lines = lines[:-1]
             text = "\n".join(lines).strip()
 
-        # Regex search for first '{' to last '}'
         match = re.search(r'\{.*\}', text, re.DOTALL)
         if match:
             text = match.group(0)
@@ -53,28 +76,51 @@ class GroqVisionOCRService:
         if not api_key or not raw_prescription_text:
             return {'status': 'error', 'error': 'Missing API key or text'}
 
+        lang_label = cls.LANG_NAMES.get(target_language, f"{target_language} language")
+
         prompt = (
-            f"You are an expert AI medical assistant for rural Indian healthcare.\n"
-            f"Parse this doctor prescription text carefully:\n"
-            f"1. Extract full raw prescription text.\n"
-            f"2. Provide clear, simple, step-by-step patient advice in regional language: '{target_language}'.\n"
-            f"3. Extract structured medication items (medicine_name, strength, frequency, meal_rule, duration_days).\n"
+            f"You are an expert AI clinical pharmacist and specialist in reading Indian doctor prescriptions.\n"
+            f"Carefully analyze this prescription text (including handwriting transcriptions, abbreviations like OD, BD, TDS, HS, AC, PC, complaints, and rest/course durations):\n\n"
+            f"CLINICAL INSTRUCTIONS:\n"
+            f"1. Extract exact Clinic Name, Doctor Name, Patient details, and Diagnosis/Complaints (e.g. 'Loose motion', 'vomiting', 'stomach pain', 'fever', 'headache', 'anxiety').\n"
+            f"2. Decipher all prescribed medicines accurately (e.g. Flagyl 400, Oflox OZ, Drotin M, Pan 40, Electral, Sertraline 50mg, Clonazepam 0.5mg, etc.). Do not label as Unknown if decipherable.\n"
+            f"3. Note dosage frequency (1-0-1 = Twice daily Morning & Night, 1-0-0 = Morning, 0-0-1 = Night, SOS = as needed) and meal rules (Before/After food).\n"
+            f"4. Look for explicit rest/course duration (e.g. 'Rest for 3 days' -> duration_days: 3). Do NOT default to 30 days if a short course is written.\n"
+            f"5. Provide warm, clear, compassionate, step-by-step patient advice in {lang_label}.\n"
+            f"   - Format with clean numbered bullet points showing medicine name, dose timing (Morning/Night), before/after food, and duration.\n"
+            f"   - STRICT PROHIBITION: DO NOT include hospital phone numbers, clinic addresses, or consultation hours in simplified_summary.\n\n"
             f"Return JSON strictly with format:\n"
             f"{{\n"
-            f'  "raw_text": "Full transcribed prescription text",\n'
-            f'  "simplified_summary": "Simplified regional explanation for patient",\n'
+            f'  "clinic_name": "Clinic Name",\n'
+            f'  "doctor_name": "Doctor Name",\n'
+            f'  "diagnosis": "Diagnosed condition / complaints",\n'
+            f'  "raw_text": "Clean transcribed text",\n'
+            f'  "simplified_summary": "Clean, structured, patient-friendly medicine guidance in {lang_label}",\n'
             f'  "medications": [\n'
-            f'    {{"medicine_name": "Medicine", "strength": "500mg", "frequency": "Once daily", "meal_rule": "After food", "duration_days": 7}}\n'
+            f'    {{\n'
+            f'      "medicine_name": "Medicine Name with strength",\n'
+            f'      "strength": "Strength",\n'
+            f'      "dosage": "1-0-1",\n'
+            f'      "frequency": "1-0-1 (Twice daily)",\n'
+            f'      "meal_rule": "After Food",\n'
+            f'      "duration_days": 3,\n'
+            f'      "purpose": "Simple 1-line reason for taking this medicine"\n'
+            f'    }}\n'
             f'  ],\n'
             f'  "confidence_score": 0.95\n'
             f"}}\n\n"
             f"Prescription Text:\n{raw_prescription_text}"
         )
 
-        candidate_models = ["llama-3.3-70b-versatile", "llama-3.1-8b-instant"]
+        candidate_models = ["llama-3.3-70b-versatile", "llama-3.1-8b-instant", "mixtral-8x7b-32768"]
         for model_name in candidate_models:
             try:
-                payload = {"model": model_name, "messages": [{"role": "user", "content": prompt}], "temperature": 0.1}
+                payload = {
+                    "model": model_name,
+                    "messages": [{"role": "user", "content": prompt}],
+                    "temperature": 0.1,
+                    "response_format": {"type": "json_object"}
+                }
                 req = urllib.request.Request(
                     cls.ENDPOINT,
                     data=json.dumps(payload).encode('utf-8'),
@@ -93,8 +139,13 @@ class GroqVisionOCRService:
                     parsed_json = cls.clean_json_response(raw_content)
                     return {
                         'status': 'success',
+                        'clinic_name': parsed_json.get('clinic_name', ''),
+                        'doctor_name': parsed_json.get('doctor_name', ''),
+                        'patient_name': parsed_json.get('patient_name', ''),
+                        'diagnosis': parsed_json.get('diagnosis', ''),
                         'extracted_text': parsed_json.get('raw_text', '') or raw_prescription_text,
                         'simplified_text': parsed_json.get('simplified_summary', ''),
+                        'translated_text': parsed_json.get('simplified_summary', ''),
                         'medications': parsed_json.get('medications', []),
                         'confidence': float(parsed_json.get('confidence_score', 0.95)),
                         'ocr_engine': f'groq-{model_name}',
@@ -138,22 +189,29 @@ class GroqVisionOCRService:
             elif ext == '.pdf':
                 mime_type = 'application/pdf'
 
-            # Read file bytes & encode to base64
             with open(file_path, 'rb') as f:
                 file_bytes = f.read()
                 base64_data = base64.b64encode(file_bytes).decode('utf-8')
 
+            lang_label = cls.LANG_NAMES.get(target_language, f"{target_language} language")
+
             prompt_text = (
-                f"You are an expert AI medical assistant for rural Indian healthcare. Analyze this doctor prescription image carefully.\n"
-                f"1. Transcribe the full raw text (Doctor Name, Clinic Name, Patient Details, Clinical Findings/Diagnosis, and all Medication names like Azithromycin, Levocetirizine, Ambroxol, strengths, dosages).\n"
-                f"2. Provide clear, simple, step-by-step patient advice in regional language: '{target_language}'.\n"
-                f"3. Extract structured medication items (medicine_name, strength, frequency, meal_rule, duration_days).\n"
+                f"You are an expert AI clinical pharmacist for rural Indian healthcare. Analyze this doctor prescription image carefully.\n"
+                f"1. Transcribe the full raw text (Doctor Name, Clinic Name, Patient Details, Clinical Findings/Diagnosis, and all Medication names).\n"
+                f"2. Provide clear, compassionate, step-by-step patient advice in regional language: {lang_label}.\n"
+                f"   - Format with clean numbered medicine points showing medicine name, dose timing (Morning/Night), before/after food, and duration.\n"
+                f"   - STRICT PROHIBITION: DO NOT include hospital phone numbers, clinic addresses, or consultation hours in simplified_summary.\n"
+                f"3. Extract structured medication items (medicine_name, strength, frequency, meal_rule, duration_days, purpose).\n"
+                f"4. Look for explicit rest/course duration (e.g. 'Rest for 3 days' -> duration_days: 3).\n\n"
                 f"Return JSON strictly with format:\n"
                 f"{{\n"
+                f'  "clinic_name": "Clinic Name",\n'
+                f'  "doctor_name": "Doctor Name",\n'
+                f'  "diagnosis": "Diagnosed condition / complaints",\n'
                 f'  "raw_text": "Full transcribed prescription text",\n'
-                f'  "simplified_summary": "Simplified regional explanation for patient",\n'
+                f'  "simplified_summary": "Clean, structured, patient-friendly medicine guidance in {lang_label}",\n'
                 f'  "medications": [\n'
-                f'    {{"medicine_name": "Azithromycin", "strength": "500mg", "frequency": "Once daily", "meal_rule": "After food", "duration_days": 7}}\n'
+                f'    {{"medicine_name": "Flagyl 400", "strength": "400mg", "frequency": "1-0-1 (Twice daily)", "meal_rule": "After food", "duration_days": 3, "purpose": "For bacterial infection & loose motions"}}\n'
                 f'  ],\n'
                 f'  "confidence_score": 0.95\n'
                 f"}}\n"
@@ -162,7 +220,6 @@ class GroqVisionOCRService:
             is_image = ext in ['.png', '.jpg', '.jpeg', '.webp']
 
             if is_image:
-                # 1. Try Groq Vision Models if enabled
                 vision_models = ["llama-3.2-11b-vision-preview", "llama-3.2-90b-vision-preview"]
                 content_list = [
                     {"type": "text", "text": prompt_text},
@@ -194,8 +251,13 @@ class GroqVisionOCRService:
                             parsed_json = cls.clean_json_response(raw_content)
                             return {
                                 'status': 'success',
+                                'clinic_name': parsed_json.get('clinic_name', ''),
+                                'doctor_name': parsed_json.get('doctor_name', ''),
+                                'patient_name': parsed_json.get('patient_name', ''),
+                                'diagnosis': parsed_json.get('diagnosis', ''),
                                 'extracted_text': parsed_json.get('raw_text', '') or raw_content,
                                 'simplified_text': parsed_json.get('simplified_summary', ''),
+                                'translated_text': parsed_json.get('simplified_summary', ''),
                                 'medications': parsed_json.get('medications', []),
                                 'confidence': float(parsed_json.get('confidence_score', 0.95)),
                                 'ocr_engine': f'groq-{model_name}',

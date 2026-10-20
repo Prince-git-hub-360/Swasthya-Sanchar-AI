@@ -6,8 +6,8 @@ import { useAuth } from '../context/AuthContext';
 import { LoginScreen } from '../features/auth/LoginScreen';
 import { PatientStack } from './PatientTabs';
 import { AshaStack } from './AshaTabs';
+import { DoctorStack } from './DoctorTabs';
 import { CaregiverHomeScreen } from '../features/caregiver/CaregiverHomeScreen';
-import { DoctorHomeScreen } from '../features/doctor/DoctorHomeScreen';
 import { MobileFrame } from '../components/frame/MobileFrame';
 import { COLORS } from '../constants/theme';
 
@@ -35,7 +35,7 @@ export const RootNavigator: React.FC = () => {
           ) : role === 'CAREGIVER' ? (
             <Stack.Screen name="CaregiverApp" component={CaregiverHomeScreen} />
           ) : role === 'DOCTOR' ? (
-            <Stack.Screen name="DoctorApp" component={DoctorHomeScreen} />
+            <Stack.Screen name="DoctorApp" component={DoctorStack} />
           ) : (
             <Stack.Screen name="PatientApp" component={PatientStack} />
           )}

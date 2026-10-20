@@ -11,17 +11,40 @@ export const DoctorProfilePage = ({ setCurrentView }) => {
   const { user, showToast } = useAuth();
   const [activeTab, setActiveTab] = useState('licensure'); // 'licensure', 'asha_supervision', 'clinical_stats'
 
+  const docName = user?.first_name 
+    ? `Dr. ${user.first_name} ${user.last_name || ''}`.trim() 
+    : (user?.username ? `Dr. ${user.username}` : 'Dr. Vikram Sharma');
+  
+  const docRegNo = user?.profile?.medical_reg_no || user?.medical_reg_no || 'KMC-58291-KA';
+  const docFacility = user?.profile?.hospital_name || user?.hospital_name || `${user?.profile?.district || 'Bengaluru Urban'} Primary Health Centre`;
+  const docDistrict = user?.profile?.district || user?.district || 'Bengaluru Urban';
+  const docState = user?.profile?.state || user?.state || 'Karnataka';
+  const docSpecialization = user?.profile?.specialization || 'General Medicine';
+  const docPhone = user?.profile?.phone_number || user?.phone_number || '+91 98765 00999';
+
+  // Live assigned ASHAs
+  const dynamicAssignedAshas = (() => {
+    try {
+      const saved = localStorage.getItem('swasthya_doctor_assigned_ashas');
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return [
+      { name: 'Ayush Kumar', id: 'ASHA-KA-MDY-084', sector: 'Electronic City Sector', activeCases: 0 },
+      { name: 'Sunita Bai', id: 'ASHA-KA-8821', sector: 'Gejjalagere Sub-Centre', activeCases: 0 },
+    ];
+  })();
+
   const doctorDetails = {
-    name: 'Dr. Vikram Sharma',
-    degree: 'MBBS, MD (General Medicine)',
+    name: docName,
+    degree: `MBBS, MD (${docSpecialization})`,
     roleTitle: 'PHC Medical Officer & ABDM Clinical Lead',
-    registrationNumber: 'KMC-58291-KA',
-    medicalCouncil: 'Karnataka Medical Council / National Medical Commission (NMC)',
+    registrationNumber: docRegNo,
+    medicalCouncil: `${docState} Medical Council / National Medical Commission (NMC)`,
     validityDate: '31 Dec 2028',
-    assignedPhc: 'Mandya #2 Primary Health Centre',
-    district: 'Mandya District (Karnataka)',
-    experienceYears: '12+ Years Clinical Practice',
-    phone: '+91 98765 00999',
+    assignedPhc: docFacility,
+    district: `${docDistrict} (${docState})`,
+    experienceYears: 'Frontline Clinical Practice',
+    phone: docPhone,
     stats: {
       opdConsultations: '14,200',
       teleConsultations: '820',
@@ -29,11 +52,7 @@ export const DoctorProfilePage = ({ setCurrentView }) => {
       prescriptionsIssued: '12,850',
       janAushadhiSavings: '₹18.4 Lakhs Saved',
     },
-    assignedAshaWorkers: [
-      { name: 'Sister Sunita Bai', id: 'ASHA-KA-8821', sector: 'Sector 1 & 2 (Gejjalagere)', activeCases: 24 },
-      { name: 'Sister Kavitha M.', id: 'ASHA-KA-8822', sector: 'Sector 3 (Farmland Belt)', activeCases: 18 },
-      { name: 'Sister Meenakshi G.', id: 'ASHA-KA-8823', sector: 'Sector 4 (School Zone)', activeCases: 15 },
-    ]
+    assignedAshaWorkers: dynamicAssignedAshas
   };
 
   return (
@@ -49,9 +68,9 @@ export const DoctorProfilePage = ({ setCurrentView }) => {
               👨‍⚕️ DR
             </div>
             <div className="text-left leading-tight">
-              <div className="text-xs font-black text-slate-900 dark:text-white">Dr. Vikram Sharma</div>
+              <div className="text-xs font-black text-slate-900 dark:text-white">{docName}</div>
               <div className="text-[10px] text-[#0B3B74] dark:text-sky-400 font-bold">Medical Officer (MBBS, MD)</div>
-              <div className="text-[9px] text-slate-500 dark:text-slate-400">Mandya PHC #2 • KMC-58291</div>
+              <div className="text-[9px] text-slate-500 dark:text-slate-400">{docFacility} • {docRegNo}</div>
             </div>
           </div>
         }

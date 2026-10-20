@@ -6,6 +6,7 @@ Configured with AllowAny for Version 1 API testing.
 Automatically triggers OCR Engine & PrescriptionParserService pipeline on uploaded documents.
 """
 from rest_framework import permissions, viewsets, status
+from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from rest_framework.filters import SearchFilter, OrderingFilter
@@ -104,6 +105,16 @@ class MedicalDocumentViewSet(viewsets.ModelViewSet):
 
         headers = self.get_success_headers(res_data)
         return Response(res_data, status=status.HTTP_201_CREATED, headers=headers)
+
+    @action(detail=False, methods=['post'], url_path='parse-text')
+    def parse_text(self, request):
+        """Processes raw OCR text using Groq LLM clinical pipeline and returns natural conversational advice + structured medications."""
+        raw_text = request.data.get('raw_text') or request.data.get('text', '')
+        target_lang = request.data.get('target_language') or request.data.get('language', 'hi')
+        
+        from .groq_ocr_service import GroqVisionOCRService
+        result = GroqVisionOCRService.process_text_with_groq(raw_text, target_language=target_lang)
+        return Response(result, status=status.HTTP_200_OK)
 
     def perform_destroy(self, instance):
         """Cascade delete all linked medications and reminders when a prescription is deleted."""

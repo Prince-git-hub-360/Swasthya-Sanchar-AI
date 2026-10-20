@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -18,23 +18,80 @@ import {
   Calendar,
   ChevronRight,
   Flame,
+  AlertTriangle,
+  Sparkles,
+  User,
+  ShoppingBag,
 } from 'lucide-react-native';
 import { COLORS, SPACING, TYPOGRAPHY, BORDER_RADIUS, SHADOWS } from '../../constants/theme';
-import { MOCK_PATIENT } from '../../mock/healthData';
+import { MOCK_PATIENT, MOCK_TODAY_MEDICINES } from '../../mock/healthData';
 import { Header } from '../../components/common/Header';
+import { MobileEmergencySosModal } from '../../components/emergency/MobileEmergencySosModal';
+import { SwasthyaMitrAiModal } from '../../components/ai/SwasthyaMitrAiModal';
+import { SafeStorage } from '../../services/safeStorage';
 
 export const CaregiverHomeScreen: React.FC<{ navigation?: any }> = () => {
+  const [selectedDependent, setSelectedDependent] = useState<'mother' | 'father'>('mother');
   const [nudgeSent, setNudgeSent] = useState(false);
+  const [sosModalVisible, setSosModalVisible] = useState(false);
+  const [aiModalVisible, setAiModalVisible] = useState(false);
+  const [todayMeds, setTodayMeds] = useState<any[]>(MOCK_TODAY_MEDICINES);
 
-  const handleCallMother = () => {
-    Alert.alert('Calling Lakshmi Devi', 'Initiating call to +91 98765 43210...');
+  useEffect(() => {
+    const loadMeds = async () => {
+      try {
+        const storedStr = await SafeStorage.getItem('@swasthya_active_medications');
+        if (storedStr) {
+          const stored = JSON.parse(storedStr);
+          if (Array.isArray(stored) && stored.length > 0) {
+            setTodayMeds(stored);
+            return;
+          }
+        }
+      } catch (e) {}
+    };
+    loadMeds();
+  }, []);
+
+  const currentPerson =
+    selectedDependent === 'mother'
+      ? {
+          name: 'Lakshmi Devi (Mother)',
+          age: 58,
+          village: 'Rampur Gram (Ward 3)',
+          abhaId: '91-4820-9921-7740',
+          adherenceRate: 92,
+          streakDays: 5,
+          phone: '+91 98765 43210',
+          conditions: ['Type 2 Diabetes', 'Hypertension'],
+        }
+      : {
+          name: 'Ram Charan Yadav (Father)',
+          age: 64,
+          village: 'Rampur Gram (Ward 1)',
+          abhaId: '91-3310-8812-4011',
+          adherenceRate: 68,
+          streakDays: 1,
+          phone: '+91 98111 22334',
+          conditions: ['Stage-2 Hypertension', 'Arthritis'],
+        };
+
+  const handleCall = () => {
+    Alert.alert(`Calling ${currentPerson.name}`, `Initiating direct voice call to ${currentPerson.phone}...`);
   };
 
   const handleSendNudge = () => {
     setNudgeSent(true);
     Alert.alert(
       'Voice Nudge Sent / आवाज में संदेश भेजा गया',
-      'A gentle regional voice reminder has been played on Lakshmi Devi\'s phone for her afternoon dose.'
+      `A gentle regional Hindi voice reminder has been played on ${currentPerson.name}'s phone for their scheduled afternoon dose.`
+    );
+  };
+
+  const handleOrderRefill = () => {
+    Alert.alert(
+      '📦 Jan Aushadhi Refill Requested!',
+      `Monthly chronic care medicine refill dispatched to Rampur Jan Aushadhi Kendra for ${currentPerson.name}. Delivery in 24 hours.`
     );
   };
 
@@ -44,10 +101,31 @@ export const CaregiverHomeScreen: React.FC<{ navigation?: any }> = () => {
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {/* Top Greeting Header */}
         <View style={styles.header}>
-          <View>
-            <Text style={styles.greeting}>Family Caregiver Portal</Text>
-            <Text style={styles.subGreeting}>Monitoring: {MOCK_PATIENT.name} (Mother)</Text>
-          </View>
+          <Text style={styles.greeting}>Family Caregiver Portal</Text>
+          <Text style={styles.subGreeting}>Remote Chronic Care & Medication Monitor</Text>
+        </View>
+
+        {/* Dependent Switcher Tabs */}
+        <View style={styles.dependentSwitcher}>
+          <TouchableOpacity
+            style={[styles.depTab, selectedDependent === 'mother' && styles.depTabActive]}
+            onPress={() => setSelectedDependent('mother')}
+          >
+            <Text style={{ fontSize: 16 }}>👵</Text>
+            <Text style={[styles.depTabText, selectedDependent === 'mother' && styles.depTabTextActive]}>
+              Lakshmi Devi (Mother)
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.depTab, selectedDependent === 'father' && styles.depTabActive]}
+            onPress={() => setSelectedDependent('father')}
+          >
+            <Text style={{ fontSize: 16 }}>👴</Text>
+            <Text style={[styles.depTabText, selectedDependent === 'father' && styles.depTabTextActive]}>
+              Ram Charan (Father)
+            </Text>
+          </TouchableOpacity>
         </View>
 
         {/* Patient Health Overview Hero Card */}
@@ -57,17 +135,22 @@ export const CaregiverHomeScreen: React.FC<{ navigation?: any }> = () => {
               <Heart size={24} color={COLORS.emergency} />
             </View>
             <View style={styles.patientHeroDetails}>
-              <Text style={styles.patientName}>{MOCK_PATIENT.name}</Text>
+              <Text style={styles.patientName}>{currentPerson.name}</Text>
               <Text style={styles.patientLocation}>
-                {MOCK_PATIENT.village} • ABHA: {MOCK_PATIENT.abhaId}
+                {currentPerson.village} • ABHA: {currentPerson.abhaId}
               </Text>
             </View>
           </View>
 
           <View style={styles.statsRow}>
             <View style={styles.statItem}>
-              <Text style={[styles.statValue, { color: COLORS.success }]}>
-                {MOCK_PATIENT.adherenceRate}%
+              <Text
+                style={[
+                  styles.statValue,
+                  { color: currentPerson.adherenceRate >= 80 ? COLORS.success : COLORS.emergency },
+                ]}
+              >
+                {currentPerson.adherenceRate}%
               </Text>
               <Text style={styles.statLabel}>Adherence Rate</Text>
             </View>
@@ -75,21 +158,24 @@ export const CaregiverHomeScreen: React.FC<{ navigation?: any }> = () => {
             <View style={styles.statItem}>
               <View style={styles.streakRow}>
                 <Flame size={14} color="#EA580C" />
-                <Text style={styles.statValue}>{MOCK_PATIENT.streakDays} Days</Text>
+                <Text style={styles.statValue}>{currentPerson.streakDays} Days</Text>
               </View>
               <Text style={styles.statLabel}>Daily Streak</Text>
             </View>
             <View style={styles.statDivider} />
             <View style={styles.statItem}>
-              <Text style={styles.statValue}>3 / 5</Text>
+              <Text style={styles.statValue}>
+                {selectedDependent === 'mother' ? '1 / 3' : '0 / 2'}
+              </Text>
               <Text style={styles.statLabel}>Doses Taken</Text>
             </View>
           </View>
 
+          {/* Action Button Row */}
           <View style={styles.actionButtonRow}>
-            <TouchableOpacity style={styles.callBtn} onPress={handleCallMother} activeOpacity={0.85}>
+            <TouchableOpacity style={styles.callBtn} onPress={handleCall} activeOpacity={0.85}>
               <PhoneCall size={16} color={COLORS.textInverse} />
-              <Text style={styles.callBtnText}>Call Mother</Text>
+              <Text style={styles.callBtnText}>Call</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -98,83 +184,85 @@ export const CaregiverHomeScreen: React.FC<{ navigation?: any }> = () => {
               activeOpacity={0.85}
             >
               <Bell size={16} color={nudgeSent ? COLORS.success : COLORS.primaryDark} />
-              <Text style={[styles.nudgeBtnText, nudgeSent && { color: COLORS.success }]}>
+              <Text style={[styles.nudgeBtnText, nudgeSent && styles.nudgeBtnTextSent]}>
                 {nudgeSent ? 'Nudge Sent ✓' : 'Send Voice Nudge'}
               </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.refillBtn} onPress={handleOrderRefill}>
+              <ShoppingBag size={16} color="#0369A1" />
             </TouchableOpacity>
           </View>
         </View>
 
-        {/* Missed Dose Alert Simulator */}
-        <View style={styles.alertNotice}>
-          <View style={styles.alertNoticeTop}>
-            <AlertCircle size={16} color={COLORS.accentDark} />
-            <Text style={styles.alertNoticeTitle}>Upcoming Schedule Notice</Text>
-          </View>
-          <Text style={styles.alertNoticeBody}>
-            Afternoon BP medicine (Amlodipine 5mg) is scheduled for 01:30 PM. Auto-alert will trigger if unconfirmed after 45 minutes.
-          </Text>
+        {/* Live Medication Schedule */}
+        <Text style={styles.sectionHeader}>Today's Live Medication Schedule</Text>
+
+        <View style={styles.medList}>
+          {todayMeds.map((med, idx) => {
+            const isTaken = med.status === 'TAKEN';
+            return (
+              <View key={med.id || idx} style={[styles.medCard, isTaken && styles.medCardTaken]}>
+                <View style={[styles.timeBadge, isTaken && styles.timeBadgeTaken]}>
+                  <Clock size={12} color={isTaken ? '#047857' : '#64748B'} />
+                  <Text style={[styles.timeText, isTaken && styles.timeTextTaken]}>
+                    {med.scheduledTime || med.time || '08:00 AM'}
+                  </Text>
+                </View>
+
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.medName, isTaken && styles.medNameTaken]}>
+                    {med.name}
+                  </Text>
+                  <Text style={styles.medMeta}>
+                    {med.dosage} • {med.foodInstructionHindi || med.foodInstruction}
+                  </Text>
+                </View>
+
+                <View style={[styles.statusPill, isTaken ? styles.pillTaken : styles.pillPending]}>
+                  <Text style={[styles.statusPillText, isTaken ? styles.pillTextTaken : styles.pillTextPending]}>
+                    {isTaken ? 'Taken ✓' : 'Pending'}
+                  </Text>
+                </View>
+              </View>
+            );
+          })}
         </View>
 
-        {/* Today's Dose Activity Stream */}
-        <Text style={styles.sectionHeader}>Today's Medication Stream</Text>
-
-        <View style={styles.timelineCard}>
-          {/* Taken Dose */}
-          <View style={styles.timelineRow}>
-            <View style={[styles.timelineIconBox, { backgroundColor: COLORS.successLight }]}>
-              <CheckCircle2 size={16} color={COLORS.success} />
-            </View>
-            <View style={styles.timelineInfo}>
-              <View style={styles.timelineTitleRow}>
-                <Text style={styles.timelineMedTitle}>Metformin 500mg (Morning)</Text>
-                <Text style={styles.timelineTime}>08:14 AM</Text>
-              </View>
-              <Text style={styles.timelineStatusSuccess}>Taken on time with breakfast ✅</Text>
-            </View>
-          </View>
-
-          <View style={styles.timelineLine} />
-
-          {/* Pending Afternoon Dose */}
-          <View style={styles.timelineRow}>
-            <View style={[styles.timelineIconBox, { backgroundColor: COLORS.afternoonBg }]}>
-              <Clock size={16} color={COLORS.afternoon} />
-            </View>
-            <View style={styles.timelineInfo}>
-              <View style={styles.timelineTitleRow}>
-                <Text style={styles.timelineMedTitle}>Amlodipine 5mg (Afternoon)</Text>
-                <Text style={styles.timelineTime}>01:30 PM</Text>
-              </View>
-              <Text style={styles.timelineStatusPending}>Scheduled after lunch</Text>
-            </View>
-          </View>
-
-          <View style={styles.timelineLine} />
-
-          {/* Night Dose */}
-          <View style={styles.timelineRow}>
-            <View style={[styles.timelineIconBox, { backgroundColor: COLORS.nightBg }]}>
-              <Clock size={16} color={COLORS.night} />
-            </View>
-            <View style={styles.timelineInfo}>
-              <View style={styles.timelineTitleRow}>
-                <Text style={styles.timelineMedTitle}>Vitamin D3 & Calcium (Night)</Text>
-                <Text style={styles.timelineTime}>08:30 PM</Text>
-              </View>
-              <Text style={styles.timelineStatusUpcoming}>Scheduled at bedtime with milk</Text>
-            </View>
-          </View>
-        </View>
-
-        {/* Emergency SOS Protection Info */}
-        <View style={styles.safetyCard}>
-          <ShieldCheck size={22} color={COLORS.primaryDark} />
-          <Text style={styles.safetyText}>
-            Emergency SOS Protection Active: Any distress button press on your mother's phone will immediately ring your phone and transmit live GPS coordinates.
-          </Text>
-        </View>
+        <View style={{ height: 80 }} />
       </ScrollView>
+
+      {/* Floating Action Buttons */}
+      <View style={styles.floatingBtnsRow}>
+        <TouchableOpacity
+          style={styles.floatingSos}
+          onPress={() => setSosModalVisible(true)}
+          activeOpacity={0.85}
+        >
+          <AlertTriangle size={16} color="#FFFFFF" />
+          <Text style={styles.floatingBtnText}>SOS Escalation</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.floatingAi}
+          onPress={() => setAiModalVisible(true)}
+          activeOpacity={0.85}
+        >
+          <Sparkles size={16} color="#FFFFFF" />
+          <Text style={styles.floatingBtnText}>Caregiver AI</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Modals */}
+      <MobileEmergencySosModal
+        visible={sosModalVisible}
+        onClose={() => setSosModalVisible(false)}
+      />
+
+      <SwasthyaMitrAiModal
+        visible={aiModalVisible}
+        onClose={() => setAiModalVisible(false)}
+      />
     </View>
   );
 };
@@ -190,13 +278,10 @@ const styles = StyleSheet.create({
     paddingBottom: SPACING.xxxl,
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: SPACING.md,
+    marginBottom: SPACING.sm,
   },
   greeting: {
-    ...TYPOGRAPHY.h1,
+    ...TYPOGRAPHY.h2,
     color: COLORS.textPrimary,
   },
   subGreeting: {
@@ -204,36 +289,55 @@ const styles = StyleSheet.create({
     color: COLORS.textSecondary,
     marginTop: 2,
   },
-  caregiverBadge: {
-    backgroundColor: '#EFF6FF',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: BORDER_RADIUS.xs,
+  dependentSwitcher: {
+    flexDirection: 'row',
+    backgroundColor: '#F1F5F9',
+    borderRadius: 12,
+    padding: 3,
+    marginBottom: SPACING.md,
+    gap: 4,
   },
-  caregiverBadgeText: {
-    fontSize: 9,
-    fontWeight: '800',
-    color: '#1E40AF',
+  depTab: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 8,
+    borderRadius: 9,
+  },
+  depTabActive: {
+    backgroundColor: '#FFFFFF',
+    ...SHADOWS.subtle,
+  },
+  depTabText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#64748B',
+  },
+  depTabTextActive: {
+    color: '#047857',
   },
   patientHeroCard: {
     backgroundColor: COLORS.surface,
-    borderRadius: BORDER_RADIUS.xl,
-    padding: SPACING.lg,
+    borderRadius: BORDER_RADIUS.lg,
+    padding: SPACING.md,
     borderWidth: 1,
     borderColor: COLORS.border,
     marginBottom: SPACING.md,
-    ...SHADOWS.card,
+    ...SHADOWS.subtle,
   },
   patientHeroTop: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: SPACING.md,
+    marginBottom: SPACING.md,
   },
   patientAvatarCircle: {
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: COLORS.emergencyLight,
+    backgroundColor: '#FEE2E2',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -241,21 +345,22 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   patientName: {
-    ...TYPOGRAPHY.h2,
+    ...TYPOGRAPHY.h3,
     color: COLORS.textPrimary,
   },
   patientLocation: {
-    ...TYPOGRAPHY.caption,
+    ...TYPOGRAPHY.captionSmall,
     color: COLORS.textSecondary,
     marginTop: 2,
   },
   statsRow: {
     flexDirection: 'row',
-    backgroundColor: COLORS.surfaceSubtle,
-    borderRadius: BORDER_RADIUS.lg,
-    padding: SPACING.md,
-    marginVertical: SPACING.md,
+    justifyContent: 'space-between',
     alignItems: 'center',
+    backgroundColor: COLORS.background,
+    padding: SPACING.md,
+    borderRadius: BORDER_RADIUS.md,
+    marginBottom: SPACING.md,
   },
   statItem: {
     flex: 1,
@@ -264,14 +369,14 @@ const styles = StyleSheet.create({
   streakRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 3,
+    gap: 2,
   },
   statValue: {
-    ...TYPOGRAPHY.h3,
+    ...TYPOGRAPHY.bodyBold,
     color: COLORS.textPrimary,
   },
   statLabel: {
-    fontSize: 10,
+    ...TYPOGRAPHY.captionSmall,
     color: COLORS.textSecondary,
     marginTop: 2,
   },
@@ -286,144 +391,160 @@ const styles = StyleSheet.create({
   },
   callBtn: {
     flex: 1,
-    backgroundColor: COLORS.emergency,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 12,
+    gap: SPACING.xs,
+    backgroundColor: COLORS.primary,
+    paddingVertical: SPACING.sm,
     borderRadius: BORDER_RADIUS.md,
-    gap: 6,
   },
   callBtnText: {
     ...TYPOGRAPHY.button,
     color: COLORS.textInverse,
-    fontSize: 13,
   },
   nudgeBtn: {
-    flex: 1,
-    backgroundColor: COLORS.primarySurface,
-    borderWidth: 1,
-    borderColor: COLORS.primaryLight,
+    flex: 1.5,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 12,
+    gap: SPACING.xs,
+    backgroundColor: COLORS.primaryLight,
+    paddingVertical: SPACING.sm,
     borderRadius: BORDER_RADIUS.md,
-    gap: 6,
+    borderWidth: 1,
+    borderColor: '#A7F3D0',
   },
   nudgeBtnSent: {
-    backgroundColor: COLORS.successLight,
+    backgroundColor: '#DCFCE7',
     borderColor: COLORS.success,
   },
   nudgeBtnText: {
     ...TYPOGRAPHY.button,
     color: COLORS.primaryDark,
-    fontSize: 13,
   },
-  alertNotice: {
-    backgroundColor: '#FFFBEB',
-    borderRadius: BORDER_RADIUS.lg,
-    padding: SPACING.md,
+  nudgeBtnTextSent: {
+    color: COLORS.success,
+  },
+  refillBtn: {
+    padding: 10,
+    borderRadius: 8,
+    backgroundColor: '#F0F9FF',
     borderWidth: 1,
-    borderColor: '#FEF3C7',
-    marginBottom: SPACING.md,
-  },
-  alertNoticeTop: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    marginBottom: 2,
-  },
-  alertNoticeTitle: {
-    ...TYPOGRAPHY.captionSmall,
-    color: COLORS.accentDark,
-    fontWeight: '700',
-  },
-  alertNoticeBody: {
-    ...TYPOGRAPHY.caption,
-    color: COLORS.textSecondary,
-    lineHeight: 16,
-  },
-  sectionHeader: {
-    ...TYPOGRAPHY.h3,
-    color: COLORS.textPrimary,
-    marginBottom: SPACING.sm,
-  },
-  timelineCard: {
-    backgroundColor: COLORS.surface,
-    borderRadius: BORDER_RADIUS.lg,
-    padding: SPACING.md,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    marginBottom: SPACING.md,
-    ...SHADOWS.subtle,
-  },
-  timelineRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: SPACING.md,
-  },
-  timelineIconBox: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    borderColor: '#BAE6FD',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  timelineInfo: {
-    flex: 1,
+  sectionHeader: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: '#475569',
+    marginBottom: SPACING.sm,
   },
-  timelineTitleRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+  medList: {
+    gap: 8,
   },
-  timelineMedTitle: {
-    ...TYPOGRAPHY.bodyBold,
-    color: COLORS.textPrimary,
-  },
-  timelineTime: {
-    fontSize: 11,
-    color: COLORS.textSecondary,
-    fontWeight: '600',
-  },
-  timelineStatusSuccess: {
-    fontSize: 11,
-    color: COLORS.success,
-    marginTop: 2,
-    fontWeight: '600',
-  },
-  timelineStatusPending: {
-    fontSize: 11,
-    color: COLORS.afternoon,
-    marginTop: 2,
-  },
-  timelineStatusUpcoming: {
-    fontSize: 11,
-    color: COLORS.textSecondary,
-    marginTop: 2,
-  },
-  timelineLine: {
-    width: 2,
-    height: 16,
-    backgroundColor: COLORS.border,
-    marginLeft: 15,
-    marginVertical: 2,
-  },
-  safetyCard: {
+  medCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: SPACING.md,
-    backgroundColor: COLORS.primarySurface,
-    padding: SPACING.md,
-    borderRadius: BORDER_RADIUS.lg,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 12,
     borderWidth: 1,
-    borderColor: COLORS.primaryLight,
+    borderColor: '#E2E8F0',
+    gap: 10,
+    ...SHADOWS.subtle,
   },
-  safetyText: {
-    flex: 1,
-    ...TYPOGRAPHY.caption,
-    color: COLORS.primaryDark,
-    lineHeight: 16,
+  medCardTaken: {
+    backgroundColor: '#F8FAFC',
+    borderColor: '#CBD5E1',
+  },
+  timeBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#F1F5F9',
+    paddingHorizontal: 6,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  timeBadgeTaken: {
+    backgroundColor: '#DCFCE7',
+  },
+  timeText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#64748B',
+  },
+  timeTextTaken: {
+    color: '#047857',
+  },
+  medName: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: '#0F172A',
+  },
+  medNameTaken: {
+    textDecorationLine: 'line-through',
+    color: '#94A3B8',
+  },
+  medMeta: {
+    fontSize: 10,
+    color: '#64748B',
+    marginTop: 1,
+  },
+  statusPill: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+  },
+  pillTaken: {
+    backgroundColor: '#DCFCE7',
+  },
+  pillPending: {
+    backgroundColor: '#FEF3C7',
+  },
+  statusPillText: {
+    fontSize: 9,
+    fontWeight: '800',
+  },
+  pillTextTaken: {
+    color: '#047857',
+  },
+  pillTextPending: {
+    color: '#D97706',
+  },
+  floatingBtnsRow: {
+    position: 'absolute',
+    bottom: 16,
+    right: 16,
+    flexDirection: 'row',
+    gap: 8,
+    zIndex: 999,
+  },
+  floatingSos: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#DC2626',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: 24,
+    ...SHADOWS.sos,
+  },
+  floatingAi: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#047857',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: 24,
+    ...SHADOWS.elevated,
+  },
+  floatingBtnText: {
+    fontSize: 11,
+    fontWeight: '900',
+    color: '#FFFFFF',
   },
 });

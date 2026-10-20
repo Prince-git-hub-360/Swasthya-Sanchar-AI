@@ -13,10 +13,109 @@ import { DoctorPrescriptionWizard } from '../../components/DoctorPrescriptionWiz
 export const DoctorDashboardPage = ({ initialTab = 'queue', currentPath }) => {
   const { user, showToast } = useAuth();
   
+  const docName = user?.first_name 
+    ? `Dr. ${user.first_name} ${user.last_name || ''}`.trim() 
+    : (user?.username ? `Dr. ${user.username}` : 'Dr. Vikram Sharma');
+  const docRegNo = user?.profile?.medical_reg_no || user?.medical_reg_no || 'KMC-58291-KA';
+  const docFacility = user?.profile?.hospital_name || user?.hospital_name || `${user?.profile?.district || 'Bengaluru Urban'} Primary Health Centre #2`;
+  const docDistrict = user?.profile?.district || user?.district || 'Bengaluru Urban';
+
   // Dashboard primary view tab: 'queue', 'directory', 'asha', 'red_flags'
   const [activeMainTab, setActiveMainTab] = useState(initialTab === 'prescriptions' || initialTab === 'asha' ? 'asha' : initialTab);
   const [triageFilter, setTriageFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Live Assigned ASHA Cadres (4-5 ASHA Workers)
+  const [assignedAshas, setAssignedAshas] = useState(() => {
+    try {
+      const saved = localStorage.getItem('swasthya_doctor_assigned_ashas');
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return [
+      {
+        id: 'ASHA-KA-MDY-084',
+        name: 'Ayush Kumar',
+        phone: '+91 90088 02105',
+        sector: 'Electronic City Sub-Centre & Village Catchment',
+        village: 'Electronic City, Bengaluru Urban',
+        assignedDate: '03 Sep 2026',
+        status: 'active'
+      },
+      {
+        id: 'ASHA-KA-8821',
+        name: 'Sunita Bai',
+        phone: '+91 98765 00111',
+        sector: 'Gejjalagere Sub-Centre (Sector 1 & 2)',
+        village: 'Gejjalagere, Mandya District',
+        assignedDate: '01 Aug 2026',
+        status: 'active'
+      }
+    ];
+  });
+
+  const [expandedAshaId, setExpandedAshaId] = useState(null);
+  const [showAssignAshaModal, setShowAssignAshaModal] = useState(false);
+  const [newAshaForm, setNewAshaForm] = useState({ id: '', name: '', phone: '', sector: '', village: '' });
+
+  // Live Registered Citizen Patients from ASHA Network
+  const [liveAshaPatients, setLiveAshaPatients] = useState([]);
+
+  useEffect(() => {
+    const loadLivePatients = () => {
+      try {
+        const saved = JSON.parse(localStorage.getItem('swasthya_asha_patients') || '[]');
+        setLiveAshaPatients(saved);
+      } catch {}
+    };
+    loadLivePatients();
+    window.addEventListener('storage', loadLivePatients);
+    return () => window.removeEventListener('storage', loadLivePatients);
+  }, []);
+
+  const handleSaveAssignedAshas = (updatedList) => {
+    setAssignedAshas(updatedList);
+    localStorage.setItem('swasthya_doctor_assigned_ashas', JSON.stringify(updatedList));
+    // Broadcast doctor assignment
+    const docInfo = {
+      name: docName,
+      roleTitle: 'PHC Medical Officer & ABDM Clinical Lead',
+      regNo: docRegNo,
+      facility: docFacility,
+      district: docDistrict,
+      phone: user?.profile?.phone_number || '+91 98765 00999',
+      status: 'ON DUTY (OPD ROOM 1)'
+    };
+    localStorage.setItem('swasthya_assigned_doctor', JSON.stringify(docInfo));
+    window.dispatchEvent(new Event('swasthya_doctor_updated'));
+  };
+
+  const handleAddAshaWorker = (e) => {
+    e.preventDefault();
+    if (!newAshaForm.id || !newAshaForm.name) {
+      if (showToast) showToast('Please enter ASHA Worker ID and Name', 'warning');
+      return;
+    }
+    const newAsha = {
+      id: newAshaForm.id.trim(),
+      name: newAshaForm.name.trim(),
+      phone: newAshaForm.phone.trim() || '+91 98000 00000',
+      sector: newAshaForm.sector.trim() || `${docDistrict} Sub-Centre`,
+      village: newAshaForm.village.trim() || `${docDistrict} Catchment`,
+      assignedDate: 'Today',
+      status: 'active'
+    };
+    const updated = [newAsha, ...assignedAshas.filter(a => a.id !== newAsha.id)];
+    handleSaveAssignedAshas(updated);
+    setShowAssignAshaModal(false);
+    setNewAshaForm({ id: '', name: '', phone: '', sector: '', village: '' });
+    if (showToast) showToast(`✅ ASHA Worker ${newAsha.name} (${newAsha.id}) successfully assigned to your PHC!`, 'success');
+  };
+
+  const handleRemoveAshaWorker = (ashaId, ashaName) => {
+    const updated = assignedAshas.filter(a => a.id !== ashaId);
+    handleSaveAssignedAshas(updated);
+    if (showToast) showToast(`ℹ️ ASHA Worker ${ashaName} unassigned from PHC`, 'info');
+  };
 
   // Synchronize activeMainTab on prop change
   useEffect(() => {
@@ -481,9 +580,9 @@ export const DoctorDashboardPage = ({ initialTab = 'queue', currentPath }) => {
               👨‍⚕️ DR
             </div>
             <div className="text-left leading-tight">
-              <div className="text-xs font-black text-slate-900 dark:text-white">Dr. Vikram Sharma</div>
+              <div className="text-xs font-black text-slate-900 dark:text-white">{docName}</div>
               <div className="text-[10px] text-[#0B3B74] dark:text-sky-400 font-bold">Medical Officer (MBBS, MD)</div>
-              <div className="text-[9px] text-slate-500 dark:text-slate-400">Mandya PHC #2 • KMC-58291</div>
+              <div className="text-[9px] text-slate-500 dark:text-slate-400">{docFacility} • {docRegNo}</div>
             </div>
           </div>
         }
@@ -502,7 +601,7 @@ export const DoctorDashboardPage = ({ initialTab = 'queue', currentPath }) => {
                 🏛️ MoHFW • National Health Mission
               </span>
               <span className="bg-[#FF9933] text-stone-950 text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider">
-                ABDM Mandya PHC #2
+                {docFacility}
               </span>
               <span className="bg-emerald-500 text-white text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase">
                 ● Live Clinical Session
@@ -513,9 +612,9 @@ export const DoctorDashboardPage = ({ initialTab = 'queue', currentPath }) => {
               Swasthya Sanchar Clinical OPD &amp; Tele-Consultation Hub
             </h1>
             <p className="text-xs text-blue-100/90 font-medium max-w-2xl">
-              Medical Officer: <strong className="text-white">Dr. Vikram Sharma, MBBS, MD (Reg: KMC-58291-KA)</strong>  
+              Medical Officer: <strong className="text-white">{docName}, MBBS, MD (Reg: {docRegNo})</strong>  
               <br className="hidden sm:inline" />
-              Attached Facility: <strong className="text-white">Mandya #2 Primary Health Centre (Supervising 3 ASHA Cadres)</strong>
+              Attached Facility: <strong className="text-white">{docFacility} (Supervising {assignedAshas.length} Frontline ASHA Cadres)</strong>
             </p>
           </div>
 
@@ -556,7 +655,7 @@ export const DoctorDashboardPage = ({ initialTab = 'queue', currentPath }) => {
         <div className="bg-slate-50 dark:bg-slate-900/90 border-t border-slate-200 dark:border-slate-800 px-6 py-2.5 flex items-center gap-3 overflow-x-auto">
           {[
             { id: 'queue', label: '🏥 Live Patient OPD Queue', count: opdPatients.filter(p => p.status === 'waiting').length },
-            { id: 'asha', label: '📋 ASHA Prescription Verifications', count: ashaQueue.filter(a => a.status === 'pending').length },
+            { id: 'asha', label: '👩‍⚕️ Assigned ASHA Cadre & Patients', count: assignedAshas.length },
             { id: 'directory', label: '📇 ABDM Patient Dossiers', count: opdPatients.length },
             { id: 'red_flags', label: '🚨 Clinical Red Flags & Emergencies', count: 3 },
           ].map((tab) => (
@@ -894,52 +993,289 @@ export const DoctorDashboardPage = ({ initialTab = 'queue', currentPath }) => {
         </div>
       )}
 
-      {/* TAB 3: ASHA FIELD SCANS */}
+      {/* TAB 3: ASHA WORKER SUPERVISION & PATIENT DRILL-DOWN */}
       {activeMainTab === 'asha' && (
-        <div className="space-y-4">
-          <div className="bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/60 p-4 rounded-2xl">
-            <h3 className="text-sm font-black text-amber-900 dark:text-amber-200">
-              👩‍⚕️ ASHA Field Prescription Approvals Feed
-            </h3>
-            <p className="text-xs text-amber-800 dark:text-amber-300 mt-0.5">
-              Prescriptions scanned in remote villages awaiting doctor verification &amp; digital signature
-            </p>
+        <div className="space-y-6">
+          
+          {/* Top Control Bar */}
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-3xl shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <span className="text-lg">👩‍⚕️</span>
+                <h3 className="text-base font-black text-slate-900 dark:text-white">
+                  Frontline ASHA Cadre Supervision Hub
+                </h3>
+                <span className="text-[10px] font-black bg-emerald-100 text-emerald-800 px-2.5 py-0.5 rounded-full">
+                  {assignedAshas.length} ASHA Cadres Active
+                </span>
+              </div>
+              <p className="text-xs text-slate-500 font-medium">
+                Supervising {assignedAshas.length} field ASHA workers &amp; their registered doorstep village patients across {docFacility}.
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setShowAssignAshaModal(true)}
+              className="bg-[#0B3B74] hover:bg-[#072448] text-white text-xs font-black px-5 py-3 rounded-2xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer border border-sky-400/30 whitespace-nowrap self-start md:self-auto"
+            >
+              <PlusIcon size={16} />
+              <span>+ Assign ASHA Worker by ID</span>
+            </button>
           </div>
 
-          {ashaQueue.length === 0 ? (
-            <div className="p-8 text-center text-xs font-bold text-slate-400 bg-white dark:bg-slate-900 rounded-2xl border border-dashed border-slate-300">
-              ✅ All ASHA village slips signed and verified!
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {ashaQueue.map((item) => (
-                <div key={item.id} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl space-y-3 shadow-xs">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="text-sm font-black text-slate-900 dark:text-white">{item.patientName} ({item.age}y)</div>
-                      <div className="text-[11px] text-slate-500 font-mono">📱 {item.phone} • Scanned by {item.ashaName}</div>
+          {/* ASHA WORKERS ROSTER GRID */}
+          <div className="space-y-4">
+            {assignedAshas.map((asha) => {
+              // Get patients under this specific ASHA worker
+              const ashaPatients = [
+                ...liveAshaPatients.filter(p => 
+                  p.asha_id === asha.id || 
+                  (p.ashaWorker && p.ashaWorker.toLowerCase().includes(asha.name.toLowerCase())) ||
+                  (asha.id.includes('MDY-084') || asha.name.toLowerCase().includes('ayush'))
+                ),
+                ...opdPatients.filter(p => 
+                  p.ashaWorker && p.ashaWorker.toLowerCase().includes(asha.name.toLowerCase())
+                )
+              ];
+
+              // Deduplicate by name or ABHA ID
+              const uniqueAshaPatients = Array.from(new Map(ashaPatients.map(p => [p.abhaId || p.abha_number || p.name || p.full_name, p])).values());
+
+              const isExpanded = expandedAshaId === asha.id;
+
+              return (
+                <div 
+                  key={asha.id}
+                  className={`bg-white dark:bg-slate-900 border rounded-3xl overflow-hidden transition-all shadow-xs ${
+                    isExpanded 
+                      ? 'border-[#0B3B74] dark:border-sky-500 ring-2 ring-[#0B3B74]/20 shadow-md' 
+                      : 'border-slate-200 dark:border-slate-800'
+                  }`}
+                >
+                  {/* ASHA Worker Main Header Card */}
+                  <div className="p-5 md:p-6 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                    <div className="flex items-start sm:items-center gap-4">
+                      <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white flex items-center justify-center font-black text-xl border-2 border-white dark:border-slate-700 shadow-xs shrink-0">
+                        {asha.name.charAt(0).toUpperCase()}
+                      </div>
+                      <div className="space-y-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <h4 className="text-base font-black text-slate-900 dark:text-white">
+                            {asha.name}
+                          </h4>
+                          <span className="text-[10px] font-mono font-black bg-slate-100 dark:bg-slate-800 text-[#0B3B74] dark:text-sky-300 px-2.5 py-0.5 rounded-lg border border-slate-200 dark:border-slate-700">
+                            {asha.id}
+                          </span>
+                          <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-md border border-emerald-200 dark:border-emerald-800">
+                            ● Active Cadre
+                          </span>
+                        </div>
+                        <div className="text-xs text-slate-500 font-semibold flex flex-wrap items-center gap-2">
+                          <span>📍 {asha.sector}</span>
+                          <span>•</span>
+                          <span>📱 {asha.phone}</span>
+                        </div>
+                      </div>
                     </div>
-                    <span className="bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 text-[10px] font-black px-2 py-0.5 rounded-md">
-                      {item.confidence} OCR Match
-                    </span>
+
+                    {/* Right Stats & Action Buttons */}
+                    <div className="flex flex-wrap items-center gap-3 self-end lg:self-auto">
+                      <div className="text-center px-4 py-2 bg-slate-50 dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700">
+                        <div className="text-lg font-black text-[#0B3B74] dark:text-sky-300">
+                          {uniqueAshaPatients.length}
+                        </div>
+                        <div className="text-[10px] font-bold text-slate-400 uppercase">Registered Citizens</div>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => setExpandedAshaId(isExpanded ? null : asha.id)}
+                        className={`text-xs font-black px-4 py-3 rounded-2xl transition-all flex items-center gap-2 cursor-pointer shadow-xs ${
+                          isExpanded
+                            ? 'bg-[#0B3B74] text-white'
+                            : 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 hover:bg-emerald-100 border border-emerald-200 dark:border-emerald-800'
+                        }`}
+                      >
+                        <span>👥 {isExpanded ? 'Hide Patients ▲' : `View Patients (${uniqueAshaPatients.length}) ▼`}</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveAshaWorker(asha.id, asha.name)}
+                        className="p-3 text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-2xl transition-all cursor-pointer"
+                        title="Unassign ASHA worker"
+                      >
+                        ✕
+                      </button>
+                    </div>
                   </div>
 
-                  <div className="bg-slate-50 dark:bg-slate-800 p-3 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-mono text-teal-800 dark:text-teal-300">
-                    📝 {item.extractedRx}
-                  </div>
+                  {/* EXPANDABLE PATIENT ROSTER UNDER THIS ASHA WORKER */}
+                  {isExpanded && (
+                    <div className="bg-slate-50/80 dark:bg-slate-900/60 border-t border-slate-200 dark:border-slate-800 p-5 md:p-6 space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div className="text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-2">
+                          <span>📋 Village Citizens Under {asha.name}'s Supervision</span>
+                          <span className="text-[10px] font-bold text-slate-400 font-mono">({uniqueAshaPatients.length} patients registered)</span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (uniqueAshaPatients.length > 0) {
+                              setRxPatient(uniqueAshaPatients[0]);
+                              setUseStepWizard(true);
+                              setShowRxModal(true);
+                            } else {
+                              if (showToast) showToast('No patients registered under this ASHA worker yet.', 'warning');
+                            }
+                          }}
+                          className="text-[11px] font-bold text-[#00875A] hover:underline cursor-pointer flex items-center gap-1"
+                        >
+                          <PlusIcon size={12} />
+                          <span>Issue Prescription to ASHA Patient</span>
+                        </button>
+                      </div>
 
-                  <button
-                    type="button"
-                    onClick={() => handleApproveAshaRx(item.id)}
-                    className="w-full bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black py-2.5 rounded-xl transition-all shadow-xs flex items-center justify-center gap-1.5 cursor-pointer"
-                  >
-                    <CheckIcon size={14} color="#fff" />
-                    <span>Approve &amp; Sign to Patient ABHA</span>
-                  </button>
+                      {uniqueAshaPatients.length === 0 ? (
+                        <div className="p-8 text-center text-xs font-bold text-slate-400 bg-white dark:bg-slate-800/40 rounded-2xl border border-dashed border-slate-300">
+                          No patients registered under {asha.name} yet. When {asha.name} registers doorstep citizens via ASHA portal, they will automatically appear here!
+                        </div>
+                      ) : (
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-left text-xs">
+                            <thead>
+                              <tr className="border-b border-slate-200 dark:border-slate-700 text-[10px] font-black uppercase tracking-wider text-slate-400">
+                                <th className="pb-2.5">Citizen Name &amp; ABHA</th>
+                                <th className="pb-2.5">Age / Gender</th>
+                                <th className="pb-2.5">Doorstep Vitals (BP / Sugar)</th>
+                                <th className="pb-2.5">Chronic Condition</th>
+                                <th className="pb-2.5 text-right">Doctor Clinical Actions</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
+                              {uniqueAshaPatients.map((pt, pIdx) => {
+                                const ptName = pt.full_name || pt.name || 'Citizen';
+                                const ptAbha = pt.abha_number || pt.abhaId || '91-XXXX-XXXX-XXXX';
+                                const ptAge = pt.age || '48';
+                                const ptGender = pt.gender || 'Female';
+                                const ptVitals = pt.vitals || { bp: pt.bp || '130/85', sugar: pt.sugar || '142 mg/dL' };
+                                const ptChronic = pt.chronic || pt.existing_chronic_conditions || 'General Healthcare';
+
+                                return (
+                                  <tr key={pIdx} className="hover:bg-white/80 dark:hover:bg-slate-800/50 transition-colors">
+                                    <td className="py-3.5">
+                                      <div className="font-black text-slate-900 dark:text-white flex items-center gap-1.5">
+                                        <span>{ptName}</span>
+                                        <span className="text-[9px] bg-emerald-100 text-emerald-800 px-1.5 py-0.2 rounded font-mono">ABDM</span>
+                                      </div>
+                                      <div className="text-[10px] font-mono text-slate-500">{ptAbha}</div>
+                                    </td>
+                                    <td className="py-3.5">
+                                      <div className="font-bold text-slate-800 dark:text-slate-200">{ptAge} Yrs</div>
+                                      <div className="text-[10px] text-slate-400">{ptGender}</div>
+                                    </td>
+                                    <td className="py-3.5">
+                                      <div className="font-mono font-bold text-slate-800 dark:text-slate-200">
+                                        BP: <span className="text-rose-600">{ptVitals.bp || '138/88'}</span>
+                                      </div>
+                                      <div className="text-[10px] font-mono text-slate-500">
+                                        Sugar: {ptVitals.sugar || '140 mg/dL'}
+                                      </div>
+                                    </td>
+                                    <td className="py-3.5">
+                                      <span className="text-[11px] font-semibold text-slate-700 dark:text-slate-300">
+                                        {ptChronic}
+                                      </span>
+                                    </td>
+                                    <td className="py-3.5 text-right space-x-2">
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          setRxPatient(pt);
+                                          setUseStepWizard(true);
+                                          setShowRxModal(true);
+                                        }}
+                                        className="bg-[#00875A] hover:bg-emerald-600 text-white font-black px-3 py-1.5 rounded-xl text-[10px] cursor-pointer shadow-xs transition-all"
+                                      >
+                                        + Write Digital Rx
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={() => handleOpenHistory(pt)}
+                                        className="bg-[#0B3B74] hover:bg-[#072448] text-white font-black px-3 py-1.5 rounded-xl text-[10px] cursor-pointer shadow-xs transition-all"
+                                      >
+                                        📂 360° Dossier
+                                      </button>
+                                    </td>
+                                  </tr>
+                                );
+                              })}
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
                 </div>
-              ))}
+              );
+            })}
+          </div>
+
+          {/* ASHA FIELD SCANS / OCR PRESCRIPTION APPROVALS */}
+          <div className="bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/60 p-6 rounded-3xl space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-sm font-black text-amber-900 dark:text-amber-200 flex items-center gap-2">
+                  <span>📸</span>
+                  <span>ASHA Field Prescription OCR Approvals</span>
+                </h3>
+                <p className="text-xs text-amber-800 dark:text-amber-300 mt-0.5">
+                  Handwritten slips scanned by ASHA workers in remote villages awaiting your clinical signature
+                </p>
+              </div>
+              <span className="text-[10px] font-black bg-amber-200 dark:bg-amber-900 text-amber-900 dark:text-amber-100 px-2.5 py-1 rounded-full">
+                {ashaQueue.length} Slips Pending
+              </span>
             </div>
-          )}
+
+            {ashaQueue.length === 0 ? (
+              <div className="p-6 text-center text-xs font-bold text-amber-800/70 bg-white/60 dark:bg-slate-900/60 rounded-2xl">
+                ✅ All ASHA village prescription slips signed and verified!
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {ashaQueue.map((item) => (
+                  <div key={item.id} className="bg-white dark:bg-slate-900 border border-amber-200 dark:border-slate-800 p-5 rounded-2xl space-y-3 shadow-xs">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="text-sm font-black text-slate-900 dark:text-white">{item.patientName} ({item.age}y)</div>
+                        <div className="text-[11px] text-slate-500 font-mono">📱 {item.phone} • Scanned by {item.ashaName}</div>
+                      </div>
+                      <span className="bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 text-[10px] font-black px-2 py-0.5 rounded-md">
+                        {item.confidence} OCR Match
+                      </span>
+                    </div>
+
+                    <div className="bg-slate-50 dark:bg-slate-800 p-3 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-mono text-teal-800 dark:text-teal-300">
+                      📝 {item.extractedRx}
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => handleApproveAshaRx(item.id)}
+                      className="w-full bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black py-2.5 rounded-xl transition-all shadow-xs flex items-center justify-center gap-1.5 cursor-pointer"
+                    >
+                      <CheckIcon size={14} color="#fff" />
+                      <span>Approve &amp; Digitally Sign to Patient ABHA</span>
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
         </div>
       )}
 
@@ -1299,6 +1635,106 @@ export const DoctorDashboardPage = ({ initialTab = 'queue', currentPath }) => {
                 Close
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: ASSIGN ASHA WORKER BY ID */}
+      {showAssignAshaModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-5 animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+              <div className="flex items-center gap-2.5">
+                <span className="text-2xl">👩‍⚕️</span>
+                <div>
+                  <h3 className="text-base font-black text-slate-900 dark:text-white">
+                    Assign ASHA Worker to PHC
+                  </h3>
+                  <p className="text-[11px] text-slate-500 font-semibold">
+                    Link a field ASHA cadre under your clinical supervision
+                  </p>
+                </div>
+              </div>
+              <button 
+                type="button"
+                onClick={() => setShowAssignAshaModal(false)}
+                className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 flex items-center justify-center font-bold hover:bg-slate-200 cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleAddAshaWorker} className="space-y-3.5">
+              <div>
+                <label className="block text-xs font-bold text-slate-800 dark:text-slate-200 mb-1">
+                  Official ASHA Worker ID <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. ASHA-KA-MDY-084 or ASHA-KA-2"
+                  value={newAshaForm.id}
+                  onChange={(e) => setNewAshaForm({ ...newAshaForm, id: e.target.value })}
+                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white text-xs rounded-xl px-3.5 py-2.5 outline-none focus:ring-2 focus:ring-[#0B3B74]"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-800 dark:text-slate-200 mb-1">
+                  ASHA Worker Full Name <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. Ayush Kumar / Sunita Bai"
+                  value={newAshaForm.name}
+                  onChange={(e) => setNewAshaForm({ ...newAshaForm, name: e.target.value })}
+                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white text-xs rounded-xl px-3.5 py-2.5 outline-none focus:ring-2 focus:ring-[#0B3B74]"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-800 dark:text-slate-200 mb-1">
+                  Contact Phone Number
+                </label>
+                <input
+                  type="tel"
+                  placeholder="+91 90088 02105"
+                  value={newAshaForm.phone}
+                  onChange={(e) => setNewAshaForm({ ...newAshaForm, phone: e.target.value })}
+                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white text-xs rounded-xl px-3.5 py-2.5 outline-none focus:ring-2 focus:ring-[#0B3B74]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-800 dark:text-slate-200 mb-1">
+                  Assigned Sub-Centre / Sector
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. Electronic City Sector & Sub-Centre"
+                  value={newAshaForm.sector}
+                  onChange={(e) => setNewAshaForm({ ...newAshaForm, sector: e.target.value })}
+                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white text-xs rounded-xl px-3.5 py-2.5 outline-none focus:ring-2 focus:ring-[#0B3B74]"
+                />
+              </div>
+
+              <div className="pt-2 flex items-center justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowAssignAshaModal(false)}
+                  className="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2.5 rounded-xl bg-[#0B3B74] hover:bg-[#072448] text-white text-xs font-black shadow-md cursor-pointer"
+                >
+                  Confirm Assignment
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

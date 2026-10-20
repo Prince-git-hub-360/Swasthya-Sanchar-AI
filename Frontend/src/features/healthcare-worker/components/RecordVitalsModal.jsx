@@ -17,13 +17,26 @@ export const RecordVitalsModal = ({ isOpen, onClose, onSaveVitals, showToast, de
   const sysNum = parseInt(systolic) || 0;
   const diaNum = parseInt(diastolic) || 0;
   const isHighBp = sysNum >= 140 || diaNum >= 90;
+  // Load real registered patients from localStorage
+  const [registeredPatients, setRegisteredPatients] = useState([]);
+  useEffect(() => {
+    try {
+      const stored = JSON.parse(localStorage.getItem('swasthya_asha_patients') || '[]');
+      setRegisteredPatients(stored);
+      if (stored.length > 0 && !patientName) {
+        setPatientName(stored[0].full_name);
+      }
+    } catch {}
+  }, []);
+
   const sugarNum = parseInt(bloodSugar) || 0;
   const isHighSugar = sugarNum >= 180;
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    const effectivePatientName = patientName || (registeredPatients[0]?.full_name) || 'Registered Citizen';
     const vitalsRecord = {
-      patientName,
+      patientName: effectivePatientName,
       bp: `${systolic}/${diastolic} mmHg`,
       bloodSugar: `${bloodSugar} mg/dL (${sugarType})`,
       pulse: `${pulse} bpm`,
@@ -32,15 +45,46 @@ export const RecordVitalsModal = ({ isOpen, onClose, onSaveVitals, showToast, de
       notes,
       isHighBp,
       isHighSugar,
-      recordedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      recordedAt: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
     };
+
+    // Save activity log into localStorage
+    try {
+      const activities = JSON.parse(localStorage.getItem('swasthya_asha_activities') || '[]');
+      const newAct = {
+        time: vitalsRecord.recordedAt,
+        icon: isHighBp || isHighSugar ? '⚠️' : '📈',
+        title: isHighBp ? 'Critical High BP Recorded' : 'Doorstep Vitals Logged',
+        desc: `${effectivePatientName} — BP: ${vitalsRecord.bp}, Sugar: ${vitalsRecord.bloodSugar}`,
+        village: 'Gejjalagere'
+      };
+      localStorage.setItem('swasthya_asha_activities', JSON.stringify([newAct, ...activities]));
+
+      // Update patient vitals in patient list
+      const patients = JSON.parse(localStorage.getItem('swasthya_asha_patients') || '[]');
+      const updatedPatients = patients.map(p => {
+        if (p.full_name === effectivePatientName) {
+          return {
+            ...p,
+            vitals: { bp: vitalsRecord.bp, sugar: vitalsRecord.bloodSugar, pulse: vitalsRecord.pulse, spo2: vitalsRecord.spo2 },
+            triage: isHighBp ? 'high_risk' : 'stable',
+            status_color: isHighBp ? 'bg-rose-600 text-white' : p.status_color
+          };
+        }
+        return p;
+      });
+      localStorage.setItem('swasthya_asha_patients', JSON.stringify(updatedPatients));
+
+      window.dispatchEvent(new Event('swasthya_asha_updated'));
+      window.dispatchEvent(new Event('storage'));
+    } catch {}
 
     if (onSaveVitals) onSaveVitals(vitalsRecord);
     if (showToast) {
       if (isHighBp || isHighSugar) {
-        showToast(`⚠️ Red Flag Vitals Logged for ${patientName}! Alert sent to Dr. Vikram Sharma.`, 'warning');
+        showToast(`⚠️ High Risk Vitals Logged for ${effectivePatientName}! Doctor Alert Created.`, 'warning');
       } else {
-        showToast(`✅ Doorstep Vitals Recorded for ${patientName}!`, 'success');
+        showToast(`✅ Doorstep Vitals Recorded for ${effectivePatientName}!`, 'success');
       }
     }
     onClose();
@@ -80,11 +124,15 @@ export const RecordVitalsModal = ({ isOpen, onClose, onSaveVitals, showToast, de
               onChange={(e) => setPatientName(e.target.value)}
               className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3 py-2 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-[#0B3B74]"
             >
-              <option value="Lakshmi Devi">Lakshmi Devi (54 / F • Gejjalagere)</option>
-              <option value="Ravi Kumar">Ravi Kumar (60 / M • Gejjalagere)</option>
-              <option value="Meena Devi">Meena Devi (28 / F • Gejjalagere - ANC)</option>
-              <option value="Savithri Devi">Savithri Devi (48 / F • Gejjalagere)</option>
-              <option value="Manjunath Gowda">Manjunath Gowda (55 / M • Gejjalagere)</option>
+              {registeredPatients.length > 0 ? (
+                registeredPatients.map((p, idx) => (
+                  <option key={idx} value={p.full_name}>
+                    {p.full_name} ({p.gender_code || `${p.age} / ${p.gender}`} • {p.village || 'Mandya'})
+                  </option>
+                ))
+              ) : (
+                <option value="">No patients registered yet — Register citizen first</option>
+              )}
             </select>
           </div>
 

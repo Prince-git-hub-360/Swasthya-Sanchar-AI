@@ -161,6 +161,42 @@ class GeminiMedicineAssistantService:
                 logger.warning(f"Gemini API error with model {model_name}: {str(e)}")
                 continue
 
+        # If Gemini is not responding, try high-speed Groq LLM
+        try:
+            groq_key = os.getenv("GROQ_API_KEY", "").strip()
+            if groq_key:
+                groq_payload = {
+                    "model": "qwen/qwen3.8-27b",
+                    "messages": [
+                        {"role": "system", "content": GEMINI_SYSTEM_PROMPT},
+                        {"role": "user", "content": f"Language: {language}\nMedicine Context: {medicine_context_str}\nQuestion: {question}"}
+                    ],
+                    "temperature": 0.2,
+                }
+                groq_req = urllib.request.Request(
+                    "https://api.groq.com/openai/v1/chat/completions",
+                    data=json.dumps(groq_payload).encode("utf-8"),
+                    headers={
+                        "Authorization": f"Bearer {groq_key}",
+                        "Content-Type": "application/json",
+                        "User-Agent": "Mozilla/5.0"
+                    }
+                )
+                with urllib.request.urlopen(groq_req, timeout=10) as g_resp:
+                    g_data = json.loads(g_resp.read().decode("utf-8"))
+                    choices = g_data.get("choices", [])
+                    if choices and choices[0].get("message", {}).get("content"):
+                        return {
+                            "success": True,
+                            "answer": choices[0]["message"]["content"].strip(),
+                            "medicine": med_name,
+                            "language": language,
+                            "model_used": "groq/qwen3.8-27b",
+                            "is_fallback": False
+                        }
+        except Exception as groq_err:
+            logger.warning(f"Groq LLM assistant error: {groq_err}")
+
         # If all API calls fail, return clean fallback
         return {
             "success": True,

@@ -5,17 +5,28 @@ const AuthContext = createContext();
 
 export const LANGUAGES = [
   { code: 'hi', name: 'Hindi', native: 'हिन्दी', flag: '🇮🇳' },
-  { code: 'en', name: 'English', native: 'English', flag: '🇬🇧' },
-  { code: 'bn', name: 'Bengali', native: 'বাংলা', flag: '🇮🇳' },
-  { code: 'ta', name: 'Tamil', native: 'தமிழ்', flag: '🇮🇳' },
+  { code: 'kn', name: 'Kannada', native: 'ಕನ್ನಡ', flag: '🇮🇳' },
   { code: 'te', name: 'Telugu', native: 'తెలుగు', flag: '🇮🇳' },
-  { code: 'mr', name: 'Marathi', native: 'मराठी', flag: '🇮🇳' },
-  { code: 'kn', name: 'Kannada', native: 'কন্নড়', flag: '🇮🇳' },
+  { code: 'ta', name: 'Tamil', native: 'தமிழ்', flag: '🇮🇳' },
   { code: 'ml', name: 'Malayalam', native: 'മലയാളം', flag: '🇮🇳' },
+  { code: 'mr', name: 'Marathi', native: 'मराठी', flag: '🇮🇳' },
+  { code: 'bn', name: 'Bengali', native: 'বাংলা', flag: '🇮🇳' },
   { code: 'gu', name: 'Gujarati', native: 'ગુજરાતી', flag: '🇮🇳' },
   { code: 'pa', name: 'Punjabi', native: 'ਪੰਜਾਬੀ', flag: '🇮🇳' },
+  { code: 'or', name: 'Odia', native: 'ଓଡ଼ିଆ', flag: '🇮🇳' },
   { code: 'ur', name: 'Urdu', native: 'اردو', flag: '🇮🇳' },
-  { code: 'or', name: 'Oriya', native: 'ଓଡ଼ିଆ', flag: '🇮🇳' },
+  { code: 'as', name: 'Assamese', native: 'অসমীয়া', flag: '🇮🇳' },
+  { code: 'mai', name: 'Maithili', native: 'मैथिली', flag: '🇮🇳' },
+  { code: 'sa', name: 'Sanskrit', native: 'संस्कृतम्', flag: '🇮🇳' },
+  { code: 'sat', name: 'Santali', native: 'ᱥᱟᱱᱛᱟᱲᱤ', flag: '🇮🇳' },
+  { code: 'ks', name: 'Kashmiri', native: 'کٲشُر', flag: '🇮🇳' },
+  { code: 'ne', name: 'Nepali', native: 'नेपाली', flag: '🇮🇳' },
+  { code: 'kok', name: 'Konkani', native: 'कोंकणी', flag: '🇮🇳' },
+  { code: 'sd', name: 'Sindhi', native: 'سنڌي', flag: '🇮🇳' },
+  { code: 'doi', name: 'Dogri', native: 'डोगरी', flag: '🇮🇳' },
+  { code: 'brx', name: 'Bodo', native: 'बड़ो', flag: '🇮🇳' },
+  { code: 'mni', name: 'Manipuri', native: 'মৈতৈলোন্', flag: '🇮🇳' },
+  { code: 'en', name: 'English', native: 'English', flag: '🇬🇧' },
 ];
 
 export const AuthProvider = ({ children }) => {
@@ -220,11 +231,6 @@ export const AuthProvider = ({ children }) => {
     setLoading(true);
     try {
       const res = await api.register(userData);
-      // Auto-login after registration
-      if (userData.username && userData.password) {
-        await login(userData.username, userData.password);
-      }
-      showToast('Registration successful! Welcome aboard.', 'success');
       setLoading(false);
       return res;
     } catch (err) {

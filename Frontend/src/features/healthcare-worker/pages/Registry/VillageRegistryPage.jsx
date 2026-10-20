@@ -21,175 +21,75 @@ export const VillageRegistryPage = ({ setCurrentView }) => {
   const [showPatientDetailModal, setShowPatientDetailModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   
-  // Geographic Hierarchy Filters
-  const [selectedDistrict, setSelectedDistrict] = useState('Mandya');
-  const [selectedBlock, setSelectedBlock] = useState('Maddur');
-  const [selectedVillage, setSelectedVillage] = useState('Gejjalagere');
+  // Geographic Hierarchy Filters (Dynamic from Logged-in ASHA Worker Profile)
+  const userDistrict = user?.profile?.district || user?.district || 'Mandya';
+  const userState = user?.profile?.state || user?.state || 'Karnataka';
+  const userVillage = user?.profile?.village_or_town || user?.village_or_town || user?.profile?.village || 'Gejjalagere';
+  const userSubCentre = user?.profile?.sub_centre || user?.sub_centre || `${userVillage} Sub-Centre`;
+  const userWard = user?.profile?.ward_no || user?.profile?.ward_number || user?.ward_no;
+
+  const [selectedDistrict, setSelectedDistrict] = useState(userDistrict);
+  const [selectedBlock, setSelectedBlock] = useState(userSubCentre.replace('Sub-Centre', '').trim() || `${userVillage} Sector`);
+  const [selectedVillage, setSelectedVillage] = useState(userVillage);
   const [selectedSector, setSelectedSector] = useState('all');
 
   // Clinical Program Filter
   const [programFilter, setProgramFilter] = useState('all');
   const [triageFilter, setTriageFilter] = useState('all');
 
-  // Authentic Indian Citizen Registry Data
-  const initialCitizens = [
-    {
-      patient_id: 101,
-      full_name: 'Savithri Devi',
-      name_hi: 'सावित्री देवी',
-      abha_id: '12-3456-7890-1122',
-      age: 48,
-      gender: 'Female',
-      gender_code: '48 F',
-      mobile: '+91 98765 00222',
-      village: 'Maddur, Mandya',
-      sector: 'Sector 2 - Market Area',
-      chronic: 'High Risk Hypertension (168/104)',
-      program: 'ncd',
-      triage_type: 'high_risk',
-      status_label: 'High Risk Hypertension | Crimson Badge',
-      status_color: 'bg-[#DC2626] text-white',
-      avatar: '/images/savithri_devi.jpg',
-      qr_pattern: 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=ABHA:12-3456-7890-1122:SAVITHRI-DEVI',
-    },
-    {
-      patient_id: 102,
-      full_name: 'Vijay Lakshmi',
-      name_hi: 'विजय लक्ष्मी',
-      abha_id: '12-3456-7890-2233',
-      age: 28,
-      gender: 'Female',
-      gender_code: '28 F',
-      mobile: '+91 97172 18344',
-      village: 'Maddur, Mandya',
-      sector: 'Sector 1 - North Colony',
-      chronic: 'ANC Pregnancy (7th Month) • Moderate Anemia',
-      program: 'anc',
-      triage_type: 'anc',
-      status_label: 'ANC Pregnancy 7m | Purple Badge',
-      status_color: 'bg-[#7C3AED] text-white',
-      avatar: '/images/vijay_lakshmi.jpg',
-      qr_pattern: 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=ABHA:12-3456-7890-2233:VIJAY-LAKSHMI',
-    },
-    {
-      patient_id: 103,
-      full_name: 'Manjunath Gowda',
-      name_hi: 'मंजुनाथ गौड़ा',
-      abha_id: '12-3456-7890-3344',
-      age: 55,
-      gender: 'Male',
-      gender_code: '55 M',
-      mobile: '+91 91743 44321',
-      village: 'Maddur, Mandya',
-      sector: 'Sector 3 - Farmland Belt',
-      chronic: 'Stable Type-2 Diabetes • Metformin Regimen',
-      program: 'ncd',
-      triage_type: 'stable',
-      status_label: 'Stable - DM | Emerald Green Badge',
-      status_color: 'bg-[#00875A] text-white',
-      avatar: '/images/manjunath_gowda.jpg',
-      qr_pattern: 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=ABHA:12-3456-7890-3344:MANJUNATH-GOWDA',
-    },
-    {
-      patient_id: 104,
-      full_name: 'Prince Kumar',
-      name_hi: 'प्रिंस कुमार',
-      abha_id: '12-3456-7890-4455',
-      age: 19,
-      gender: 'Male',
-      gender_code: '19 M',
-      mobile: '+91 90088 02105',
-      village: 'Maddur, Mandya',
-      sector: 'Sector 1 - North Colony',
-      chronic: 'Seasonal Asthma • Inhaler Verified',
-      program: 'ncd',
-      triage_type: 'stable',
-      status_label: 'Stable - Monitored | Emerald Green Badge',
-      status_color: 'bg-[#00875A] text-white',
-      avatar: '/images/manjunath_gowda.jpg',
-      qr_pattern: 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=ABHA:12-3456-7890-4455:PRINCE-KUMAR',
-    },
-    {
-      patient_id: 105,
-      full_name: 'Salithri Devi',
-      name_hi: 'सावित्री देवी',
-      abha_id: '12-3456-7890-5566',
-      age: 53,
-      gender: 'Female',
-      gender_code: '53 F',
-      mobile: '+91 73212 36589',
-      village: 'Maddur, Mandya',
-      sector: 'Sector 2 - Market Area',
-      chronic: 'Hypertension • Telmisartan 40mg Due',
-      program: 'ncd',
-      triage_type: 'high_risk',
-      status_label: 'High Risk Hypertension | Crimson Badge',
-      status_color: 'bg-[#DC2626] text-white',
-      avatar: '/images/savithri_devi.jpg',
-      qr_pattern: 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=ABHA:12-3456-7890-5566:SALITHRI-DEVI',
-    },
-    {
-      patient_id: 106,
-      full_name: 'Basavaraj Patil',
-      name_hi: 'बसंवराज पाटिल',
-      abha_id: '12-3456-7890-6677',
-      age: 42,
-      gender: 'Male',
-      gender_code: '42 M',
-      mobile: '+91 98765 00555',
-      village: 'Maddur, Mandya',
-      sector: 'Sector 1 - North Colony',
-      chronic: 'Nikshay TB DOTS (Month 2 Intensive Phase)',
-      program: 'tb',
-      triage_type: 'stable',
-      status_label: 'Nikshay TB DOTS | Emerald Green Badge',
-      status_color: 'bg-[#00875A] text-white',
-      avatar: '/images/manjunath_gowda.jpg',
-      qr_pattern: 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=ABHA:12-3456-7890-6677:BASAVARAJ-PATIL',
-    }
-  ];
-
   const loadData = async () => {
     setLoading(true);
     try {
-      const response = await healthcareWorkerApi.getAbhaDirectory({
-        triage: triageFilter,
-        search: searchQuery,
-      });
-      const list = response?.results || [];
-      if (list.length > 0) {
-        setFieldPatients(list);
-      } else {
-        setFieldPatients(initialCitizens);
-      }
+      const stored = JSON.parse(localStorage.getItem('swasthya_asha_patients') || '[]');
+      setFieldPatients(stored);
     } catch (err) {
-      setFieldPatients(initialCitizens);
+      setFieldPatients([]);
     }
     setLoading(false);
   };
 
   useEffect(() => {
     loadData();
+    window.addEventListener('swasthya_asha_updated', loadData);
+    window.addEventListener('storage', loadData);
+    return () => {
+      window.removeEventListener('swasthya_asha_updated', loadData);
+      window.removeEventListener('storage', loadData);
+    };
   }, [user, triageFilter]);
 
   const handleOpenPatientAbha = (patient) => {
+    let realBlood = patient.blood_group || patient.bloodGroup || 'B+';
+    let realDob = patient.date_of_birth || patient.dob || '2007-10-05';
+    try {
+      const registry = JSON.parse(localStorage.getItem('swasthya_abdm_registry') || '[]');
+      const cleanAbha = (patient.abha_id || '').replace(/[^0-9]/g, '');
+      const match = registry.find(r => r.abhaId && r.abhaId.replace(/[^0-9]/g, '') === cleanAbha);
+      if (match) {
+        if (match.blood_group) realBlood = match.blood_group;
+        if (match.date_of_birth) realDob = match.date_of_birth;
+      }
+    } catch {}
+
     setSelectedPatientData({
       patient_id: patient.patient_id || 101,
       full_name: patient.full_name,
+      name_hi: patient.name_hi,
       abha_id: patient.abha_id,
       phone_number: patient.mobile || patient.phone_number,
-      village: patient.village || patient.village_or_town,
-      age: patient.age,
-      gender: patient.gender,
-      blood_group: 'O +ve',
-      chronic_conditions: patient.chronic || patient.chronic_conditions,
-      adherence_rate: '94%',
-      triage_badge: patient.triage_type || 'high_risk',
+      village: patient.village || patient.village_or_town || userVillage,
+      age: patient.age || 18,
+      gender: patient.gender || 'Male',
+      date_of_birth: realDob,
+      blood_group: realBlood,
+      chronic_conditions: patient.chronic || patient.chronic_conditions || 'None',
+      adherence_rate: '100%',
+      triage_badge: patient.triage_type || 'stable',
       ai_summary: {
-        overview: `${patient.full_name}, ${patient.age} yrs • Registered under Ayushman Bharat ABDM (${patient.village || 'Mandya'}).`,
-        adherence_rate: '94%',
-        red_flags: [patient.chronic || 'Hypertension monitoring active.'],
-        recent_vitals: { bp: '168/104', sugar: '115 mg/dL', pulse: '76 bpm', weight: '64 kg' },
+        overview: `${patient.full_name}, ${patient.age || 18} yrs • Blood Group ${realBlood}. Registered under Ayushman Bharat ABDM (${patient.village || userDistrict}).`,
+        adherence_rate: '100%',
+        red_flags: [patient.chronic || 'General health monitoring active.'],
+        recent_vitals: { bp: '120/80', sugar: '110 mg/dL', pulse: '74 bpm', weight: '65 kg' },
       }
     });
     setShowPatientDetailModal(true);
@@ -219,11 +119,11 @@ export const VillageRegistryPage = ({ setCurrentView }) => {
           <div className="flex items-center justify-between text-xs font-black text-slate-700 dark:text-slate-300">
             <span className="flex items-center gap-1.5">
               <span>🗺️ Geographic Catchment Filter</span>
-              <span className="text-[10px] font-medium text-slate-400">(Public Health Hierarchy)</span>
+              <span className="text-[10px] font-medium text-slate-400">({userDistrict} Health Catchment)</span>
             </span>
             <button 
               type="button" 
-              onClick={() => { setSelectedSector('all'); setSelectedVillage('Gejjalagere'); }}
+              onClick={() => { setSelectedSector('all'); setSelectedVillage(userVillage); }}
               className="text-[11px] font-bold text-[#0B3B74] dark:text-sky-400 hover:underline cursor-pointer"
             >
               Reset Filters
@@ -238,8 +138,8 @@ export const VillageRegistryPage = ({ setCurrentView }) => {
                 onChange={(e) => setSelectedDistrict(e.target.value)}
                 className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-200 outline-none focus:ring-2 focus:ring-[#0B3B74]"
               >
+                <option value={userDistrict}>{userDistrict} ({userState})</option>
                 <option value="Mandya">Mandya (Karnataka)</option>
-                <option value="Hassan">Hassan</option>
                 <option value="Mysuru">Mysuru</option>
               </select>
             </div>
@@ -251,22 +151,22 @@ export const VillageRegistryPage = ({ setCurrentView }) => {
                 onChange={(e) => setSelectedBlock(e.target.value)}
                 className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-200 outline-none focus:ring-2 focus:ring-[#0B3B74]"
               >
-                <option value="Maddur">Maddur Taluk</option>
-                <option value="Pandavapura">Pandavapura</option>
-                <option value="Malavalli">Malavalli</option>
+                <option value={selectedBlock}>{selectedBlock}</option>
+                <option value="South Taluk">{userDistrict} South Block</option>
+                <option value="North Taluk">{userDistrict} North Block</option>
               </select>
             </div>
 
             <div>
-              <label className="block text-[10px] font-black uppercase text-slate-400 mb-1">3. Gram Panchayat (ग्राम)</label>
+              <label className="block text-[10px] font-black uppercase text-slate-400 mb-1">3. Gram Panchayat / Town (ग्राम)</label>
               <select 
                 value={selectedVillage}
                 onChange={(e) => setSelectedVillage(e.target.value)}
                 className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-200 outline-none focus:ring-2 focus:ring-[#0B3B74]"
               >
-                <option value="Gejjalagere">Gejjalagere (Mandya #2)</option>
-                <option value="Besagarahalli">Besagarahalli</option>
-                <option value="Shivalli">Shivalli</option>
+                <option value={userVillage}>{userVillage} ({userDistrict})</option>
+                <option value="Sector 1 Area">Sector 1 Area</option>
+                <option value="Sector 2 Area">Sector 2 Area</option>
               </select>
             </div>
 
@@ -278,9 +178,9 @@ export const VillageRegistryPage = ({ setCurrentView }) => {
                 className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-200 outline-none focus:ring-2 focus:ring-[#0B3B74]"
               >
                 <option value="all">All Wards / Sectors</option>
-                <option value="Sector 1">Sector 1 - North Colony</option>
+                <option value="Sector 1">Sector 1 - Main Catchment</option>
                 <option value="Sector 2">Sector 2 - Market Area</option>
-                <option value="Sector 3">Sector 3 - Farmland Belt</option>
+                <option value="Sector 3">Sector 3 - Extended Belt</option>
               </select>
             </div>
           </div>
@@ -297,7 +197,7 @@ export const VillageRegistryPage = ({ setCurrentView }) => {
                 </span>
               </h2>
               <p className="text-xs text-slate-500">
-                Mandya Village: <strong>Maddur Sector</strong> • Realistic in high-resolution citizen records
+                {userDistrict}: <strong>{userSubCentre}</strong> • Realistic high-resolution ABDM citizen records
               </p>
             </div>
 
@@ -348,7 +248,7 @@ export const VillageRegistryPage = ({ setCurrentView }) => {
             />
           </div>
 
-          {/* 🪪 CITIZEN CARDS GRID (EXACT MOCKUP WITH AUTHENTIC PORTRAITS & QR CODES) */}
+          {/* 🪪 CITIZEN CARDS GRID */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 pt-2">
             {filteredCitizens.map((citizen) => (
               <div
@@ -357,15 +257,21 @@ export const VillageRegistryPage = ({ setCurrentView }) => {
                 onClick={() => handleOpenPatientAbha(citizen)}
               >
                 <div className="p-4 space-y-3">
-                  {/* Top Row: Authentic Portrait, Name, Age Code, QR Code */}
+                  {/* Top Row: Initial / Portrait, Name, Age Code, QR Code */}
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-start gap-3 min-w-0">
-                      <img
-                        src={citizen.avatar}
-                        alt={citizen.full_name}
-                        style={{ width: '60px', height: '60px', minWidth: '60px', minHeight: '60px' }}
-                        className="rounded-xl object-cover border border-slate-200 shadow-xs shrink-0"
-                      />
+                      {citizen.avatar && !citizen.avatar.includes('manjunath') && !citizen.avatar.includes('savithri') ? (
+                        <img
+                          src={citizen.avatar}
+                          alt={citizen.full_name}
+                          style={{ width: '56px', height: '56px', minWidth: '56px', minHeight: '56px' }}
+                          className="rounded-xl object-cover border border-slate-200 shadow-xs shrink-0"
+                        />
+                      ) : (
+                        <div className="w-14 h-14 rounded-xl bg-gradient-to-tr from-[#0B3B74] to-teal-600 text-white flex items-center justify-center font-black text-2xl border border-slate-200 dark:border-slate-700 shadow-xs shrink-0">
+                          {citizen.full_name ? citizen.full_name.charAt(0).toUpperCase() : 'P'}
+                        </div>
+                      )}
                       <div className="min-w-0">
                         <div className="font-black text-xs text-slate-900 dark:text-white leading-tight truncate">
                           {citizen.full_name}
@@ -383,27 +289,26 @@ export const VillageRegistryPage = ({ setCurrentView }) => {
                     {/* QR Code Box & Age Badge */}
                     <div className="flex flex-col items-end gap-1 shrink-0">
                       <span className="text-xs font-black text-slate-700 dark:text-slate-300">
-                        {citizen.gender_code}
+                        {citizen.gender_code || `${citizen.age || 18} M`}
                       </span>
                       <img
                         src={citizen.qr_pattern}
                         alt="ABHA QR Code"
-                        style={{ width: '48px', height: '48px', minWidth: '48px', minHeight: '48px' }}
-                        className="bg-white p-0.5 rounded-lg border border-slate-300 shadow-xs"
+                        className="w-10 h-10 border border-slate-200 dark:border-slate-700 rounded-lg p-0.5"
                       />
                     </div>
                   </div>
 
-                  {/* Demographics */}
-                  <div className="text-[10px] text-slate-600 dark:text-slate-400 space-y-0.5 pt-1 border-t border-slate-100 dark:border-slate-800">
-                    <div>Age Code: <strong>{citizen.age}, {citizen.gender}</strong></div>
-                    <div>Mobile Number: <strong>{citizen.mobile}</strong></div>
+                  {/* Contact & Demographics */}
+                  <div className="text-[11px] text-slate-600 dark:text-slate-400 space-y-0.5 border-t border-slate-100 dark:border-slate-800 pt-2">
+                    <div>Age Code: <strong>{citizen.age || 18}, {citizen.gender || 'Male'}</strong> • Blood: <strong>{citizen.blood_group || 'B+'}</strong></div>
+                    <div>Mobile Number: <strong>{citizen.mobile || citizen.phone_number || '+91 90088 02105'}</strong></div>
                   </div>
                 </div>
 
-                {/* Full-width Solid Bottom Color Status Banner */}
-                <div className={`py-2 px-3 text-center text-[10px] font-black uppercase tracking-wide ${citizen.status_color}`}>
-                  {citizen.status_label}
+                {/* Bottom Status Ribbon */}
+                <div className={`py-1.5 px-4 text-center text-[10px] font-black uppercase tracking-wider ${citizen.status_color || 'bg-[#00875A] text-white'}`}>
+                  {citizen.status_label || 'ACTIVE MONITORED | ABDM VERIFIED'}
                 </div>
               </div>
             ))}

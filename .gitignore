@@ -110,6 +110,12 @@ Frontend/dist/
 Frontend/.vite/
 Frontend/*.tsbuildinfo
 
+# Mobile / Expo
+Mobile/node_modules/
+Mobile/.expo/
+Mobile/dist/
+Mobile/*.tsbuildinfo
+
 # OS generated files
 .DS_Store
 Thumbs.db

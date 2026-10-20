@@ -40,24 +40,50 @@ export const PatientDetailModal = ({ isOpen, onClose, patientData, onRefresh }) 
     recent_vitals: { bp: '120/80', sugar: '110 mg/dL', pulse: '74 bpm', weight: '65 kg' },
   };
 
-  const patientPrescriptions = patientData.prescriptions || [
-    {
-      id: 1,
-      medicine_name: 'Amlodipine Besylate 5mg',
-      price: 12,
-      dosage: '1 Tablet OD Morning (After breakfast)',
-      dosage_summary: '1 Tablet daily in the morning after breakfast • 30 Day Supply',
-      kannada_audio_desc: 'ಬೆಳಿಗ್ಗೆ ಉಪಹಾರದ ನಂತರ 1 ಮಾತ್ರೆ ನೀರಿನೊಂದಿಗೆ ತೆಗೆದುಕೊಳ್ಳಿ.',
-    },
-    {
-      id: 2,
-      medicine_name: 'Telmisartan 40mg',
-      price: 18,
-      dosage: '1 Tablet OD Evening (After dinner)',
-      dosage_summary: '1 Tablet daily in the evening after dinner • 30 Day Supply',
-      kannada_audio_desc: 'ರಾತ್ರಿ ಊಟದ ನಂತರ 1 ಮಾತ್ರೆ ನೀರಿನೊಂದಿಗೆ ತೆಗೆದುಕೊಳ್ಳಿ.',
-    },
-  ];
+  // Live synced prescriptions uploaded by the patient or doctor
+  const patientPrescriptions = (() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem('swasthya_patient_prescriptions') || '[]');
+      const patientAbha = patientData.abha_id || patientData.abhaId || patientData.abha_number;
+      const patientName = patientData.full_name || patientData.name;
+      
+      const matched = saved.filter(r => 
+        (patientAbha && r.patient_abha && r.patient_abha.replace(/[^0-9]/g, '') === patientAbha.replace(/[^0-9]/g, '')) ||
+        (patientName && r.patient_name && r.patient_name.toLowerCase().includes(patientName.toLowerCase())) ||
+        (r.patient_name && patientName && patientName.toLowerCase().includes(r.patient_name.toLowerCase()))
+      );
+      if (matched.length > 0) {
+        return matched.map(m => ({
+          id: m.id,
+          medicine_name: m.title || (m.medications && m.medications[0]?.name) || 'Digital Prescription',
+          price: m.price || 12,
+          dosage: (m.medications && m.medications[0]?.dosage) || m.extracted_text || 'Active Regimen',
+          dosage_summary: m.translated_text || m.dosage_summary || 'Verified by Primary Care Network',
+          kannada_audio_desc: m.kannada_audio_desc || 'ವೈದ್ಯರ ಸಲಹೆಯಂತೆ ಸಮಯಕ್ಕೆ ಸರಿಯಾಗಿ ಸೇವಿಸಿ.',
+          image: m.image
+        }));
+      }
+    } catch {}
+    return patientData.prescriptions || [];
+  })();
+
+  const patientDocuments = (() => {
+    try {
+      const savedVault = JSON.parse(localStorage.getItem('swasthya_vault_records') || '[]');
+      const patientAbha = patientData.abha_id || patientData.abhaId;
+      const patientName = patientData.full_name || patientData.name;
+
+      const matched = savedVault.filter(v =>
+        (patientAbha && v.patient_abha === patientAbha) ||
+        (patientName && v.patient_name && v.patient_name.toLowerCase().includes(patientName.toLowerCase()))
+      );
+      if (matched.length > 0) return matched;
+    } catch {}
+    return patientData.vault_items || [
+      { id: 'DOC-1', title: 'Ayushman Bharat ABHA Health Card', document_type: 'Identity Record', date: '03 Sep 2026', notes: 'ABDM digital health card synchronized' },
+      { id: 'DOC-2', title: 'Annual NCD Blood Pressure & Glycemic Report', document_type: 'Diagnostic Report', date: '01 Sep 2026', notes: 'Doorstep ASHA vitals verification logged' }
+    ];
+  })();
 
   // Toggle Vernacular Voice Recording
   const handleToggleRecord = () => {
@@ -435,7 +461,7 @@ export const PatientDetailModal = ({ isOpen, onClose, patientData, onRefresh }) 
               </h4>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {patientData.vault_items?.map((doc) => (
+                {patientDocuments.map((doc) => (
                   <div key={doc.id} className="p-4 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-2xl space-y-2">
                     <div className="flex items-center gap-2.5">
                       <div className="w-9 h-9 rounded-xl bg-sky-100 dark:bg-sky-950 text-sky-700 dark:text-sky-300 flex items-center justify-center font-bold text-sm">

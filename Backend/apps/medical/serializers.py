@@ -8,8 +8,7 @@ from django.conf import settings
 
 
 class MedicalDocumentSerializer(serializers.ModelSerializer):
-    # Allow clients to provide a patient id when creating documents (staff/healthcare worker flows).
-    # For patients creating their own document, the view will set patient automatically.
+    title = serializers.CharField(required=False, allow_blank=True, default='Prescription Document')
     patient = serializers.PrimaryKeyRelatedField(queryset=Patient.objects.all(), required=False)
     uploaded_by = serializers.CharField(source='uploaded_by.username', read_only=True)
     patient_username = serializers.CharField(source='patient.user.username', read_only=True)
@@ -37,6 +36,15 @@ class MedicalDocumentSerializer(serializers.ModelSerializer):
             'updated_at',
         ]
         read_only_fields = ['uploaded_by', 'created_at', 'updated_at', 'patient_username']
+
+    def validate(self, attrs):
+        if not attrs.get('title'):
+            orig_file = attrs.get('original_file')
+            if orig_file and hasattr(orig_file, 'name'):
+                attrs['title'] = orig_file.name
+            else:
+                attrs['title'] = 'Prescription Document'
+        return attrs
 
     def validate_original_file(self, file):
         # File may be None

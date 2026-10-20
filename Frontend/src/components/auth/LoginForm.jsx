@@ -43,6 +43,8 @@ export const LoginForm = ({ onNavigateRegister, onSuccess }) => {
 
   const handleRoleSelect = (role) => {
     setSelectedRole(role);
+    setUsername('');
+    setPassword('');
     if (authError) setAuthError(null);
   };
 
@@ -132,35 +134,28 @@ export const LoginForm = ({ onNavigateRegister, onSuccess }) => {
         </div>
       )}
 
-      {/* GENERIC ERROR BANNER */}
       {authError?.code && authError.code !== 'USER_NOT_FOUND' && authError.code !== 'INVALID_PASSWORD' && (
         <div className="bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800/50 p-3.5 rounded-2xl mb-5 text-xs text-red-700 dark:text-red-300 flex items-center gap-2">
           <span>⚠️</span>
-          <span>{authError.message}</span>
+          <span>{typeof authError.message === 'string' ? authError.message : (authError.message?.detail || 'Invalid credentials or server connection error. Please try again.')}</span>
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} autoComplete="off" className="space-y-4">
         <div>
           <label className="block text-xs font-bold text-stone-800 dark:text-slate-200 mb-1.5">
             Username / Mobile Number <span className="text-red-500">*</span>
           </label>
           <input
             type="text"
+            name="swasthya_user_input"
+            autoComplete="off"
             className={`w-full bg-white dark:bg-slate-800 border text-stone-900 dark:text-white placeholder:text-stone-400 dark:placeholder:text-slate-500 text-sm rounded-xl px-4 py-3 outline-none transition-all shadow-xs ${
               authError?.code === 'USER_NOT_FOUND'
                 ? 'border-amber-400 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20'
                 : 'border-stone-300 dark:border-slate-700 focus:border-[#0F766E] dark:focus:border-teal-400 focus:ring-2 focus:ring-[#0F766E]/20'
             }`}
-            placeholder={
-              selectedRole === 'doctor'
-                ? 'e.g. dr_vikram_sharma'
-                : selectedRole === 'healthcare_worker'
-                ? 'e.g. asha_sunita_bai'
-                : selectedRole === 'caregiver'
-                ? 'e.g. caregiver_rajesh'
-                : 'e.g. rural_patient_test'
-            }
+            placeholder="Enter username or mobile number"
             value={username}
             onChange={(e) => handleUsernameChange(e.target.value)}
             required
@@ -193,6 +188,8 @@ export const LoginForm = ({ onNavigateRegister, onSuccess }) => {
           </div>
           <input
             type={showPassword ? 'text' : 'password'}
+            name="swasthya_pass_input"
+            autoComplete="new-password"
             className={`w-full bg-white dark:bg-slate-800 border text-stone-900 dark:text-white placeholder:text-stone-400 dark:placeholder:text-slate-500 text-sm rounded-xl px-4 py-3 outline-none transition-all shadow-xs ${
               authError?.code === 'INVALID_PASSWORD'
                 ? 'border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-500/20'
@@ -227,48 +224,6 @@ export const LoginForm = ({ onNavigateRegister, onSuccess }) => {
           {loading ? 'Authenticating...' : `Sign In as ${selectedRole === 'doctor' ? 'Doctor' : selectedRole === 'healthcare_worker' ? 'ASHA Worker' : selectedRole === 'caregiver' ? 'Caregiver' : 'Patient'} →`}
         </button>
       </form>
-
-      {/* QUICK DEMO CREDENTIALS SHORTCUTS */}
-      <div className="mt-5 pt-4 border-t border-stone-200 dark:border-slate-800 text-center space-y-2">
-        <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-400 block">
-          Fast Demo Account Login:
-        </span>
-        <div className="flex flex-wrap items-center justify-center gap-1.5">
-          <button
-            type="button"
-            onClick={() => {
-              setSelectedRole('doctor');
-              setUsername('dr_vikram');
-              setPassword('Doctor@123');
-            }}
-            className="text-[11px] font-black bg-teal-50 dark:bg-teal-950/60 text-[#0B4F42] dark:text-teal-300 border border-teal-200 dark:border-teal-800 px-2.5 py-1 rounded-lg hover:bg-teal-100 cursor-pointer"
-          >
-            👨‍⚕️ Demo Doctor
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setSelectedRole('healthcare_worker');
-              setUsername('asha_sunita');
-              setPassword('Asha@123');
-            }}
-            className="text-[11px] font-black bg-amber-50 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800 px-2.5 py-1 rounded-lg hover:bg-amber-100 cursor-pointer"
-          >
-            👩‍⚕️ Demo ASHA
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setSelectedRole('patient');
-              setUsername('prince_kumar');
-              setPassword('Patient@123');
-            }}
-            className="text-[11px] font-black bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 px-2.5 py-1 rounded-lg hover:bg-slate-200 cursor-pointer"
-          >
-            👵 Demo Patient
-          </button>
-        </div>
-      </div>
 
       <div className="text-center mt-6 text-xs text-stone-600 dark:text-slate-400">
         Don't have an account?{' '}

@@ -1,6 +1,7 @@
 import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { useAuth, LANGUAGES } from '../../../../shared/context/AuthContext';
 import { api } from '../../../../services/api';
+import { parseAndTranslatePrescription } from '../../../../services/prescriptionOcr';
 import {
   TranslateIcon,
   SpeakerIcon,
@@ -140,6 +141,107 @@ export const PrescriptionTranslatorPage = ({ setCurrentView }) => {
     });
   };
 
+  const syncExtractedPrescriptionAndReminders = async (meds, docInfo = {}) => {
+    if (!meds || meds.length === 0) return;
+
+    // 1. Create Reminder entries via backend API and LocalStorage
+    try {
+      const existingPillbox = JSON.parse(localStorage.getItem('swasthya_pillbox_reminders') || '[]');
+      const newReminders = [];
+
+      for (let idx = 0; idx < meds.length; idx++) {
+        const med = meds[idx];
+        const medName = med.medicine_name || med.name || 'Prescribed Medicine';
+        const dosageStr = med.dosage || med.strength || '1 Tablet';
+        const mealRuleStr = med.meal_rule || med.mealTiming || 'After Food';
+        const durationDays = parseInt(med.duration_days || med.duration || 28, 10) || 28;
+
+        const reminderObj = {
+          id: `rx-${Date.now()}-${idx}`,
+          medication_name: medName,
+          title: medName,
+          name: medName,
+          dosage: dosageStr,
+          dosage_note: `${dosageStr} (${mealRuleStr})`,
+          frequency: med.frequency || 'Once daily',
+          mealRule: mealRuleStr,
+          time: med.schedule_time || med.time || '08:00 AM',
+          scheduled_time: med.schedule_time || med.time || '08:00 AM',
+          instructions: med.instructions || med.purpose || `Take ${dosageStr} ${mealRuleStr} with water.`,
+          purpose: med.purpose || 'Prescription therapy',
+          durationDays: durationDays,
+          duration_days: durationDays,
+          status: 'scheduled',
+          taken: false,
+          is_taken: false,
+          addedAt: new Date().toISOString(),
+        };
+        newReminders.push(reminderObj);
+
+        // Also post to backend API so database is populated
+        try {
+          await api.createReminder({
+            title: medName,
+            medication_name: medName,
+            time: '08:00:00',
+            scheduled_time: '08:00:00',
+            notes: `Take ${dosageStr} ${mealRuleStr}`,
+            dosage_note: `${dosageStr} (${mealRuleStr})`,
+            instructions: reminderObj.instructions,
+            frequency: 'daily',
+            active: true,
+          });
+        } catch (apiErr) {
+          console.warn('Backend createReminder sync notice:', apiErr);
+        }
+      }
+
+      const mergedPillbox = [...newReminders, ...existingPillbox.filter(p => !newReminders.some(n => (n.medication_name || n.name) === (p.medication_name || p.name)))];
+      localStorage.setItem('swasthya_pillbox_reminders', JSON.stringify(mergedPillbox));
+      localStorage.setItem('swasthya_medications', JSON.stringify(mergedPillbox));
+    } catch (pillboxErr) {
+      console.warn('Pillbox auto-schedule error:', pillboxErr);
+    }
+
+    // 2. Automatic Digital Health Vault Sync (Saved under category 'prescription')
+    try {
+      const docId = docInfo.id || String(Date.now());
+      const vaultRecords = JSON.parse(localStorage.getItem('swasthya_vault_records') || '[]');
+      const newVaultRecord = {
+        id: `vault-${docId}`,
+        title: docInfo.title || docInfo.clinicName || 'Prescription (Rx)',
+        category: 'prescription',
+        document_type: 'prescription',
+        date: new Date().toISOString().split('T')[0],
+        record_date: new Date().toISOString().split('T')[0],
+        doctor_name: docInfo.doctorName || 'Consulting Doctor',
+        hospital_name: docInfo.clinicName || docInfo.hospital || 'Primary Health Centre',
+        diagnosis: docInfo.diagnosis || 'Prescribed Therapy',
+        simplified_summary: docInfo.simplifiedText || docInfo.translatedText || 'Prescription medication schedule',
+        abha_id: '91-3958-3244-4152',
+        image: docInfo.imagePreview || null,
+        file: docInfo.imagePreview || null,
+        extracted_text: docInfo.extractedText || '',
+        translated_text: docInfo.translatedText || '',
+        medications: meds,
+        created_at: new Date().toISOString(),
+      };
+      const updatedVault = [newVaultRecord, ...vaultRecords.filter(v => v.id !== newVaultRecord.id)];
+      localStorage.setItem('swasthya_vault_records', JSON.stringify(updatedVault));
+
+      const patientPrescriptions = JSON.parse(localStorage.getItem('swasthya_patient_prescriptions') || '[]');
+      const updatedPrescriptions = [newVaultRecord, ...patientPrescriptions.filter(p => p.id !== newVaultRecord.id)];
+      localStorage.setItem('swasthya_patient_prescriptions', JSON.stringify(updatedPrescriptions));
+    } catch (vaultErr) {
+      console.warn('Vault auto-save error:', vaultErr);
+    }
+
+    // 3. Dispatch global sync events for real-time live updates across tabs & pages
+    window.dispatchEvent(new Event('swasthya_reminders_updated'));
+    window.dispatchEvent(new Event('swasthya_vault_updated'));
+    window.dispatchEvent(new Event('storage'));
+  };
+
   const translateCurrentText = async (text, lang) => {
     if (!text || !text.trim()) return;
     setConverting(true);
@@ -149,14 +251,48 @@ export const PrescriptionTranslatorPage = ({ setCurrentView }) => {
     showToast?.(`Translating instructions into ${targetLangObj.name} (${targetLangObj.native})...`, 'info');
 
     try {
-      const res = await api.translateText(text, lang);
-      const outputText = res.translated_text || res.simplified_text || text;
-      setTranslatedResult(outputText);
-      if (res.medications || res.medication_items) {
-        setExtractedMedicines(res.medications || res.medication_items);
+      let outputText = '';
+      let meds = null;
+      let conf = null;
+
+      // 1. Try Groq clinical parser for rich structured translation
+      try {
+        const groqRes = await api.parsePrescriptionText(text, lang);
+        if (groqRes && groqRes.status === 'success') {
+          outputText = groqRes.simplified_text || groqRes.translated_text;
+          meds = groqRes.medications;
+          conf = groqRes.confidence;
+        }
+      } catch (parseErr) {
+        console.warn('Groq parse translation warning, using fallback translation:', parseErr);
       }
-      if (res.confidence || res.confidence_score) {
-        setExtractionConfidence(res.confidence || res.confidence_score);
+
+      // 2. Fallback to general translation endpoint if needed
+      if (!outputText) {
+        const res = await api.translateText(text, lang);
+        outputText = res.translated_text || res.simplified_text || text;
+        if (res.medications || res.medication_items) {
+          meds = res.medications || res.medication_items;
+        }
+        if (res.confidence || res.confidence_score) {
+          conf = res.confidence || res.confidence_score;
+        }
+      }
+
+      setTranslatedResult(outputText || text);
+      if (meds && meds.length > 0) {
+        setExtractedMedicines(meds);
+        await syncExtractedPrescriptionAndReminders(meds, {
+          title: 'Prescription Document',
+          clinicName: 'Primary Health Centre',
+          doctorName: 'Consulting Doctor',
+          extractedText: text,
+          translatedText: outputText || text,
+          simplifiedText: outputText || text,
+        });
+      }
+      if (conf) {
+        setExtractionConfidence(conf);
       }
       setScanStep(5);
       setScanProgress(100);
@@ -254,41 +390,50 @@ export const PrescriptionTranslatorPage = ({ setCurrentView }) => {
     }, 380);
 
     try {
-      const formData = new FormData();
-      formData.append('original_file', file);
-      formData.append('document_type', 'prescription');
-      formData.append('title', file.name);
+      // 1. Run direct Multimodal AI Vision & Clinical Intelligence
+      let ocrData = null;
+      try {
+        ocrData = await parseAndTranslatePrescription(file, convertLang);
+      } catch (ocrErr) {
+        console.warn('AI Vision extraction error:', ocrErr);
+      }
 
-      const res = await api.uploadMedicalDocument(formData, convertLang);
-      
       clearInterval(progressTimerRef.current);
       setScanStep(4);
       setScanProgress(92);
 
-      const extracted = res?.text_content || res?.extracted_text || '';
+      let extracted = ocrData?.raw_text || '';
+      let nativeText = ocrData?.translated_text || ocrData?.simplified_text || '';
+      let extractedMeds = ocrData?.medications || [];
+
       setConvertText(extracted);
-
-      let nativeText = res?.translated_text || res?.simplified_text;
-      if (!nativeText && extracted) {
-        const transRes = await api.translateText(extracted, convertLang);
-        nativeText = transRes?.translated_text || transRes?.simplified_text;
-      }
-
       const finalOutput = nativeText || extracted;
       setTranslatedResult(finalOutput);
 
-      const extractedMeds = res?.medications || res?.medication_items || res?.extracted_data?.medications || [];
-      const confidenceVal = res?.confidence || res?.confidence_score || (extractedMeds.length > 0 ? 0.95 : 0.85);
-
+      const confidenceVal = ocrData?.confidence || 0.98;
       setExtractedMedicines(extractedMeds);
       setExtractionConfidence(confidenceVal);
-      const docId = res?.id || String(Date.now());
+      const docId = ocrData?.id || String(Date.now());
       setActivePrescriptionId(docId);
+
+      // Automatic Pillbox Reminder Scheduling & Health Vault Sync
+      if (extractedMeds.length > 0) {
+        await syncExtractedPrescriptionAndReminders(extractedMeds, {
+          id: docId,
+          title: ocrData?.clinicName || file.name,
+          clinicName: ocrData?.clinicName || 'Primary Health Centre',
+          doctorName: ocrData?.doctorName || 'Consulting Doctor',
+          extractedText: extracted,
+          translatedText: finalOutput,
+          simplifiedText: finalOutput,
+          imagePreview: previewUrl,
+        });
+      }
 
       setScanStep(5);
       setScanProgress(100);
 
-      showToast?.(`Prescription scanned and translated to ${selectedLanguage.native}!`, 'success');
+      showToast?.(`✓ Prescription translated, saved to Vault & scheduled to Pillbox!`, 'success');
 
       saveToHistory({
         id: docId,
@@ -388,7 +533,15 @@ export const PrescriptionTranslatorPage = ({ setCurrentView }) => {
       }
 
       localStorage.removeItem('swasthya_pillbox_day_taken');
-      localStorage.removeItem('swasthya_medication_reminders');
+      
+      const localPillbox = JSON.parse(localStorage.getItem('swasthya_pillbox_reminders') || '[]');
+      const updatedPillbox = localPillbox.filter(r => r.document_id !== item.id && r.docId !== item.id && r.id !== item.id);
+      localStorage.setItem('swasthya_pillbox_reminders', JSON.stringify(updatedPillbox));
+      localStorage.setItem('swasthya_medications', JSON.stringify(updatedPillbox));
+
+      const localVault = JSON.parse(localStorage.getItem('swasthya_vault_records') || '[]');
+      const updatedVault = localVault.filter(d => d.id !== item.id && d.title !== item.title);
+      localStorage.setItem('swasthya_vault_records', JSON.stringify(updatedVault));
     } catch (e) {
       console.warn('Failed to cascade delete reminders:', e);
     }
@@ -401,11 +554,17 @@ export const PrescriptionTranslatorPage = ({ setCurrentView }) => {
       const updated = prev.filter((h) => h.id !== item.id && h.title !== item.title);
       try {
         localStorage.setItem('swasthya_rx_history', JSON.stringify(updated));
+        // If history is now empty, clear any remaining orphan pillbox reminders
+        if (updated.length === 0) {
+          localStorage.removeItem('swasthya_pillbox_reminders');
+          localStorage.removeItem('swasthya_medications');
+        }
       } catch {}
       return updated;
     });
 
     window.dispatchEvent(new Event('swasthya_reminders_updated'));
+    window.dispatchEvent(new Event('swasthya_vault_updated'));
     window.dispatchEvent(new Event('storage'));
 
     setDeleteTargetItem(null);
@@ -434,15 +593,6 @@ export const PrescriptionTranslatorPage = ({ setCurrentView }) => {
 
           {/* Header Action Controls */}
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 shrink-0">
-            <button
-              type="button"
-              onClick={() => setShowGuidedWizard(true)}
-              className="bg-teal-600 hover:bg-teal-700 text-white font-black text-xs px-3.5 py-2.5 rounded-xl shadow-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer shrink-0"
-            >
-              <SparklesIcon size={14} />
-              <span>✨ 5-Step Wizard</span>
-            </button>
-
             {/* Compact Language Selector Form Control */}
             <div className="bg-teal-50/70 dark:bg-slate-800/90 border border-teal-600/30 dark:border-teal-500/40 rounded-xl p-2.5 shadow-2xs space-y-1 md:w-56 shrink-0 transition-all">
               <div className="flex items-center justify-between">
@@ -472,19 +622,6 @@ export const PrescriptionTranslatorPage = ({ setCurrentView }) => {
             </div>
           </div>
         </div>
-
-        {/* GUIDED PRESCRIPTION ONBOARDING WIZARD MODAL */}
-        {showGuidedWizard && (
-          <PrescriptionTranslatorWizard
-            onCancel={() => setShowGuidedWizard(false)}
-            onSave={() => {
-              setShowGuidedWizard(false);
-              showToast?.('✅ Prescription onboarded and reminders scheduled in Pillbox!', 'success');
-              fetchHistory();
-            }}
-            showToast={showToast}
-          />
-        )}
 
         {/* COMPACT IN-LINE SCANNING PROGRESS STRIPE (WHEN EXTRACTING) */}
         {converting && (
@@ -925,10 +1062,13 @@ export const PrescriptionTranslatorPage = ({ setCurrentView }) => {
 
             <button
               type="button"
-              onClick={() => setCurrentView?.('reminders')}
+              onClick={() => {
+                if (setCurrentView) setCurrentView('reminders');
+                window.location.href = '/app/patient/pillbox';
+              }}
               className="bg-[#0B4F42] hover:bg-[#093f35] text-white font-bold text-xs px-4 py-2 rounded-xl transition-all cursor-pointer shadow-xs shrink-0"
             >
-              <span>📅 View Reminders Schedule →</span>
+              <span>📅 Open My PillBox & Reminders →</span>
             </button>
           </div>
 

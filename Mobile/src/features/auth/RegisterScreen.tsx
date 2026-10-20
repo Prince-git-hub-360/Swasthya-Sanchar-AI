@@ -155,6 +155,15 @@ export const RegisterScreen: React.FC<{ onNavigateToLogin: () => void }> = ({ on
       date_of_birth: dob.trim() || '15/08/1996',
     };
 
+    const normalizedRole =
+      role.toUpperCase() === 'ASHA' || role.toUpperCase() === 'HEALTHCARE_WORKER'
+        ? 'HEALTHCARE_WORKER'
+        : role.toUpperCase() === 'DOCTOR'
+        ? 'DOCTOR'
+        : role.toUpperCase() === 'CAREGIVER'
+        ? 'CAREGIVER'
+        : 'PATIENT';
+
     // Always save registered user credentials locally in SafeStorage for immediate reliable authentication
     const userToSave = {
       username: cleanPhone,
@@ -162,7 +171,7 @@ export const RegisterScreen: React.FC<{ onNavigateToLogin: () => void }> = ({ on
       last_name: '',
       password: cleanPass,
       phone_number: cleanPhone,
-      role: 'PATIENT',
+      role: normalizedRole,
       preferred_language: currentLanguage,
       state: selectedState,
       district: district.trim() || 'Varanasi',

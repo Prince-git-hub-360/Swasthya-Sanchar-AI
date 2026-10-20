@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { useAuth, LANGUAGES } from '../../shared/context/AuthContext';
 import { ROUTES, navigateTo, getRoleDefaultRoute } from '../../utils/routes';
+import { INDIAN_STATES_LIST, getDistrictsForState } from '../../shared/data/indianStatesAndDistricts';
 
 export const RegisterForm = ({ onNavigateLogin, onSuccess }) => {
   const { register, loading, showToast } = useAuth();
-  const [step, setStep] = useState(0);
+  const [selectedRole, setSelectedRole] = useState('patient');
 
   const [formData, setFormData] = useState({
-    role: 'patient',
     username: '',
     first_name: '',
     last_name: '',
@@ -18,17 +18,30 @@ export const RegisterForm = ({ onNavigateLogin, onSuccess }) => {
     date_of_birth: '',
     age: '',
     phone_number: '',
+    state: 'Karnataka',
+    district: 'Mandya',
     village_or_town: '',
-    district: '',
-    state: '',
     pincode: '',
-    emergency_contact_name: '',
-    emergency_contact_phone: '',
+    
+    // Doctor Specific
+    medical_reg_no: '',
+    specialization: 'General Medicine / MBBS',
+    hospital_name: 'Mandya Primary Health Centre #2',
+
+    // ASHA Specific
+    asha_id: '',
+    sub_centre: 'Sector 1 - North Colony Sub-Centre',
+
+    // Caregiver Specific
+    relationship_to_patient: 'Son',
+    linked_patient_name: '',
+    linked_patient_phone: '',
   });
 
-  const selectRole = (role) => {
-    setFormData((prev) => ({ ...prev, role }));
-    setStep(1);
+  const availableDistricts = getDistrictsForState(formData.state);
+
+  const handleRoleChange = (role) => {
+    setSelectedRole(role);
   };
 
   const handleChange = (e) => {
@@ -47,396 +60,490 @@ export const RegisterForm = ({ onNavigateLogin, onSuccess }) => {
           updated.age = age.toString();
         }
       }
+      if (name === 'state') {
+        const districts = getDistrictsForState(value);
+        updated.district = districts.length > 0 ? districts[0] : '';
+      }
       return updated;
     });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!formData.username || !formData.first_name || !formData.password) {
+      if (showToast) showToast('Please fill all required fields.', 'warning');
+      return;
+    }
+
     try {
-      const registeredUser = await register(formData);
-      const userRole = registeredUser?.role || formData.role;
+      const payload = {
+        ...formData,
+        role: selectedRole,
+      };
+
+      const registeredUser = await register(payload);
+      const userRole = registeredUser?.role || selectedRole;
       const targetRoute = getRoleDefaultRoute(userRole);
-      if (onSuccess) {
-        onSuccess(targetRoute);
+      
+      const roleDisplayName = 
+        selectedRole === 'doctor' ? 'Doctor' :
+        selectedRole === 'healthcare_worker' ? 'ASHA Worker' :
+        selectedRole === 'caregiver' ? 'Caregiver' : 'Patient';
+
+      // Save patient to shared ABDM registry for instant ASHA & Doctor lookup
+      if (selectedRole === 'patient') {
+        try {
+          const abdmRegistry = JSON.parse(localStorage.getItem('swasthya_abdm_registry') || '[]');
+          const registeredAbha = registeredUser?.profile?.abha_id || registeredUser?.abha_id || `91-${Math.floor(1000 + Math.random() * 9000)}-${Math.floor(1000 + Math.random() * 9000)}-${Math.floor(1000 + Math.random() * 9000)}`;
+          const patientEntry = {
+            abhaId: registeredAbha,
+            fullName: `${formData.first_name} ${formData.last_name || ''}`.trim(),
+            nameHi: `${formData.first_name} ${formData.last_name || ''}`.trim(),
+            date_of_birth: formData.date_of_birth || '',
+            age: formData.age || '18',
+            gender: formData.gender === 'F' ? 'Female' : 'Male',
+            mobile: formData.phone_number || '+91 9008802105',
+            state: formData.state || 'Karnataka',
+            district: formData.district || 'Bengaluru Urban',
+            village: formData.village_or_town || 'Electronic City',
+            sector: `${formData.village_or_town || 'Electronic City'} Sector`,
+            chronicCondition: 'None',
+          };
+          abdmRegistry.unshift(patientEntry);
+          localStorage.setItem('swasthya_abdm_registry', JSON.stringify(abdmRegistry));
+        } catch {}
+      }
+
+      if (showToast) showToast(`✅ ${roleDisplayName} account created successfully for ${formData.first_name}! Please sign in.`, 'success');
+      
+      if (onNavigateLogin) {
+        onNavigateLogin();
       } else {
-        navigateTo(targetRoute);
+        navigateTo(ROUTES.AUTH.LOGIN);
       }
     } catch (err) {
-      if (showToast) showToast(err.message || 'Registration failed.', 'error');
+      if (showToast) showToast(err.message || 'Registration failed. Please try again.', 'error');
     }
   };
 
   return (
-    <div className="w-full max-w-xl mx-auto bg-white dark:bg-[#161F30] p-6 rounded-3xl border border-stone-200 dark:border-slate-800 shadow-xl font-sans transition-colors">
+    <div className="w-full max-w-xl mx-auto bg-white dark:bg-[#161F30] p-6 sm:p-8 rounded-3xl border border-stone-200 dark:border-slate-800 shadow-xl font-sans transition-colors">
+      
+      {/* Header Adapting Dynamically per Role */}
       <div className="text-center mb-6">
-        <h2 className="text-2xl font-extrabold text-stone-900 dark:text-white tracking-tight mb-1">
-          Join Swasthya Sanchar AI
+        <h2 className="text-2xl font-black text-stone-900 dark:text-white tracking-tight mb-1">
+          {selectedRole === 'patient' && 'Register Citizen Patient'}
+          {selectedRole === 'healthcare_worker' && 'Register ASHA Health Worker'}
+          {selectedRole === 'doctor' && 'Register Medical Officer / Doctor'}
+          {selectedRole === 'caregiver' && 'Register Family Caregiver'}
         </h2>
         <p className="text-xs text-stone-600 dark:text-slate-300">
-          How will you use Swasthya Sanchar? Select your role to begin.
+          {selectedRole === 'patient' && 'ABDM Ayushman Bharat Digital Health Ecosystem & 14-Digit ABHA ID'}
+          {selectedRole === 'healthcare_worker' && 'National Health Mission (NHM) Community Health & Doorstep Care'}
+          {selectedRole === 'doctor' && 'Healthcare Professionals Registry (HPR) & PHC Clinical OPD'}
+          {selectedRole === 'caregiver' && 'Family Care Network & Patient Medication Monitoring'}
         </p>
       </div>
 
-      {/* STEP 0: ROLE SELECTION CARDS */}
-      {step === 0 && (
-        <div className="space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div
-              onClick={() => selectRole('patient')}
-              className={`p-4 rounded-2xl border-2 transition-all cursor-pointer text-center ${
-                formData.role === 'patient'
-                  ? 'bg-teal-50 dark:bg-teal-950/60 border-teal-700 dark:border-teal-400 shadow-sm'
-                  : 'bg-stone-50 dark:bg-slate-900 border-stone-200 dark:border-slate-800 hover:border-stone-300 dark:hover:border-slate-700'
-              }`}
-            >
-              <div className="text-3xl mb-2">👵</div>
-              <div className="font-extrabold text-stone-900 dark:text-white text-sm mb-1">1. Patient</div>
-              <div className="text-xs text-stone-600 dark:text-slate-300 leading-relaxed">
-                Rural resident seeking clear prescription explanations & spoken voice guidance.
-              </div>
-            </div>
-
-            <div
-              onClick={() => selectRole('healthcare_worker')}
-              className={`p-4 rounded-2xl border-2 transition-all cursor-pointer text-center ${
-                formData.role === 'healthcare_worker'
-                  ? 'bg-teal-50 dark:bg-teal-950/60 border-teal-700 dark:border-teal-400 shadow-sm'
-                  : 'bg-stone-50 dark:bg-slate-900 border-stone-200 dark:border-slate-800 hover:border-stone-300 dark:hover:border-slate-700'
-              }`}
-            >
-              <div className="text-3xl mb-2">👩‍⚕️</div>
-              <div className="font-extrabold text-stone-900 dark:text-white text-sm mb-1">2. ASHA Worker</div>
-              <div className="text-xs text-stone-600 dark:text-slate-300 leading-relaxed">
-                Frontline worker assisting community patients & tracking home medication follow-ups.
-              </div>
-            </div>
-
-            <div
-              onClick={() => selectRole('doctor')}
-              className={`p-4 rounded-2xl border-2 transition-all cursor-pointer text-center ${
-                formData.role === 'doctor'
-                  ? 'bg-teal-50 dark:bg-teal-950/60 border-teal-700 dark:border-teal-400 shadow-sm'
-                  : 'bg-stone-50 dark:bg-slate-900 border-stone-200 dark:border-slate-800 hover:border-stone-300 dark:hover:border-slate-700'
-              }`}
-            >
-              <div className="text-3xl mb-2">👨‍⚕️</div>
-              <div className="font-extrabold text-stone-900 dark:text-white text-sm mb-1">3. Doctor</div>
-              <div className="text-xs text-stone-600 dark:text-slate-300 leading-relaxed">
-                Healthcare provider issuing digital prescriptions & managing treatment advice.
-              </div>
-            </div>
-
-            <div
-              onClick={() => selectRole('caregiver')}
-              className={`p-4 rounded-2xl border-2 transition-all cursor-pointer text-center ${
-                formData.role === 'caregiver'
-                  ? 'bg-teal-50 dark:bg-teal-950/60 border-teal-700 dark:border-teal-400 shadow-sm'
-                  : 'bg-stone-50 dark:bg-slate-900 border-stone-200 dark:border-slate-800 hover:border-stone-300 dark:hover:border-slate-700'
-              }`}
-            >
-              <div className="text-3xl mb-2">👨‍👩‍👧</div>
-              <div className="font-extrabold text-stone-900 dark:text-white text-sm mb-1">4. Caregiver</div>
-              <div className="text-xs text-stone-600 dark:text-slate-300 leading-relaxed">
-                Family member supporting patient medication adherence & dose alerts.
-              </div>
-            </div>
-          </div>
-
+      {/* 4 Clean Role Selector Tabs at the Top */}
+      <div className="grid grid-cols-4 gap-1.5 bg-stone-100 dark:bg-slate-900 p-1.5 rounded-2xl mb-6 border border-stone-200 dark:border-slate-800">
+        {[
+          { id: 'patient', label: '👵 Patient' },
+          { id: 'healthcare_worker', label: '👩‍⚕️ ASHA' },
+          { id: 'doctor', label: '👨‍⚕️ Doctor' },
+          { id: 'caregiver', label: '👨‍👩‍👧 Caregiver' },
+        ].map((tab) => (
           <button
+            key={tab.id}
             type="button"
-            onClick={() => setStep(1)}
-            className="w-full bg-[#0B4F42] hover:bg-[#07362d] dark:bg-teal-600 dark:hover:bg-teal-500 text-white font-bold text-sm py-3.5 rounded-xl shadow-md transition-all cursor-pointer mt-2"
+            onClick={() => handleRoleChange(tab.id)}
+            className={`py-2 px-1 rounded-xl text-[11px] font-black transition-all cursor-pointer text-center ${
+              selectedRole === tab.id
+                ? 'bg-[#0B4F42] dark:bg-teal-600 text-white shadow-sm'
+                : 'text-stone-600 dark:text-slate-400 hover:text-stone-900 dark:hover:text-white hover:bg-stone-200/60 dark:hover:bg-slate-800'
+            }`}
           >
-            Continue as {formData.role === 'healthcare_worker' ? 'ASHA Worker' : formData.role.charAt(0).toUpperCase() + formData.role.slice(1)} →
+            {tab.label}
           </button>
-        </div>
-      )}
+        ))}
+      </div>
 
-      {/* STEPS 1-3: FORM WIZARD */}
-      {step > 0 && (
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="flex border-b border-stone-200 dark:border-slate-800 pb-2 mb-4 justify-between text-xs font-bold text-stone-500 dark:text-slate-400">
-            <span className={step === 1 ? 'text-[#0F766E] dark:text-teal-300 font-extrabold' : ''}>1. Credentials</span>
-            <span className={step === 2 ? 'text-[#0F766E] dark:text-teal-300 font-extrabold' : ''}>2. Demographics</span>
-            <span className={step === 3 ? 'text-[#0F766E] dark:text-teal-300 font-extrabold' : ''}>3. Location</span>
+      {/* Registration Form with Empty Inputs */}
+      <form onSubmit={handleSubmit} autoComplete="off" className="space-y-4">
+        
+        {/* Name Fields */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label className="block text-xs font-bold text-stone-800 dark:text-slate-200 mb-1">
+              First Name <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              name="first_name"
+              autoComplete="off"
+              className="w-full bg-white dark:bg-slate-800 border border-stone-300 dark:border-slate-700 text-stone-900 dark:text-white text-xs rounded-xl px-3.5 py-2.5 outline-none focus:border-[#0F766E] dark:focus:border-teal-400 shadow-2xs"
+              placeholder="e.g. Ramesh"
+              value={formData.first_name}
+              onChange={handleChange}
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-bold text-stone-800 dark:text-slate-200 mb-1">
+              Last Name
+            </label>
+            <input
+              type="text"
+              name="last_name"
+              autoComplete="off"
+              className="w-full bg-white dark:bg-slate-800 border border-stone-300 dark:border-slate-700 text-stone-900 dark:text-white text-xs rounded-xl px-3.5 py-2.5 outline-none focus:border-[#0F766E] dark:focus:border-teal-400 shadow-2xs"
+              placeholder="e.g. Kumar"
+              value={formData.last_name}
+              onChange={handleChange}
+            />
+          </div>
+        </div>
+
+        {/* Username & Mobile */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label className="block text-xs font-bold text-stone-800 dark:text-slate-200 mb-1">
+              Username <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              name="username"
+              autoComplete="off"
+              className="w-full bg-white dark:bg-slate-800 border border-stone-300 dark:border-slate-700 text-stone-900 dark:text-white text-xs rounded-xl px-3.5 py-2.5 outline-none focus:border-[#0F766E] dark:focus:border-teal-400 shadow-2xs"
+              placeholder="e.g. ramesh_kumar"
+              value={formData.username}
+              onChange={handleChange}
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-bold text-stone-800 dark:text-slate-200 mb-1">
+              Mobile Number <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="tel"
+              name="phone_number"
+              autoComplete="off"
+              className="w-full bg-white dark:bg-slate-800 border border-stone-300 dark:border-slate-700 text-stone-900 dark:text-white text-xs rounded-xl px-3.5 py-2.5 outline-none focus:border-[#0F766E] dark:focus:border-teal-400 shadow-2xs"
+              placeholder="e.g. 9876543210"
+              value={formData.phone_number}
+              onChange={handleChange}
+              required
+            />
+          </div>
+        </div>
+
+        {/* Password */}
+        <div>
+          <label className="block text-xs font-bold text-stone-800 dark:text-slate-200 mb-1">
+            Create Password <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="password"
+            name="password"
+            autoComplete="new-password"
+            className="w-full bg-white dark:bg-slate-800 border border-stone-300 dark:border-slate-700 text-stone-900 dark:text-white text-xs rounded-xl px-3.5 py-2.5 outline-none focus:border-[#0F766E] dark:focus:border-teal-400 shadow-2xs"
+            placeholder="••••••••••••"
+            value={formData.password}
+            onChange={handleChange}
+            required
+          />
+        </div>
+
+        {/* Age/DOB, Gender & Language */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div>
+            <label className="block text-xs font-bold text-stone-800 dark:text-slate-200 mb-1 flex items-center justify-between">
+              <span>DOB (जन्म तिथि) <span className="text-red-500">*</span></span>
+              {formData.age && (
+                <span className="text-[10px] font-black text-teal-700 dark:text-teal-300 bg-teal-50 dark:bg-teal-950/60 px-1.5 py-0.5 rounded-md border border-teal-200 dark:border-teal-800">
+                  {formData.age} yrs
+                </span>
+              )}
+            </label>
+            <input
+              type="date"
+              name="date_of_birth"
+              max={new Date().toISOString().split('T')[0]}
+              className="w-full bg-white dark:bg-slate-800 border border-stone-300 dark:border-slate-700 text-stone-900 dark:text-white text-xs rounded-xl px-3.5 py-2.5 outline-none focus:border-[#0F766E] dark:focus:border-teal-400 shadow-2xs cursor-pointer"
+              value={formData.date_of_birth}
+              onChange={handleChange}
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-bold text-stone-800 dark:text-slate-200 mb-1">
+              Gender <span className="text-red-500">*</span>
+            </label>
+            <select
+              name="gender"
+              value={formData.gender}
+              onChange={handleChange}
+              className="w-full bg-white dark:bg-slate-800 border border-stone-300 dark:border-slate-700 text-stone-900 dark:text-white text-xs rounded-xl px-3 py-2.5 outline-none focus:border-[#0F766E] dark:focus:border-teal-400 shadow-2xs"
+            >
+              <option value="M">Male (पुरुष)</option>
+              <option value="F">Female (महिला)</option>
+              <option value="O">Other (अन्य)</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs font-bold text-stone-800 dark:text-slate-200 mb-1">
+              Preferred Language
+            </label>
+            <select
+              name="preferred_language"
+              value={formData.preferred_language}
+              onChange={handleChange}
+              className="w-full bg-white dark:bg-slate-800 border border-stone-300 dark:border-slate-700 text-stone-900 dark:text-white text-xs rounded-xl px-3 py-2.5 outline-none focus:border-[#0F766E] dark:focus:border-teal-400 shadow-2xs"
+            >
+              {LANGUAGES.map((lang) => (
+                <option key={lang.code} value={lang.code}>
+                  {lang.flag} {lang.native} ({lang.name})
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {/* 🩺 ROLE-SPECIFIC PROFESSIONAL / IDENTITY FIELDS */}
+
+        {/* DOCTOR FIELDS */}
+        {selectedRole === 'doctor' && (
+          <div className="bg-teal-50/70 dark:bg-teal-950/40 border border-teal-200 dark:border-teal-800/60 p-4 rounded-2xl space-y-3">
+            <div className="text-[11px] font-black uppercase text-teal-800 dark:text-teal-300 tracking-wider">
+              👨‍⚕️ Medical Registration &amp; License Details (HPR)
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-[11px] font-bold text-stone-700 dark:text-slate-300 mb-1">
+                  Medical Council Reg No. *
+                </label>
+                <input
+                  type="text"
+                  name="medical_reg_no"
+                  placeholder="e.g. KMC-58492"
+                  value={formData.medical_reg_no}
+                  onChange={handleChange}
+                  className="w-full bg-white dark:bg-slate-800 border border-teal-300 dark:border-teal-700 text-stone-900 dark:text-white text-xs rounded-xl px-3 py-2 outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-[11px] font-bold text-stone-700 dark:text-slate-300 mb-1">
+                  Clinical Specialization *
+                </label>
+                <select
+                  name="specialization"
+                  value={formData.specialization}
+                  onChange={handleChange}
+                  className="w-full bg-white dark:bg-slate-800 border border-teal-300 dark:border-teal-700 text-stone-900 dark:text-white text-xs rounded-xl px-3 py-2 outline-none"
+                >
+                  <option value="General Medicine / MBBS">General Medicine / MBBS</option>
+                  <option value="Cardiology">Cardiology</option>
+                  <option value="Obstetrics & Gynecology (OBGYN)">Obstetrics & Gynecology (OBGYN)</option>
+                  <option value="Pulmonology (Chest/TB)">Pulmonology (Chest/TB)</option>
+                  <option value="Pediatrics">Pediatrics</option>
+                  <option value="Diabetology">Diabetology</option>
+                </select>
+              </div>
+            </div>
+            <div>
+              <label className="block text-[11px] font-bold text-stone-700 dark:text-slate-300 mb-1">
+                Assigned PHC / Hospital Facility *
+              </label>
+              <input
+                type="text"
+                name="hospital_name"
+                placeholder="e.g. Mandya Primary Health Centre #2"
+                value={formData.hospital_name}
+                onChange={handleChange}
+                className="w-full bg-white dark:bg-slate-800 border border-teal-300 dark:border-teal-700 text-stone-900 dark:text-white text-xs rounded-xl px-3 py-2 outline-none"
+              />
+            </div>
+          </div>
+        )}
+
+        {/* ASHA WORKER FIELDS */}
+        {selectedRole === 'healthcare_worker' && (
+          <div className="bg-amber-50/70 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 p-4 rounded-2xl space-y-3">
+            <div className="text-[11px] font-black uppercase text-amber-800 dark:text-amber-300 tracking-wider">
+              👩‍⚕️ Frontline Health Worker Identification (NHM)
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-[11px] font-bold text-stone-700 dark:text-slate-300 mb-1">
+                  Official ASHA ID / Badge No. *
+                </label>
+                <input
+                  type="text"
+                  name="asha_id"
+                  placeholder="e.g. ASHA-KA-MDY-084"
+                  value={formData.asha_id}
+                  onChange={handleChange}
+                  className="w-full bg-white dark:bg-slate-800 border border-amber-300 dark:border-amber-700 text-stone-900 dark:text-white text-xs rounded-xl px-3 py-2 outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-[11px] font-bold text-stone-700 dark:text-slate-300 mb-1">
+                  Assigned Sub-Centre / Sector *
+                </label>
+                <input
+                  type="text"
+                  name="sub_centre"
+                  placeholder="e.g. Gejjalagere Health Sub-Centre"
+                  value={formData.sub_centre}
+                  onChange={handleChange}
+                  className="w-full bg-white dark:bg-slate-800 border border-amber-300 dark:border-amber-700 text-stone-900 dark:text-white text-xs rounded-xl px-3 py-2 outline-none"
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* CAREGIVER FIELDS */}
+        {selectedRole === 'caregiver' && (
+          <div className="bg-blue-50/70 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800/60 p-4 rounded-2xl space-y-3">
+            <div className="text-[11px] font-black uppercase text-blue-800 dark:text-blue-300 tracking-wider">
+              👨‍👩‍👧 Family Linkage &amp; Care Details
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-[11px] font-bold text-stone-700 dark:text-slate-300 mb-1">
+                  Relationship to Patient *
+                </label>
+                <select
+                  name="relationship_to_patient"
+                  value={formData.relationship_to_patient}
+                  onChange={handleChange}
+                  className="w-full bg-white dark:bg-slate-800 border border-blue-300 dark:border-blue-700 text-stone-900 dark:text-white text-xs rounded-xl px-3 py-2 outline-none"
+                >
+                  <option value="Son">Son (बेटा / ಮಗ)</option>
+                  <option value="Daughter">Daughter (बेटी / ಮಗಳು)</option>
+                  <option value="Spouse">Spouse (पति/पत्नी / ಗಂಡ/ಹೆಂಡತಿ)</option>
+                  <option value="Parent">Parent (माता/पिता / ತಂದೆ/ತಾಯಿ)</option>
+                  <option value="Brother/Sister">Sibling (भाई/बहन / ಸಹೋದರ/ಸಹೋದರಿ)</option>
+                  <option value="Legal Guardian">Legal Guardian (संरक्षक / ಪಾಲಕ)</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-[11px] font-bold text-stone-700 dark:text-slate-300 mb-1">
+                  Primary Patient Name / Mobile *
+                </label>
+                <input
+                  type="text"
+                  name="linked_patient_name"
+                  placeholder="e.g. Savithri Devi (+91 98765 00222)"
+                  value={formData.linked_patient_name}
+                  onChange={handleChange}
+                  className="w-full bg-white dark:bg-slate-800 border border-blue-300 dark:border-blue-700 text-stone-900 dark:text-white text-xs rounded-xl px-3 py-2 outline-none"
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 🇮🇳 DYNAMIC STATE & DISTRICT DROPDOWNS (28 STATES & 8 UTs) */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+          <div>
+            <label className="block text-xs font-bold text-stone-800 dark:text-slate-200 mb-1">
+              State (राज्य) <span className="text-red-500">*</span>
+            </label>
+            <select
+              name="state"
+              value={formData.state}
+              onChange={handleChange}
+              className="w-full bg-white dark:bg-slate-800 border border-stone-300 dark:border-slate-700 text-stone-900 dark:text-white text-xs font-bold rounded-xl px-3 py-2.5 outline-none focus:border-[#0F766E] dark:focus:border-teal-400 shadow-2xs cursor-pointer"
+              required
+            >
+              {INDIAN_STATES_LIST.map((st) => (
+                <option key={st} value={st}>
+                  {st}
+                </option>
+              ))}
+            </select>
           </div>
 
-          {step === 1 && (
-            <div className="space-y-3">
-              <div>
-                <label className="block text-xs font-bold text-stone-800 dark:text-slate-200 mb-1">Username / Mobile *</label>
-                <input
-                  type="text"
-                  name="username"
-                  className="w-full bg-white dark:bg-slate-800 border border-stone-300 dark:border-slate-700 text-stone-900 dark:text-white text-xs rounded-xl px-3 py-2.5 outline-none focus:border-[#0F766E] dark:focus:border-teal-400"
-                  placeholder="e.g. ramesh_kumar or 9876543210"
-                  value={formData.username}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
+          <div>
+            <label className="block text-xs font-bold text-stone-800 dark:text-slate-200 mb-1">
+              District (जिला) <span className="text-red-500">*</span>
+            </label>
+            <select
+              name="district"
+              value={formData.district}
+              onChange={handleChange}
+              className="w-full bg-white dark:bg-slate-800 border border-stone-300 dark:border-slate-700 text-stone-900 dark:text-white text-xs font-bold rounded-xl px-3 py-2.5 outline-none focus:border-[#0F766E] dark:focus:border-teal-400 shadow-2xs cursor-pointer"
+              required
+            >
+              {availableDistricts.length > 0 ? (
+                availableDistricts.map((dist) => (
+                  <option key={dist} value={dist}>
+                    {dist}
+                  </option>
+                ))
+              ) : (
+                <option value="">Select State First</option>
+              )}
+            </select>
+          </div>
+        </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-bold text-stone-800 dark:text-slate-200 mb-1">First Name *</label>
-                  <input
-                    type="text"
-                    name="first_name"
-                    className="w-full bg-white dark:bg-slate-800 border border-stone-300 dark:border-slate-700 text-stone-900 dark:text-white text-xs rounded-xl px-3 py-2.5 outline-none focus:border-[#0F766E] dark:focus:border-teal-400"
-                    placeholder="First Name"
-                    value={formData.first_name}
-                    onChange={handleChange}
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-stone-800 dark:text-slate-200 mb-1">Last Name *</label>
-                  <input
-                    type="text"
-                    name="last_name"
-                    className="w-full bg-white dark:bg-slate-800 border border-stone-300 dark:border-slate-700 text-stone-900 dark:text-white text-xs rounded-xl px-3 py-2.5 outline-none focus:border-[#0F766E] dark:focus:border-teal-400"
-                    placeholder="Last Name"
-                    value={formData.last_name}
-                    onChange={handleChange}
-                    required
-                  />
-                </div>
-              </div>
+        {/* Village / Town & Pincode */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label className="block text-xs font-bold text-stone-800 dark:text-slate-200 mb-1">
+              Village / Town / Ward <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              name="village_or_town"
+              autoComplete="off"
+              className="w-full bg-white dark:bg-slate-800 border border-stone-300 dark:border-slate-700 text-stone-900 dark:text-white text-xs rounded-xl px-3.5 py-2.5 outline-none focus:border-[#0F766E] dark:focus:border-teal-400 shadow-2xs"
+              placeholder="e.g. Gejjalagere"
+              value={formData.village_or_town}
+              onChange={handleChange}
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-bold text-stone-800 dark:text-slate-200 mb-1">
+              PIN Code
+            </label>
+            <input
+              type="text"
+              name="pincode"
+              autoComplete="off"
+              maxLength={6}
+              className="w-full bg-white dark:bg-slate-800 border border-stone-300 dark:border-slate-700 text-stone-900 dark:text-white text-xs rounded-xl px-3.5 py-2.5 outline-none focus:border-[#0F766E] dark:focus:border-teal-400 shadow-2xs"
+              placeholder="e.g. 571428"
+              value={formData.pincode}
+              onChange={handleChange}
+            />
+          </div>
+        </div>
 
-              <div>
-                <label className="block text-xs font-bold text-stone-800 dark:text-slate-200 mb-1">Email Address *</label>
-                <input
-                  type="email"
-                  name="email"
-                  className="w-full bg-white dark:bg-slate-800 border border-stone-300 dark:border-slate-700 text-stone-900 dark:text-white text-xs rounded-xl px-3 py-2.5 outline-none focus:border-[#0F766E] dark:focus:border-teal-400"
-                  placeholder="name@example.com"
-                  value={formData.email}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-stone-800 dark:text-slate-200 mb-1">Password *</label>
-                <input
-                  type="password"
-                  name="password"
-                  className="w-full bg-white dark:bg-slate-800 border border-stone-300 dark:border-slate-700 text-stone-900 dark:text-white text-xs rounded-xl px-3 py-2.5 outline-none focus:border-[#0F766E] dark:focus:border-teal-400"
-                  placeholder="Strong password (min 8 chars)"
-                  value={formData.password}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-
-              <button
-                type="button"
-                className="w-full bg-[#0B4F42] hover:bg-[#07362d] dark:bg-teal-600 dark:hover:bg-teal-500 text-white font-bold text-xs py-3 rounded-xl shadow-md transition-all cursor-pointer mt-2"
-                onClick={() => setStep(2)}
-              >
-                Next Step: Demographics →
-              </button>
-            </div>
+        {/* Dynamic Role Submit Button */}
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full bg-[#0B4F42] hover:bg-[#07362d] dark:bg-teal-600 dark:hover:bg-teal-500 text-white font-bold text-sm py-3.5 rounded-xl shadow-md transition-all cursor-pointer disabled:opacity-50 mt-4"
+        >
+          {loading ? 'Registering Account...' : (
+            selectedRole === 'patient' ? 'Create Patient Account & Issue 14-Digit ABHA ID →' :
+            selectedRole === 'doctor' ? 'Register Doctor & Verify HPR License →' :
+            selectedRole === 'healthcare_worker' ? 'Register ASHA Worker Portal Account →' :
+            'Create Caregiver Account & Link Family Member →'
           )}
+        </button>
 
-          {step === 2 && (
-            <div className="space-y-3">
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-bold text-stone-800 dark:text-slate-200 mb-1">Gender *</label>
-                  <select
-                    name="gender"
-                    className="w-full bg-white dark:bg-slate-800 border border-stone-300 dark:border-slate-700 text-stone-900 dark:text-white text-xs rounded-xl px-3 py-2.5 outline-none focus:border-[#0F766E] dark:focus:border-teal-400 cursor-pointer"
-                    value={formData.gender}
-                    onChange={handleChange}
-                    required
-                  >
-                    <option value="M">Male (पुरुष)</option>
-                    <option value="F">Female (महिला)</option>
-                    <option value="O">Other (अन्य)</option>
-                  </select>
-                </div>
+      </form>
 
-                <div>
-                  <label className="block text-xs font-bold text-stone-800 dark:text-slate-200 mb-1">Preferred Language *</label>
-                  <select
-                    name="preferred_language"
-                    className="w-full bg-white dark:bg-slate-800 border border-stone-300 dark:border-slate-700 text-stone-900 dark:text-white text-xs rounded-xl px-3 py-2.5 outline-none focus:border-[#0F766E] dark:focus:border-teal-400 cursor-pointer"
-                    value={formData.preferred_language}
-                    onChange={handleChange}
-                    required
-                  >
-                    {LANGUAGES.map((l) => (
-                      <option key={l.code} value={l.code}>
-                        {l.flag} {l.name} ({l.native})
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-bold text-stone-800 dark:text-slate-200 mb-1">Date of Birth *</label>
-                  <input
-                    type="date"
-                    name="date_of_birth"
-                    className="w-full bg-white dark:bg-slate-800 border border-stone-300 dark:border-slate-700 text-stone-900 dark:text-white text-xs rounded-xl px-3 py-2.5 outline-none focus:border-[#0F766E] dark:focus:border-teal-400"
-                    value={formData.date_of_birth}
-                    onChange={handleChange}
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-stone-800 dark:text-slate-200 mb-1">Approx Age *</label>
-                  <input
-                    type="number"
-                    name="age"
-                    className="w-full bg-white dark:bg-slate-800 border border-stone-300 dark:border-slate-700 text-stone-900 dark:text-white text-xs rounded-xl px-3 py-2.5 outline-none focus:border-[#0F766E] dark:focus:border-teal-400"
-                    placeholder="e.g. 45"
-                    value={formData.age}
-                    onChange={handleChange}
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="flex gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setStep(1)}
-                  className="w-1/3 bg-stone-100 dark:bg-slate-800 hover:bg-stone-200 dark:hover:bg-slate-700 text-stone-800 dark:text-slate-200 font-bold text-xs py-3 rounded-xl transition-colors cursor-pointer"
-                >
-                  ← Back
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setStep(3)}
-                  className="w-2/3 bg-[#0B4F42] hover:bg-[#07362d] dark:bg-teal-600 dark:hover:bg-teal-500 text-white font-bold text-xs py-3 rounded-xl shadow-md transition-all cursor-pointer"
-                >
-                  Next Step: Location →
-                </button>
-              </div>
-            </div>
-          )}
-
-          {step === 3 && (
-            <div className="space-y-3">
-              <div>
-                <label className="block text-xs font-bold text-stone-800 dark:text-slate-200 mb-1">Phone Number *</label>
-                <input
-                  type="text"
-                  name="phone_number"
-                  className="w-full bg-white dark:bg-slate-800 border border-stone-300 dark:border-slate-700 text-stone-900 dark:text-white text-xs rounded-xl px-3 py-2.5 outline-none focus:border-[#0F766E] dark:focus:border-teal-400"
-                  placeholder="+91 9876543210"
-                  value={formData.phone_number}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-bold text-stone-800 dark:text-slate-200 mb-1">Village / Town *</label>
-                  <input
-                    type="text"
-                    name="village_or_town"
-                    className="w-full bg-white dark:bg-slate-800 border border-stone-300 dark:border-slate-700 text-stone-900 dark:text-white text-xs rounded-xl px-3 py-2.5 outline-none focus:border-[#0F766E] dark:focus:border-teal-400"
-                    placeholder="e.g. Mandya"
-                    value={formData.village_or_town}
-                    onChange={handleChange}
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-stone-800 dark:text-slate-200 mb-1">District *</label>
-                  <input
-                    type="text"
-                    name="district"
-                    className="w-full bg-white dark:bg-slate-800 border border-stone-300 dark:border-slate-700 text-stone-900 dark:text-white text-xs rounded-xl px-3 py-2.5 outline-none focus:border-[#0F766E] dark:focus:border-teal-400"
-                    placeholder="e.g. Mandya District"
-                    value={formData.district}
-                    onChange={handleChange}
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-bold text-stone-800 dark:text-slate-200 mb-1">State *</label>
-                  <input
-                    type="text"
-                    name="state"
-                    className="w-full bg-white dark:bg-slate-800 border border-stone-300 dark:border-slate-700 text-stone-900 dark:text-white text-xs rounded-xl px-3 py-2.5 outline-none focus:border-[#0F766E] dark:focus:border-teal-400"
-                    placeholder="Karnataka"
-                    value={formData.state}
-                    onChange={handleChange}
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-stone-800 dark:text-slate-200 mb-1">PIN Code *</label>
-                  <input
-                    type="text"
-                    name="pincode"
-                    className="w-full bg-white dark:bg-slate-800 border border-stone-300 dark:border-slate-700 text-stone-900 dark:text-white text-xs rounded-xl px-3 py-2.5 outline-none focus:border-[#0F766E] dark:focus:border-teal-400"
-                    placeholder="571401"
-                    value={formData.pincode}
-                    onChange={handleChange}
-                    required
-                  />
-                </div>
-              </div>
-
-              {/* Ayushman Bharat ABHA Card Auto-generation Banner */}
-              <div className="bg-sky-50 dark:bg-sky-950/50 border border-sky-200 dark:border-sky-800/80 rounded-2xl p-3.5 flex items-center justify-between gap-3 shadow-xs">
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-white dark:bg-slate-800 border border-sky-200 dark:border-slate-700 flex items-center justify-center shrink-0 text-base shadow-xs">
-                    🇮🇳
-                  </div>
-                  <div>
-                    <div className="text-xs font-black text-slate-900 dark:text-white flex items-center gap-1.5">
-                      <span>Ayushman Bharat ABHA Card</span>
-                      <span className="bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 text-[9px] font-extrabold px-1.5 py-0.2 rounded-md">FREE</span>
-                    </div>
-                    <p className="text-[10px] text-slate-600 dark:text-slate-300">
-                      Auto-generate 14-digit Digital Health Card with QR for PHC access.
-                    </p>
-                  </div>
-                </div>
-                <div className="w-5 h-5 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xs font-bold shrink-0">
-                  ✓
-                </div>
-              </div>
-
-              <div className="flex gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setStep(2)}
-                  className="w-1/3 bg-stone-100 dark:bg-slate-800 hover:bg-stone-200 dark:hover:bg-slate-700 text-stone-800 dark:text-slate-200 font-bold text-xs py-3 rounded-xl transition-colors cursor-pointer"
-                >
-                  ← Back
-                </button>
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="w-2/3 bg-[#0B4F42] hover:bg-[#07362d] dark:bg-teal-600 dark:hover:bg-teal-500 text-white font-bold text-xs py-3 rounded-xl shadow-md transition-all cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
-                >
-                  {loading ? 'Generating ABHA & Registering...' : 'Complete & Generate ABHA ID →'}
-                </button>
-              </div>
-            </div>
-          )}
-        </form>
-      )}
-
+      {/* Switch to Login */}
       <div className="text-center mt-6 text-xs text-stone-600 dark:text-slate-400">
-        Already registered?{' '}
+        Already have an account?{' '}
         <button
           type="button"
           onClick={onNavigateLogin || (() => navigateTo(ROUTES.AUTH.LOGIN))}
@@ -445,6 +552,7 @@ export const RegisterForm = ({ onNavigateLogin, onSuccess }) => {
           Sign In
         </button>
       </div>
+
     </div>
   );
 };

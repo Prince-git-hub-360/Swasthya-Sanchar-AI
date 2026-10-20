@@ -89,6 +89,14 @@ export async function request(endpoint, options = {}, isRetry = false) {
           throw new Error('Session expired. Please sign in again.');
         }
       } else {
+        if (!isRetry && (endpoint.includes('/medical-documents') || endpoint.includes('/prescriptions') || endpoint.includes('/sync/'))) {
+          // Retry without stale token for public / AllowAny endpoints
+          const retryOptions = { ...options };
+          if (retryOptions.headers) {
+            delete retryOptions.headers['Authorization'];
+          }
+          return request(endpoint, retryOptions, true);
+        }
         clearSession();
         throw new Error('Please sign in to access healthcare services.');
       }

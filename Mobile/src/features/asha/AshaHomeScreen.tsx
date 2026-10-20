@@ -21,14 +21,31 @@ import {
   ShieldCheck,
   ChevronRight,
   UserCheck,
+  Activity,
+  Hospital,
+  MessageSquare,
+  Sparkles,
+  Plus,
 } from 'lucide-react-native';
 import { COLORS, SPACING, TYPOGRAPHY, BORDER_RADIUS, SHADOWS } from '../../constants/theme';
 import { MOCK_ASHA_DATA } from '../../mock/healthData';
 import { Header } from '../../components/common/Header';
+import { RecordVitalsModal } from '../../components/asha/RecordVitalsModal';
+import { AbhaRegistrationModal } from '../../components/asha/AbhaRegistrationModal';
+import { CreateReferralModal } from '../../components/asha/CreateReferralModal';
+import { DoctorTeleChatModal } from '../../components/asha/DoctorTeleChatModal';
+import { SwasthyaMitrAiModal } from '../../components/ai/SwasthyaMitrAiModal';
 
 export const AshaHomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const [search, setSearch] = useState('');
   const [isSyncing, setIsSyncing] = useState(false);
+
+  // Modals state
+  const [vitalsModalVisible, setVitalsModalVisible] = useState(false);
+  const [abhaModalVisible, setAbhaModalVisible] = useState(false);
+  const [referralModalVisible, setReferralModalVisible] = useState(false);
+  const [teleChatModalVisible, setTeleChatModalVisible] = useState(false);
+  const [aiModalVisible, setAiModalVisible] = useState(false);
 
   const handleSync = () => {
     setIsSyncing(true);
@@ -68,6 +85,57 @@ export const AshaHomeScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
           </TouchableOpacity>
         </View>
 
+        {/* Quick Actions Grid */}
+        <View style={styles.quickActionsGrid}>
+          <TouchableOpacity
+            style={styles.quickActionTile}
+            onPress={() => setVitalsModalVisible(true)}
+            activeOpacity={0.8}
+          >
+            <View style={[styles.actionIconBox, { backgroundColor: '#ECFDF5' }]}>
+              <Activity size={20} color="#059669" />
+            </View>
+            <Text style={styles.actionTileTitle}>Record Vitals</Text>
+            <Text style={styles.actionTileSub}>रोगी जांच</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.quickActionTile}
+            onPress={() => setAbhaModalVisible(true)}
+            activeOpacity={0.8}
+          >
+            <View style={[styles.actionIconBox, { backgroundColor: '#EFF6FF' }]}>
+              <ShieldCheck size={20} color="#2563EB" />
+            </View>
+            <Text style={styles.actionTileTitle}>Add ABHA</Text>
+            <Text style={styles.actionTileSub}>नया कार्ड</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.quickActionTile}
+            onPress={() => setReferralModalVisible(true)}
+            activeOpacity={0.8}
+          >
+            <View style={[styles.actionIconBox, { backgroundColor: '#F0FDF4' }]}>
+              <Hospital size={20} color="#047857" />
+            </View>
+            <Text style={styles.actionTileTitle}>PHC Referral</Text>
+            <Text style={styles.actionTileSub}>रेफरल पर्ची</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.quickActionTile}
+            onPress={() => setTeleChatModalVisible(true)}
+            activeOpacity={0.8}
+          >
+            <View style={[styles.actionIconBox, { backgroundColor: '#FFFBEB' }]}>
+              <MessageSquare size={20} color="#D97706" />
+            </View>
+            <Text style={styles.actionTileTitle}>Doctor Chat</Text>
+            <Text style={styles.actionTileSub}>डॉक्टर सलाह</Text>
+          </TouchableOpacity>
+        </View>
+
         {/* Today's Field Metrics */}
         <View style={styles.metricsGrid}>
           <View style={styles.metricCard}>
@@ -96,92 +164,186 @@ export const AshaHomeScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
           <Text style={styles.alertBody}>
             Ram Charan Yadav (Ward 1) has not logged his morning Amlodipine BP dose. Needs home check-in.
           </Text>
-        </View>
-
-        {/* Quick Actions Row */}
-        <View style={styles.quickActionRow}>
           <TouchableOpacity
-            style={styles.quickScanBtn}
-            onPress={() => navigation.navigate('Scanner')}
-            activeOpacity={0.85}
+            style={styles.alertActionBtn}
+            onPress={() => {
+              Alert.alert('Visit Scheduled', 'Home visit added to priority itinerary.');
+            }}
           >
-            <Camera size={18} color={COLORS.textInverse} />
-            <Text style={styles.quickScanText}>Field Scan Prescription</Text>
+            <Text style={styles.alertActionBtnText}>Schedule Visit Now →</Text>
           </TouchableOpacity>
         </View>
 
-        {/* Patient Search */}
-        <View style={styles.searchBox}>
-          <Search size={16} color={COLORS.textSecondary} />
+        {/* Household Roster Section Header */}
+        <View style={styles.sectionHeaderRow}>
+          <View>
+            <Text style={styles.sectionTitle}>Household Patient Roster</Text>
+            <Text style={styles.sectionSub}>Daily visual adherence & condition monitor</Text>
+          </View>
+          <TouchableOpacity
+            onPress={() => navigation?.navigate && navigation.navigate('Registry')}
+            style={styles.viewRegistryBtn}
+          >
+            <Text style={styles.viewRegistryText}>View All ({MOCK_ASHA_DATA.patients.length}) →</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Search Bar */}
+        <View style={styles.searchBar}>
+          <Search size={18} color={COLORS.textMuted} />
           <TextInput
             style={styles.searchInput}
             placeholder="Search patient by name or ward..."
+            placeholderTextColor={COLORS.textMuted}
             value={search}
             onChangeText={setSearch}
-            placeholderTextColor={COLORS.textMuted}
           />
         </View>
 
-        {/* Assigned Patients Roster */}
-        <Text style={styles.sectionHeader}>Assigned Rural Patients ({filteredPatients.length})</Text>
-
+        {/* Patient Cards List */}
         <View style={styles.patientList}>
           {filteredPatients.map((patient) => {
             const isAttention = patient.status === 'ATTENTION_NEEDED';
             return (
-              <View key={patient.id} style={styles.patientCard}>
+              <View
+                key={patient.id}
+                style={[
+                  styles.patientCard,
+                  isAttention && styles.patientCardAttention,
+                ]}
+              >
                 <View style={styles.patientCardTop}>
-                  <View style={styles.patientAvatar}>
-                    <Text style={styles.avatarLetter}>{patient.name.charAt(0)}</Text>
+                  <View style={styles.patientAvatarBox}>
+                    <Text style={styles.avatarEmoji}>
+                      {patient.gender === 'Female' ? '👩' : '👨'}
+                    </Text>
                   </View>
+
                   <View style={styles.patientInfo}>
                     <View style={styles.patientNameRow}>
-                      <Text style={styles.patientName}>{patient.name}</Text>
+                      <Text style={styles.patientNameText}>{patient.name}</Text>
                       <View
                         style={[
-                          styles.adherenceBadge,
-                          { backgroundColor: isAttention ? COLORS.emergencyLight : COLORS.successLight },
+                          styles.statusBadge,
+                          isAttention ? styles.badgeAttention : styles.badgeNormal,
                         ]}
                       >
                         <Text
                           style={[
-                            styles.adherenceText,
-                            { color: isAttention ? COLORS.emergencyDark : COLORS.success },
+                            styles.statusBadgeText,
+                            isAttention ? styles.textAttention : styles.textNormal,
                           ]}
                         >
-                          {patient.adherenceRate}% Adherence
+                          {isAttention ? 'Needs Attention' : 'On Track'}
                         </Text>
                       </View>
                     </View>
-                    <Text style={styles.patientMeta}>
+
+                    <Text style={styles.patientMetaText}>
                       {patient.age} yrs • {patient.gender} • {patient.ward}
                     </Text>
+
+                    <View style={styles.abhaRow}>
+                      <ShieldCheck size={12} color={COLORS.primary} />
+                      <Text style={styles.abhaIdText}>{patient.abhaId}</Text>
+                    </View>
                   </View>
                 </View>
 
+                {/* Condition Pills */}
+                <View style={styles.conditionRow}>
+                  {patient.conditions.map((cond, idx) => (
+                    <View key={idx} style={styles.conditionPill}>
+                      <Text style={styles.conditionPillText}>{cond}</Text>
+                    </View>
+                  ))}
+                </View>
+
+                {/* Adherence Rate & Actions */}
                 <View style={styles.patientCardFooter}>
-                  <View style={styles.conditionTags}>
-                    {patient.conditions.map((c, i) => (
-                      <View key={i} style={styles.conditionPill}>
-                        <Text style={styles.conditionText}>{c}</Text>
-                      </View>
-                    ))}
+                  <View style={styles.adherenceContainer}>
+                    <Text style={styles.adherenceLabel}>Adherence Rate:</Text>
+                    <Text
+                      style={[
+                        styles.adherenceVal,
+                        { color: patient.adherenceRate >= 80 ? COLORS.success : COLORS.emergency },
+                      ]}
+                    >
+                      {patient.adherenceRate}% ({patient.streakDays} Day Streak 🔥)
+                    </Text>
                   </View>
 
-                  <TouchableOpacity
-                    style={styles.checkinBtn}
-                    onPress={() => Alert.alert('Patient Contacted', `Opening visit log for ${patient.name}`)}
-                    activeOpacity={0.75}
-                  >
-                    <UserCheck size={14} color={COLORS.primary} />
-                    <Text style={styles.checkinText}>Log Visit</Text>
-                  </TouchableOpacity>
+                  <View style={styles.cardActions}>
+                    <TouchableOpacity
+                      style={styles.vitalsBtn}
+                      onPress={() => setVitalsModalVisible(true)}
+                    >
+                      <Activity size={13} color="#047857" />
+                      <Text style={styles.vitalsBtnText}>Vitals</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={styles.callIconBtn}
+                      onPress={() => Alert.alert('Dialing', `Calling ${patient.phone}...`)}
+                    >
+                      <Phone size={14} color={COLORS.primaryDark} />
+                    </TouchableOpacity>
+                  </View>
                 </View>
               </View>
             );
           })}
         </View>
+
+        <View style={{ height: 80 }} />
       </ScrollView>
+
+      {/* Floating Action Buttons */}
+      <View style={styles.floatingBtnsRow}>
+        <TouchableOpacity
+          style={styles.floatingDocChat}
+          onPress={() => setTeleChatModalVisible(true)}
+          activeOpacity={0.85}
+        >
+          <MessageSquare size={16} color="#FFFFFF" />
+          <Text style={styles.floatingBtnText}>Dr. Chat</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.floatingAi}
+          onPress={() => setAiModalVisible(true)}
+          activeOpacity={0.85}
+        >
+          <Sparkles size={16} color="#FFFFFF" />
+          <Text style={styles.floatingBtnText}>AI Guide</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Modals */}
+      <RecordVitalsModal
+        visible={vitalsModalVisible}
+        onClose={() => setVitalsModalVisible(false)}
+      />
+
+      <AbhaRegistrationModal
+        visible={abhaModalVisible}
+        onClose={() => setAbhaModalVisible(false)}
+      />
+
+      <CreateReferralModal
+        visible={referralModalVisible}
+        onClose={() => setReferralModalVisible(false)}
+      />
+
+      <DoctorTeleChatModal
+        visible={teleChatModalVisible}
+        onClose={() => setTeleChatModalVisible(false)}
+      />
+
+      <SwasthyaMitrAiModal
+        visible={aiModalVisible}
+        onClose={() => setAiModalVisible(false)}
+      />
     </View>
   );
 };
@@ -197,13 +359,10 @@ const styles = StyleSheet.create({
     paddingBottom: SPACING.xxxl,
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: SPACING.md,
+    marginBottom: SPACING.sm,
   },
   greeting: {
-    ...TYPOGRAPHY.h1,
+    ...TYPOGRAPHY.h2,
     color: COLORS.textPrimary,
   },
   subGreeting: {
@@ -211,42 +370,64 @@ const styles = StyleSheet.create({
     color: COLORS.textSecondary,
     marginTop: 2,
   },
-  ashaBadge: {
-    backgroundColor: COLORS.secondaryLight,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: BORDER_RADIUS.xs,
-  },
-  ashaBadgeText: {
-    fontSize: 9,
-    fontWeight: '800',
-    color: COLORS.secondaryDark,
-  },
   syncBanner: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: COLORS.primarySurface,
-    borderRadius: BORDER_RADIUS.md,
+    backgroundColor: COLORS.secondaryLight,
     paddingHorizontal: SPACING.md,
-    paddingVertical: 8,
+    paddingVertical: SPACING.sm,
+    borderRadius: BORDER_RADIUS.md,
     marginBottom: SPACING.md,
     borderWidth: 1,
-    borderColor: COLORS.primaryLight,
+    borderColor: '#BAE6FD',
   },
   syncBannerLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    flex: 1,
+    gap: SPACING.xs,
   },
   syncBannerText: {
-    fontSize: 11,
+    ...TYPOGRAPHY.captionSmall,
     fontWeight: '700',
-    color: COLORS.primaryDark,
+    color: COLORS.secondaryDark,
   },
   syncIconBtn: {
     padding: 4,
+  },
+  quickActionsGrid: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: SPACING.md,
+  },
+  quickActionTile: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 10,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    ...SHADOWS.subtle,
+  },
+  actionIconBox: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 4,
+  },
+  actionTileTitle: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: '#0F172A',
+    textAlign: 'center',
+  },
+  actionTileSub: {
+    fontSize: 9,
+    color: '#64748B',
+    marginTop: 1,
   },
   metricsGrid: {
     flexDirection: 'row',
@@ -256,118 +437,129 @@ const styles = StyleSheet.create({
   metricCard: {
     flex: 1,
     backgroundColor: COLORS.surface,
-    borderRadius: BORDER_RADIUS.lg,
     padding: SPACING.md,
-    alignItems: 'center',
+    borderRadius: BORDER_RADIUS.md,
     borderWidth: 1,
     borderColor: COLORS.border,
+    alignItems: 'center',
     ...SHADOWS.subtle,
   },
   metricVal: {
-    ...TYPOGRAPHY.display,
-    color: COLORS.primaryDark,
+    ...TYPOGRAPHY.h1,
+    color: COLORS.primary,
   },
   metricLabel: {
-    fontSize: 10,
+    ...TYPOGRAPHY.captionSmall,
     color: COLORS.textSecondary,
     marginTop: 2,
     textAlign: 'center',
   },
   criticalAlertCard: {
-    backgroundColor: COLORS.emergencyLight,
-    borderRadius: BORDER_RADIUS.lg,
+    backgroundColor: '#FEF2F2',
     padding: SPACING.md,
-    marginBottom: SPACING.md,
+    borderRadius: BORDER_RADIUS.md,
     borderWidth: 1,
-    borderColor: '#FECACA',
+    borderColor: '#FCA5A5',
+    marginBottom: SPACING.lg,
+    gap: SPACING.xs,
   },
   alertTopRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    marginBottom: 4,
+    gap: SPACING.xs,
   },
   alertHeading: {
     ...TYPOGRAPHY.bodyBold,
-    color: COLORS.emergencyDark,
+    color: COLORS.emergency,
     flex: 1,
   },
   alertTime: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: COLORS.emergency,
+    ...TYPOGRAPHY.captionSmall,
+    color: COLORS.textMuted,
   },
   alertBody: {
     ...TYPOGRAPHY.caption,
-    color: COLORS.emergencyDark,
-    lineHeight: 16,
+    color: COLORS.textPrimary,
+    lineHeight: 18,
   },
-  quickActionRow: {
-    marginBottom: SPACING.md,
+  alertActionBtn: {
+    alignSelf: 'flex-start',
+    marginTop: 4,
   },
-  quickScanBtn: {
-    backgroundColor: COLORS.primary,
+  alertActionBtnText: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#DC2626',
+  },
+  sectionHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 12,
-    borderRadius: BORDER_RADIUS.lg,
-    gap: SPACING.sm,
-    ...SHADOWS.subtle,
+    justifyContent: 'space-between',
+    marginBottom: SPACING.sm,
   },
-  quickScanText: {
-    ...TYPOGRAPHY.button,
-    color: COLORS.textInverse,
+  sectionTitle: {
+    ...TYPOGRAPHY.h3,
+    color: COLORS.textPrimary,
   },
-  searchBox: {
+  sectionSub: {
+    ...TYPOGRAPHY.caption,
+    color: COLORS.textSecondary,
+  },
+  viewRegistryBtn: {
+    paddingVertical: 4,
+  },
+  viewRegistryText: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#047857',
+  },
+  searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: COLORS.surface,
     borderRadius: BORDER_RADIUS.md,
-    paddingHorizontal: SPACING.md,
-    height: 44,
     borderWidth: 1,
     borderColor: COLORS.border,
+    paddingHorizontal: SPACING.md,
+    paddingVertical: SPACING.sm,
     gap: SPACING.sm,
     marginBottom: SPACING.md,
   },
   searchInput: {
     flex: 1,
     ...TYPOGRAPHY.body,
-    color: COLORS.textPrimary,
-  },
-  sectionHeader: {
-    ...TYPOGRAPHY.h3,
-    color: COLORS.textPrimary,
-    marginBottom: SPACING.sm,
+    padding: 0,
   },
   patientList: {
-    gap: SPACING.sm,
+    gap: SPACING.md,
   },
   patientCard: {
     backgroundColor: COLORS.surface,
     borderRadius: BORDER_RADIUS.lg,
-    padding: SPACING.md,
     borderWidth: 1,
     borderColor: COLORS.border,
+    padding: SPACING.md,
+    gap: SPACING.sm,
     ...SHADOWS.subtle,
+  },
+  patientCardAttention: {
+    borderColor: '#FCA5A5',
+    backgroundColor: '#FFFBFB',
   },
   patientCardTop: {
     flexDirection: 'row',
     gap: SPACING.md,
-    marginBottom: SPACING.sm,
   },
-  patientAvatar: {
-    width: 42,
-    height: 42,
-    borderRadius: BORDER_RADIUS.md,
-    backgroundColor: COLORS.primaryLight,
+  patientAvatarBox: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: COLORS.background,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  avatarLetter: {
-    ...TYPOGRAPHY.h3,
-    color: COLORS.primaryDark,
+  avatarEmoji: {
+    fontSize: 22,
   },
   patientInfo: {
     flex: 1,
@@ -377,59 +569,142 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  patientName: {
+  patientNameText: {
     ...TYPOGRAPHY.bodyBold,
     color: COLORS.textPrimary,
   },
-  adherenceBadge: {
-    paddingHorizontal: 6,
+  statusBadge: {
+    paddingHorizontal: 8,
     paddingVertical: 2,
-    borderRadius: BORDER_RADIUS.xs,
+    borderRadius: BORDER_RADIUS.full,
   },
-  adherenceText: {
-    fontSize: 10,
-    fontWeight: '800',
+  badgeNormal: {
+    backgroundColor: '#DCFCE7',
   },
-  patientMeta: {
-    ...TYPOGRAPHY.caption,
+  badgeAttention: {
+    backgroundColor: '#FEE2E2',
+  },
+  statusBadgeText: {
+    ...TYPOGRAPHY.captionSmall,
+    fontWeight: '700',
+  },
+  textNormal: {
+    color: COLORS.success,
+  },
+  textAttention: {
+    color: COLORS.emergency,
+  },
+  patientMetaText: {
+    ...TYPOGRAPHY.captionSmall,
     color: COLORS.textSecondary,
     marginTop: 2,
   },
-  patientCardFooter: {
+  abhaRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    paddingTop: SPACING.xs,
-    borderTopWidth: 1,
-    borderTopColor: COLORS.borderLight,
-  },
-  conditionTags: {
-    flexDirection: 'row',
     gap: 4,
+    marginTop: 4,
+  },
+  abhaIdText: {
+    ...TYPOGRAPHY.captionSmall,
+    color: COLORS.primaryDark,
+    fontFamily: 'monospace',
+    fontWeight: '700',
+  },
+  conditionRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: SPACING.xs,
   },
   conditionPill: {
-    backgroundColor: COLORS.surfaceSubtle,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: BORDER_RADIUS.xs,
+    backgroundColor: COLORS.primaryLight,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: BORDER_RADIUS.sm,
   },
-  conditionText: {
-    fontSize: 10,
-    color: COLORS.textSecondary,
+  conditionPillText: {
+    ...TYPOGRAPHY.captionSmall,
+    color: COLORS.primaryDark,
     fontWeight: '600',
   },
-  checkinBtn: {
+  patientCardFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderTopWidth: 1,
+    borderTopColor: COLORS.border,
+    paddingTop: SPACING.sm,
+  },
+  adherenceContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: COLORS.primarySurface,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: BORDER_RADIUS.sm,
   },
-  checkinText: {
-    fontSize: 11,
+  adherenceLabel: {
+    ...TYPOGRAPHY.captionSmall,
+    color: COLORS.textSecondary,
+  },
+  adherenceVal: {
+    ...TYPOGRAPHY.captionSmall,
     fontWeight: '700',
-    color: COLORS.primary,
+  },
+  cardActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  vitalsBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#ECFDF5',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#A7F3D0',
+  },
+  vitalsBtnText: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: '#047857',
+  },
+  callIconBtn: {
+    padding: 6,
+    borderRadius: BORDER_RADIUS.full,
+    backgroundColor: COLORS.secondaryLight,
+  },
+  floatingBtnsRow: {
+    position: 'absolute',
+    bottom: 16,
+    right: 16,
+    flexDirection: 'row',
+    gap: 8,
+    zIndex: 999,
+  },
+  floatingDocChat: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#0369A1',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: 24,
+    ...SHADOWS.elevated,
+  },
+  floatingAi: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#047857',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: 24,
+    ...SHADOWS.elevated,
+  },
+  floatingBtnText: {
+    fontSize: 11,
+    fontWeight: '900',
+    color: '#FFFFFF',
   },
 });

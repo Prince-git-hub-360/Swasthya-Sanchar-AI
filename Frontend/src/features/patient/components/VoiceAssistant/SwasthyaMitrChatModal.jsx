@@ -169,17 +169,21 @@ export const SwasthyaMitrChatModal = ({ isOpen, onClose, initialMedicine = null 
     let aiAnswerText = '';
 
     try {
-      // 1. If photo attached, analyze prescription document first
+      // 1. If photo attached, analyze prescription document first in selected language
       if (currentImg?.file) {
-        showToast?.('Scanning prescription photo with AI OCR...', 'info');
+        const langObj = LANGUAGES.find(l => l.code === selectedLang);
+        showToast?.(`Scanning prescription in ${langObj ? langObj.name : 'selected language'}...`, 'info');
         const formData = new FormData();
         formData.append('original_file', currentImg.file);
         formData.append('document_type', 'prescription');
-        formData.append('title', currentImg.file.name);
+        formData.append('title', currentImg.file.name || 'Prescription Document');
+        formData.append('target_language', selectedLang);
+        formData.append('language', selectedLang);
 
-        const ocrRes = await api.uploadMedicalDocument(formData);
-        if (ocrRes?.simplified_text || ocrRes?.text_content) {
-          aiAnswerText = `📷 **Prescription Photo Analysis:**\n\n` + (ocrRes.simplified_text || ocrRes.text_content);
+        const ocrRes = await api.uploadMedicalDocument(formData, selectedLang);
+        if (ocrRes?.translated_text || ocrRes?.simplified_text || ocrRes?.text_content) {
+          const resultText = ocrRes.translated_text || ocrRes.simplified_text || ocrRes.text_content;
+          aiAnswerText = `📷 **Prescription Photo Analysis:**\n\n` + resultText;
         }
       }
 

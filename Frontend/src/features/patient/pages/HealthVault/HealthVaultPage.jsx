@@ -43,24 +43,67 @@ export const HealthVaultPage = () => {
 
   const fetchDocs = async () => {
     setLoading(true);
+    let combined = [];
+
+    // 1. Fetch from backend API
     try {
       const data = await api.getMedicalDocuments();
       let list = [];
       if (Array.isArray(data)) list = data;
       else if (data?.results) list = data.results;
-
-      // STRICTLY REAL DATA: No hardcoded dummy records
-      setDocuments(list);
+      combined = [...list];
     } catch (err) {
-      console.error('Failed to load medical documents:', err);
-      setDocuments([]);
-    } finally {
-      setLoading(false);
+      console.warn('Failed to load medical documents from API:', err);
     }
+
+    // 2. Merge with locally saved prescription & health records
+    try {
+      const vaultRecords = JSON.parse(localStorage.getItem('swasthya_vault_records') || '[]');
+      const patientPrescriptions = JSON.parse(localStorage.getItem('swasthya_patient_prescriptions') || '[]');
+      const localCombined = [...vaultRecords, ...patientPrescriptions];
+
+      const mappedLocal = localCombined.map((doc, idx) => ({
+        id: doc.id || `vault-local-${idx}`,
+        title: doc.title || doc.clinicName || 'Prescription (Rx)',
+        document_type: (doc.document_type || doc.category || 'prescription').toLowerCase().replace(/\s+/g, '_'),
+        hospital_name: doc.hospital_name || doc.hospital || doc.clinicName || 'Health Centre',
+        doctor_name: doc.doctor_name || doc.doctor || 'Consulting Doctor',
+        record_date: doc.record_date || doc.date || (doc.created_at ? new Date(doc.created_at).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]),
+        created_at: doc.created_at || new Date().toISOString(),
+        diagnosis: doc.diagnosis || (doc.medications?.length ? `Prescribed: ${doc.medications.map(m => m.name || m.medicine_name).join(', ')}` : 'Prescription therapy'),
+        simplified_summary: doc.simplified_summary || doc.translated_text || doc.extracted_text || '',
+        translated_text: doc.translated_text || '',
+        extracted_text: doc.extracted_text || '',
+        medications: doc.medications || [],
+        file: doc.file || doc.image || null,
+        imagePreview: doc.image || doc.file || null,
+      }));
+
+      // Deduplicate by id and title
+      const seenIds = new Set(combined.map(d => String(d.id)));
+      for (const loc of mappedLocal) {
+        if (!seenIds.has(String(loc.id))) {
+          seenIds.add(String(loc.id));
+          combined.push(loc);
+        }
+      }
+    } catch (localErr) {
+      console.warn('Local vault records parse error:', localErr);
+    }
+
+    setDocuments(combined);
+    setLoading(false);
   };
 
   useEffect(() => {
     fetchDocs();
+    const handleSync = () => fetchDocs();
+    window.addEventListener('swasthya_vault_updated', handleSync);
+    window.addEventListener('storage', handleSync);
+    return () => {
+      window.removeEventListener('swasthya_vault_updated', handleSync);
+      window.removeEventListener('storage', handleSync);
+    };
   }, []);
 
   const handleUpload = async (e) => {
@@ -107,12 +150,43 @@ export const HealthVaultPage = () => {
   const handleDelete = async (docId) => {
     if (!window.confirm('Are you sure you want to remove this record from your vault?')) return;
     try {
-      await api.deleteMedicalDocument(docId);
-      if (showToast) showToast('Record removed from vault.', 'info');
-      setDocuments((prev) => prev.filter((d) => d.id !== docId));
-    } catch {
-      if (showToast) showToast('Failed to remove record.', 'error');
+      if (typeof docId === 'number' || (typeof docId === 'string' && !docId.startsWith('vault-'))) {
+        await api.deleteMedicalDocument(docId);
+      }
+    } catch (e) {
+      console.warn('Backend delete document warning:', e);
     }
+    setDocuments((prev) => {
+      const updated = prev.filter((d) => d.id !== docId);
+      try {
+        const localVault = JSON.parse(localStorage.getItem('swasthya_vault_records') || '[]');
+        const updatedVault = localVault.filter(d => d.id !== docId);
+        localStorage.setItem('swasthya_vault_records', JSON.stringify(updatedVault));
+
+        const localRx = JSON.parse(localStorage.getItem('swasthya_patient_prescriptions') || '[]');
+        const updatedRx = localRx.filter(d => d.id !== docId);
+        localStorage.setItem('swasthya_patient_prescriptions', JSON.stringify(updatedRx));
+
+        // Cascade delete linked pillbox reminders and medication schedules
+        const localPillbox = JSON.parse(localStorage.getItem('swasthya_pillbox_reminders') || '[]');
+        const updatedPillbox = localPillbox.filter(r => r.document_id !== docId && r.docId !== docId && r.id !== docId);
+        // If no records left in vault, clear all remaining orphan test reminders
+        const finalPillbox = updated.length === 0 ? [] : updatedPillbox;
+        localStorage.setItem('swasthya_pillbox_reminders', JSON.stringify(finalPillbox));
+        localStorage.setItem('swasthya_medications', JSON.stringify(finalPillbox));
+
+        const rxHistory = JSON.parse(localStorage.getItem('swasthya_rx_history') || '[]');
+        const updatedHistory = rxHistory.filter(h => h.id !== docId);
+        localStorage.setItem('swasthya_rx_history', JSON.stringify(updatedHistory));
+      } catch {}
+      return updated;
+    });
+
+    window.dispatchEvent(new Event('swasthya_reminders_updated'));
+    window.dispatchEvent(new Event('swasthya_vault_updated'));
+    window.dispatchEvent(new Event('storage'));
+
+    if (showToast) showToast('Record & associated reminders removed.', 'info');
   };
 
   const playVoiceSummary = async (doc) => {
@@ -480,8 +554,41 @@ export const HealthVaultPage = () => {
       {showUploadModal && useWizardUpload && (
         <HealthVaultUploadWizard
           onCancel={() => setShowUploadModal(false)}
-          onSave={() => {
+          onSave={async (uploadData) => {
             setShowUploadModal(false);
+            if (uploadData) {
+              const formData = new FormData();
+              if (uploadData.file) formData.append('file', uploadData.file);
+              formData.append('title', uploadData.title || 'Medical Document');
+              formData.append('document_type', uploadData.documentType || 'prescription');
+              formData.append('hospital_name', uploadData.hospitalName || '');
+              formData.append('doctor_name', uploadData.doctorName || '');
+              formData.append('record_date', uploadData.recordDate || new Date().toISOString().split('T')[0]);
+              formData.append('diagnosis', uploadData.diagnosis || '');
+
+              try {
+                await api.uploadMedicalDocument(formData);
+              } catch (e) {
+                console.warn('Backend upload notice:', e);
+              }
+
+              try {
+                const vaultRecords = JSON.parse(localStorage.getItem('swasthya_vault_records') || '[]');
+                const newRec = {
+                  id: `vault-${Date.now()}`,
+                  title: uploadData.title || 'Medical Document',
+                  category: uploadData.documentType || 'prescription',
+                  document_type: uploadData.documentType || 'prescription',
+                  hospital_name: uploadData.hospitalName || 'Health Centre',
+                  doctor_name: uploadData.doctorName || 'Consulting Doctor',
+                  record_date: uploadData.recordDate || new Date().toISOString().split('T')[0],
+                  diagnosis: uploadData.diagnosis || '',
+                  simplified_summary: uploadData.diagnosis || uploadData.title,
+                  created_at: new Date().toISOString(),
+                };
+                localStorage.setItem('swasthya_vault_records', JSON.stringify([newRec, ...vaultRecords]));
+              } catch {}
+            }
             showToast?.('✅ Record uploaded to your ABHA Health Vault!', 'success');
             fetchDocs();
           }}

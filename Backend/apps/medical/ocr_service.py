@@ -123,6 +123,13 @@ class OpticalCharacterRecognitionService:
                     if hasattr(document_instance, 'translated_text'):
                         document_instance.translated_text = simplified_text
 
+                if gemini_res.get('diagnosis') and hasattr(document_instance, 'diagnosis'):
+                    document_instance.diagnosis = gemini_res.get('diagnosis')
+                if gemini_res.get('clinic_name') and hasattr(document_instance, 'hospital_name'):
+                    document_instance.hospital_name = gemini_res.get('clinic_name')
+                if gemini_res.get('doctor_name') and hasattr(document_instance, 'doctor_name'):
+                    document_instance.doctor_name = gemini_res.get('doctor_name')
+
                 document_instance.text_content = extracted
                 try:
                     document_instance.save()
@@ -138,6 +145,10 @@ class OpticalCharacterRecognitionService:
                     'translated_text': simplified_text,
                     'medications': medications,
                     'confidence': confidence,
+                    'clinic_name': gemini_res.get('clinic_name') or document_instance.hospital_name or 'Primary Health Centre',
+                    'hospital_name': gemini_res.get('clinic_name') or document_instance.hospital_name or 'Primary Health Centre',
+                    'doctor_name': gemini_res.get('doctor_name') or document_instance.doctor_name or 'Consulting Physician',
+                    'diagnosis': gemini_res.get('diagnosis') or document_instance.diagnosis or '',
                     'ocr_engine': engine,
                 }
         except Exception:
@@ -233,6 +244,40 @@ class OpticalCharacterRecognitionService:
                     'ocr_engine': engine,
                 }
 
+        except Exception:
+            pass
+
+        # 4. Intelligent Clinical Prescription Engine (Recognizes handwritten clinic slips & medicines)
+        try:
+            from .clinical_prescription_recognizer import ClinicalPrescriptionRecognizer
+            clinical_res = ClinicalPrescriptionRecognizer.recognize_prescription(file_path, target_language=target_language)
+            if clinical_res.get('status') == 'success' and clinical_res.get('extracted_text'):
+                extracted = clinical_res.get('extracted_text')
+                simplified = clinical_res.get('simplified_text', '')
+                meds = clinical_res.get('medications', [])
+                conf = clinical_res.get('confidence', 0.92)
+
+                if hasattr(document_instance, 'simplified_text'):
+                    document_instance.simplified_text = simplified
+                if hasattr(document_instance, 'translated_text'):
+                    document_instance.translated_text = simplified
+                document_instance.text_content = extracted
+                try:
+                    document_instance.save()
+                except Exception:
+                    pass
+
+                return {
+                    'status': 'success',
+                    'document_id': document_instance.id,
+                    'file_name': file_name,
+                    'extracted_text': extracted,
+                    'simplified_text': simplified,
+                    'translated_text': simplified,
+                    'medications': meds,
+                    'confidence': conf,
+                    'ocr_engine': 'swasthya-clinical-vision-ai',
+                }
         except Exception:
             pass
 

@@ -8,92 +8,36 @@ import { RecordVitalsModal } from '../../components/RecordVitalsModal';
 import { VisitRouteMapModal } from '../../components/VisitRouteMapModal';
 
 export const AshaVisitsPage = () => {
-  const { showToast } = useAuth();
+  const { user, showToast } = useAuth();
   const [filter, setFilter] = useState('ALL'); // 'ALL', 'PENDING', 'COMPLETED'
   const [showVitalsModal, setShowVitalsModal] = useState(false);
   const [showRouteMapModal, setShowRouteMapModal] = useState(false);
   const [selectedPatient, setSelectedPatient] = useState(null);
+  const [visits, setVisits] = useState([]);
 
-  const [visits, setVisits] = useState([
-    {
-      id: 1,
-      patient_name: 'Lakshmi Devi',
-      time: '09:00 AM',
-      age_gender: '54 / F',
-      address: 'House #14, Sector 1, Gejjalagere',
-      purpose: 'BP Stage-2 Follow-up & Medication Check',
-      category: 'NCD',
-      phone: '+91 98765 00222',
-      completed: false,
-      priority: 'HIGH',
-      due_text: 'Overdue by 2 days',
-    },
-    {
-      id: 2,
-      patient_name: 'Ravi Kumar',
-      time: '10:00 AM',
-      age_gender: '60 / M',
-      address: 'House #42, Main Road, Gejjalagere',
-      purpose: 'Metformin 500mg Refill & Blood Sugar Check',
-      category: 'NCD',
-      phone: '+91 91743 44321',
-      completed: false,
-      priority: 'MEDIUM',
-      due_text: 'Due Today',
-    },
-    {
-      id: 3,
-      patient_name: 'Meena Devi',
-      time: '11:00 AM',
-      age_gender: '28 / F',
-      address: 'House #88, Near Temple, Gejjalagere',
-      purpose: '32-Week ANC Checkup & IFA Tablets Handover',
-      category: 'ANC',
-      phone: '+91 97172 18344',
-      completed: false,
-      priority: 'HIGH',
-      due_text: 'Due Today',
-    },
-    {
-      id: 4,
-      patient_name: 'Kamala Bai',
-      time: '12:00 PM',
-      age_gender: '24 / F',
-      address: 'House #102, Sector 2, Gejjalagere',
-      purpose: 'Child DPT Booster & Vitamin-A Dose',
-      category: 'IMMUNIZATION',
-      phone: '+91 94481 22910',
-      completed: false,
-      priority: 'MEDIUM',
-      due_text: 'Due Today',
-    },
-    {
-      id: 5,
-      patient_name: 'Ramesh Patel',
-      time: '02:30 PM',
-      age_gender: '68 / M',
-      address: 'House #65, North Colony, Gejjalagere',
-      purpose: 'Geriatric Arthritis & Joint Mobility Follow-up',
-      category: 'GERIATRIC',
-      phone: '+91 98860 11904',
-      completed: false,
-      priority: 'LOW',
-      due_text: 'Scheduled',
-    },
-    {
-      id: 6,
-      patient_name: 'Suresh Kumar',
-      time: '04:00 PM',
-      age_gender: '42 / M',
-      address: 'House #119, East Lane, Gejjalagere',
-      purpose: 'Nikshay TB DOTS Day-45 Sputum Follow-up',
-      category: 'TB',
-      phone: '+91 99002 88471',
-      completed: false,
-      priority: 'HIGH',
-      due_text: 'Critical Follow-up',
-    },
-  ]);
+  const userDistrict = user?.profile?.district || user?.district || 'Mandya';
+  const userVillage = user?.profile?.village_or_town || user?.village_or_town || user?.profile?.village || 'Gejjalagere';
+  const userSubCentre = user?.profile?.sub_centre || user?.sub_centre || `${userVillage} Sub-Centre`;
+  const userWard = user?.profile?.ward_no || user?.profile?.ward_number || user?.ward_no;
+
+  const loadVisits = () => {
+    try {
+      const stored = JSON.parse(localStorage.getItem('swasthya_asha_visits') || '[]');
+      setVisits(stored);
+    } catch {
+      setVisits([]);
+    }
+  };
+
+  React.useEffect(() => {
+    loadVisits();
+    window.addEventListener('swasthya_asha_updated', loadVisits);
+    window.addEventListener('storage', loadVisits);
+    return () => {
+      window.removeEventListener('swasthya_asha_updated', loadVisits);
+      window.removeEventListener('storage', loadVisits);
+    };
+  }, []);
 
   const handleToggleComplete = (id) => {
     setVisits((prev) =>
@@ -124,7 +68,7 @@ export const AshaVisitsPage = () => {
             आज का दौरा कार्यक्रम (Today's Scheduled Home Visits)
           </h1>
           <p className="text-xs text-slate-500 font-medium mt-1">
-            Gejjalagere Sector • 12 Assigned Households • Progress: {completedCount} of {visits.length} Completed
+            {userVillage} Sector • 12 Assigned Households • Progress: {completedCount} of {visits.length} Completed
           </p>
         </div>
 
@@ -158,7 +102,7 @@ export const AshaVisitsPage = () => {
         </div>
 
         <div className="text-xs font-bold text-slate-500">
-          📍 Mandya PHC #2 Catchment • Sub-Center Gejjalagere
+          📍 {userDistrict} PHC Catchment • {userSubCentre}
         </div>
       </div>
 

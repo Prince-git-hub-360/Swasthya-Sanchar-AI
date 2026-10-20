@@ -9,6 +9,14 @@ import {
 export const AshaPortalLayout = ({ currentPath, onNavigate, children }) => {
   const { user, logout, showToast, currentLang, updateLanguage } = useAuth();
   const [selectedLanguage, setSelectedLanguage] = useState(currentLang || 'en');
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  React.useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   const navGroups = [
     {
@@ -61,6 +69,33 @@ export const AshaPortalLayout = ({ currentPath, onNavigate, children }) => {
   };
 
   const isActive = (path) => currentPath === path;
+  
+  const userName = user?.first_name 
+    ? `${user.first_name} ${user.last_name || ''}`.trim() 
+    : user?.username || 'ASHA Worker';
+
+  const userState = user?.profile?.state || user?.state || 'Karnataka';
+  const userDistrict = user?.profile?.district || user?.district || 'Mandya';
+  const userVillage = user?.profile?.village_or_town || user?.village_or_town || user?.profile?.village || 'Gejjalagere';
+  const userSubCentre = user?.profile?.sub_centre || user?.sub_centre || `${userVillage} Sub-Centre`;
+  const userWard = user?.profile?.ward_no || user?.profile?.ward_number || user?.ward_no;
+  const userAshaId = user?.profile?.asha_id || user?.asha_id || `ASHA-${userState.slice(0,2).toUpperCase()}-${user?.id || '2026'}`;
+
+  const locationDisplay = userWard 
+    ? `${userSubCentre}, ${userVillage} (Ward #${userWard}), ${userDistrict} District, ${userState}`
+    : `${userSubCentre}, ${userVillage}, ${userDistrict} District, ${userState}`;
+
+  const formattedDate = currentTime.toLocaleDateString('en-IN', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric'
+  });
+  const formattedTime = currentTime.toLocaleTimeString('en-IN', {
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: true
+  });
 
   return (
     <div className="h-screen w-full flex flex-col bg-[#F4F7FB] dark:bg-[#090D16] text-slate-900 dark:text-slate-100 font-sans overflow-hidden select-none">
@@ -69,73 +104,62 @@ export const AshaPortalLayout = ({ currentPath, onNavigate, children }) => {
       <header className="shrink-0 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 shadow-xs z-30">
         <div className="max-w-[1650px] mx-auto px-4 sm:px-6 py-2.5 flex flex-wrap items-center justify-between gap-4">
           
-          {/* Left: Government of India (MoHFW) + National Health Mission (Bolder & Larger) */}
+          {/* Left: Government of India (MoHFW) + National Health Mission */}
           <div className="flex items-center gap-4 sm:gap-6">
             <div className="flex items-center gap-2">
               <img
                 src="/images/nha_logo.jpg"
                 alt="Government of India - Ministry of Health and Family Welfare"
-                style={{ height: '52px' }}
-                className="w-auto object-contain drop-shadow-2xs"
-              />
-            </div>
-
-            <div className="hidden sm:block h-10 w-[1px] bg-slate-200 dark:bg-slate-700" />
-
-            <div className="flex items-center gap-2">
-              <img
-                src="/images/nhm_logo.png"
-                alt="National Health Mission"
-                style={{ height: '52px' }}
-                className="w-auto object-contain drop-shadow-2xs"
+                style={{ height: '64px' }}
+                className="w-auto object-contain drop-shadow-xs"
               />
             </div>
           </div>
 
-          {/* Center: Swasthya Sanchar AI • ASHA Field Health Portal */}
-          <div className="text-center">
-            <div className="flex items-center justify-center gap-2">
-              <span className="text-xl sm:text-2xl font-black text-[#0B3B74] dark:text-sky-300 tracking-tight">
-                Swasthya Sanchar
-              </span>
-              <span className="text-[11px] font-black bg-emerald-100 text-[#00875A] dark:bg-emerald-950 dark:text-emerald-300 px-2 py-0.5 rounded-md border border-emerald-300 dark:border-emerald-800">
-                AI
-              </span>
-            </div>
-            <div className="text-xs font-black text-slate-800 dark:text-slate-200 tracking-wide uppercase mt-0.5">
-              ASHA Field Health Portal
-            </div>
-            <div className="text-[11px] font-bold text-slate-500 dark:text-slate-400">
-              स्वास्थ्य संचार
+          {/* Center: Dedicated Swasthya Sanchar AI Emblem & Title */}
+          <div className="flex items-center gap-3">
+            <img
+              src="/assets/branding/swasthya-sanchar-mark.png"
+              alt="Swasthya Sanchar Emblem"
+              style={{ height: '50px', width: 'auto' }}
+              className="object-contain drop-shadow-sm transition-transform hover:scale-105 shrink-0"
+            />
+            <div className="text-left">
+              <div className="text-xl font-black tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
+                <span>Swasthya Sanchar</span>
+                <span className="text-[10px] font-black bg-[#0B3B74] text-white px-2 py-0.5 rounded-md uppercase tracking-wider">
+                  ASHA AI
+                </span>
+              </div>
+              <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400">
+                Frontline Health Worker Portal • राष्ट्रीय स्वास्थ्य मिशन
+              </p>
             </div>
           </div>
 
-          {/* Right: Clean Digital India Vector Logo + Sunita Bai Profile Pill */}
+          {/* Right: Digital India + ASHA Sister Profile Pill */}
           <div className="flex items-center gap-4">
             <img
               src="/images/digital_india_logo.svg"
-              alt="Digital India - Power To Empower"
-              style={{ height: '46px' }}
-              className="w-auto object-contain hidden md:block"
+              alt="Digital India"
+              style={{ height: '54px' }}
+              className="w-auto object-contain hidden md:block drop-shadow-xs"
             />
 
             <div 
               onClick={() => handleNav(ROUTES.APP.ASHA.PROFILE)}
               className="flex items-center gap-2.5 bg-slate-50 dark:bg-slate-800 p-1.5 pr-3.5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-xs cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700/60 transition-all"
             >
-              <img
-                src="/images/asha_sister_action.jpg"
-                alt="Sunita Bai"
-                style={{ width: '40px', height: '40px', minWidth: '40px', minHeight: '40px' }}
-                className="rounded-full object-cover border-2 border-emerald-500 shadow-xs"
-              />
+              <div className="w-10 h-10 rounded-full bg-emerald-600 text-white flex items-center justify-center font-black text-sm border-2 border-emerald-400 shadow-xs">
+                {userName.charAt(0).toUpperCase()}
+              </div>
               <div className="text-left leading-tight">
                 <div className="text-xs font-black text-slate-900 dark:text-white flex items-center gap-1">
-                  <span>Sunita Bai</span>
+                  <span>{userName}</span>
                   <span className="text-[10px] text-slate-400">⌵</span>
                 </div>
-                <div className="text-[10px] text-slate-600 dark:text-slate-300 font-semibold">ASHA Worker</div>
-                <div className="text-[9px] text-slate-400 font-mono">ASHA-KA-8821</div>
+                <div className="text-[10px] text-emerald-700 dark:text-emerald-400 font-bold">ASHA Worker</div>
+                <div className="text-[9px] text-slate-400 font-mono">{userAshaId}</div>
               </div>
             </div>
           </div>
@@ -148,7 +172,7 @@ export const AshaPortalLayout = ({ currentPath, onNavigate, children }) => {
         <div className="max-w-[1650px] mx-auto flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <span className="text-sm">📍</span>
-            <span className="font-bold text-white tracking-wide">Mandya PHC #2, Mandya District, Karnataka</span>
+            <span className="font-bold text-white tracking-wide">{locationDisplay}</span>
           </div>
 
           <div className="flex items-center gap-4 text-xs font-bold text-blue-100">
@@ -168,7 +192,7 @@ export const AshaPortalLayout = ({ currentPath, onNavigate, children }) => {
 
             <div className="flex items-center gap-1.5 text-emerald-300 font-black">
               <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse shadow-xs" />
-              <span>Live Sync: 10:42 AM</span>
+              <span>Live Sync: {formattedDate} • {formattedTime}</span>
             </div>
           </div>
         </div>
@@ -280,7 +304,7 @@ export const AshaPortalLayout = ({ currentPath, onNavigate, children }) => {
       <footer className="shrink-0 bg-[#0B3B74] text-white text-[11px] font-medium py-2 px-4 sm:px-6 shadow-xs z-20">
         <div className="max-w-[1650px] mx-auto flex flex-col md:flex-row items-center justify-between gap-2 text-center md:text-left">
           <div>© 2026 Government of India • National Health Authority (ABDM) | All Rights Reserved</div>
-          <div className="font-mono text-[10px] text-blue-200">Mandya Catchment Zone #2 • Ver: 1.0.0</div>
+          <div className="font-mono text-[10px] text-blue-200">{userDistrict} Catchment Zone • Ver: 1.0.0</div>
         </div>
       </footer>
 

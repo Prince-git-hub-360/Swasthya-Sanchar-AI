@@ -75,7 +75,7 @@ export const LoginScreen: React.FC = () => {
       Alert.alert('Required Fields / आवश्यक जानकारी', 'Please enter your mobile number and password.');
       return;
     }
-    const success = await login(cleanPhone, cleanPass);
+    const success = await login(cleanPhone, cleanPass, { role: selectedRole as any });
     if (!success) {
       Alert.alert(
         'Login Failed / गलत जानकारी ⚠️',

@@ -7,54 +7,33 @@ import {
 import { CreateReferralModal } from '../../components/CreateReferralModal';
 
 export const AshaReferralsPage = () => {
-  const { showToast } = useAuth();
+  const { user, showToast } = useAuth();
   const [filter, setFilter] = useState('ALL');
   const [showCreateModal, setShowCreateModal] = useState(false);
 
-  const [referrals, setReferrals] = useState([
-    {
-      id: 'REF-2026-081',
-      patient_name: 'Meena Devi',
-      age_gender: '28 / F',
-      village: 'Gejjalagere',
-      referred_to: 'Dr. Vikram Sharma, MBBS',
-      facility: 'Mandya PHC #2',
-      reason: '32-Week Gestational High BP (142/94) & Routine ANC Ultrasound Requisition',
-      urgency: 'HIGH',
-      status: 'UNDER_REVIEW',
-      status_label: '🟡 Under Doctor Review',
-      created_at: 'Today, 09:15 AM',
-      ambulance_108: false,
-    },
-    {
-      id: 'REF-2026-079',
-      patient_name: 'Ramesh Gowda',
-      age_gender: '62 / M',
-      village: 'Gejjalagere',
-      referred_to: 'Cardiology Specialist OPD',
-      facility: 'Mandya District Hospital',
-      reason: 'Persistent chest tightness & uncontrolled systolic hypertension (>170 mmHg)',
-      urgency: 'EMERGENCY',
-      status: 'AMBULANCE_DISPATCHED',
-      status_label: '🔴 108 Ambulance Dispatched',
-      created_at: 'Yesterday, 04:30 PM',
-      ambulance_108: true,
-    },
-    {
-      id: 'REF-2026-074',
-      patient_name: 'Savitri Bai',
-      age_gender: '48 / F',
-      village: 'Gejjalagere',
-      referred_to: 'Dr. Vikram Sharma, MBBS',
-      facility: 'Mandya PHC #2',
-      reason: 'Uncontrolled Fasting Blood Sugar (210 mg/dL) requiring insulin dose titration',
-      urgency: 'MEDIUM',
-      status: 'APPROVED',
-      status_label: '🟢 Doctor Approved & Rx Issued',
-      created_at: '28 Aug 2026',
-      ambulance_108: false,
-    },
-  ]);
+  const [referrals, setReferrals] = useState([]);
+
+  const userDistrict = user?.profile?.district || user?.district || 'Mandya';
+  const assignedFacility = user?.profile?.assigned_facility || `${userDistrict} PHC`;
+
+  const loadReferrals = () => {
+    try {
+      const stored = JSON.parse(localStorage.getItem('swasthya_asha_referrals') || '[]');
+      setReferrals(stored);
+    } catch {
+      setReferrals([]);
+    }
+  };
+
+  React.useEffect(() => {
+    loadReferrals();
+    window.addEventListener('swasthya_asha_updated', loadReferrals);
+    window.addEventListener('storage', loadReferrals);
+    return () => {
+      window.removeEventListener('swasthya_asha_updated', loadReferrals);
+      window.removeEventListener('storage', loadReferrals);
+    };
+  }, []);
 
   const filteredReferrals = referrals.filter((r) => {
     if (filter === 'PENDING') return r.status === 'UNDER_REVIEW';
@@ -76,7 +55,7 @@ export const AshaReferralsPage = () => {
             रेफरल प्रबंधन (PHC &amp; Hospital Referrals)
           </h1>
           <p className="text-xs text-slate-500 font-medium mt-1">
-            Official ABDM Fast-Track Referral Slips to Mandya PHC #2 &amp; District Hospitals
+            Official ABDM Fast-Track Referral Slips to {assignedFacility} &amp; District Hospitals
           </p>
         </div>
 

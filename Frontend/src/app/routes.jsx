@@ -24,6 +24,7 @@ import { MedicationReminders } from '../pages/application/patient/MedicationRemi
 import { EmergencyHelp } from '../pages/application/patient/EmergencyHelp';
 import { EmergencyPatientCardPage } from '../features/patient/pages/Emergency/EmergencyPatientCardPage';
 import { MyHealthMapPage } from '../features/patient/pages/HealthMap/MyHealthMapPage';
+import { PatientPortalLayout } from '../features/patient/layout/PatientPortalLayout';
 
 import { AshaDashboard } from '../pages/application/asha/AshaDashboard';
 import { VillageRegistry } from '../pages/application/asha/VillageRegistry';
@@ -213,9 +214,31 @@ const AuthenticatedApp = ({ currentPath, navigate, onOpenChat, chatModalOpen, se
 
   if (role === 'healthcare_worker' || currentPath.startsWith('/app/asha')) {
     return (
-      <AshaPortalLayout currentPath={currentPath} onNavigate={navigate}>
-        {renderContent()}
-      </AshaPortalLayout>
+      <>
+        <AshaPortalLayout currentPath={currentPath} onNavigate={navigate}>
+          {renderContent()}
+        </AshaPortalLayout>
+        <SwasthyaMitrChatModal
+          isOpen={chatModalOpen}
+          onClose={() => setChatModalOpen(false)}
+          initialMedicine={selectedMedForAI}
+        />
+      </>
+    );
+  }
+
+  if (role === 'patient' || currentPath.startsWith('/app/patient') || currentPath === '/app/patient/care') {
+    return (
+      <>
+        <PatientPortalLayout currentPath={currentPath} onNavigate={navigate} onOpenChat={onOpenChat}>
+          {renderContent()}
+        </PatientPortalLayout>
+        <SwasthyaMitrChatModal
+          isOpen={chatModalOpen}
+          onClose={() => setChatModalOpen(false)}
+          initialMedicine={selectedMedForAI}
+        />
+      </>
     );
   }
 
