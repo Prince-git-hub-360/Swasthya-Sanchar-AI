@@ -92,7 +92,25 @@ export const AppRoutes = () => {
 
   // ROUTE 1: PUBLIC HOME (/)
   if (currentPath === ROUTES.PUBLIC.HOME || currentPath === ROUTES.PUBLIC.HOW_IT_WORKS || currentPath === ROUTES.PUBLIC.SOLUTIONS || currentPath === ROUTES.PUBLIC.ROADMAP) {
-    return <HomePage onNavigate={navigate} />;
+    return (
+      <>
+        <HomePage onNavigate={navigate} onOpenChat={() => setChatModalOpen(true)} />
+        {/* Floating AI Health Assistant Companion Button (Accessible right on Landing Page) */}
+        <button
+          type="button"
+          onClick={() => setChatModalOpen(true)}
+          className="fixed bottom-5 right-5 z-40 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 text-xs font-black px-4 py-2.5 rounded-full shadow-2xl transition-all transform hover:scale-105 flex items-center gap-2 cursor-pointer border border-amber-300 ring-4 ring-amber-400/20"
+          title="Ask Swasthya AI Assistant (Swasthya Mitr)"
+        >
+          <SparklesIcon size={16} className="text-slate-950 animate-pulse" />
+          <span>✦ Talk to Swasthya Mitr (AI)</span>
+        </button>
+        <SwasthyaMitrChatModal
+          isOpen={chatModalOpen}
+          onClose={() => setChatModalOpen(false)}
+        />
+      </>
+    );
   }
 
   // ROUTE 2: PUBLIC ABOUT (/about)

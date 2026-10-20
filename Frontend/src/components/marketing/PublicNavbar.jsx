@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { HospitalIcon, MenuIcon, CloseIcon, UserIcon, ArrowRightIcon, ChevronDownIcon } from '../../shared/icons/Icons';
+import { HospitalIcon, MenuIcon, CloseIcon, UserIcon, ArrowRightIcon, ChevronDownIcon, SparklesIcon } from '../../shared/icons/Icons';
 import { ROUTES, navigateTo } from '../../utils/routes';
 import { useAuth } from '../../shared/context/AuthContext';
 import SwasthyaLogo from '../branding/SwasthyaLogo';
 
-export const PublicNavbar = ({ onNavigate }) => {
+export const PublicNavbar = ({ onNavigate, onOpenChat }) => {
   const { theme, toggleTheme } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -226,6 +226,19 @@ export const PublicNavbar = ({ onNavigate }) => {
             <span>Login</span>
           </button>
 
+          {/* Swasthya Mitr AI Companion Button */}
+          {onOpenChat && (
+            <button
+              type="button"
+              onClick={onOpenChat}
+              className="inline-flex items-center gap-1.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 text-xs font-black px-3.5 py-1.5 rounded-xl shadow-md transition-all cursor-pointer border border-amber-300 ring-2 ring-amber-400/20 active:scale-95"
+              title="Open Swasthya Mitr Autonomous AI Assistant"
+            >
+              <SparklesIcon size={14} className="text-slate-950 animate-pulse" />
+              <span>✦ AI Assistant</span>
+            </button>
+          )}
+
           {/* Get Started Button */}
           <button 
             onClick={() => handleNav(ROUTES.AUTH.REGISTER)} 
@@ -303,6 +316,16 @@ export const PublicNavbar = ({ onNavigate }) => {
           </button>
 
           <div className="pt-2 flex flex-col gap-2">
+            {onOpenChat && (
+              <button
+                type="button"
+                onClick={() => { setMobileMenuOpen(false); onOpenChat(); }}
+                className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 py-2.5 rounded-xl font-black text-xs text-center shadow-md transition-all flex items-center justify-center gap-2 border border-amber-300"
+              >
+                <SparklesIcon size={14} className="text-slate-950 animate-pulse" />
+                <span>✦ Talk to Swasthya Mitr (AI)</span>
+              </button>
+            )}
             <button 
               onClick={() => handleNav(ROUTES.AUTH.LOGIN)} 
               className="w-full bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 py-2 rounded-xl font-bold text-xs text-center border border-slate-200 dark:border-slate-700 transition-colors"

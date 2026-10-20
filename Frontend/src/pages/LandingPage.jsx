@@ -64,7 +64,7 @@ const AnimatedStat = ({ endValue, suffix = '', prefix = '', decimals = 0, durati
   );
 };
 
-export const LandingPage = ({ onNavigate }) => {
+export const LandingPage = ({ onNavigate, onOpenChat }) => {
   // Top Utility Bar State
   const [selectedLanguage, setSelectedLanguage] = useState('Hindi');
   const languages = [
@@ -417,7 +417,7 @@ export const LandingPage = ({ onNavigate }) => {
     <div className="min-h-screen flex flex-col bg-[#F8FAFC] dark:bg-[#0B0F17] bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-teal-500/8 via-[#F8FAFC] to-[#F8FAFC] dark:from-teal-950/30 dark:via-[#0B0F17] dark:to-[#0B0F17] text-slate-900 dark:text-slate-100 font-sans antialiased transition-colors duration-200">
       
       {/* 1. FIXED TOP PUBLIC NAVBAR (Always visible across all scrolls) */}
-      <PublicNavbar onNavigate={onNavigate} />
+      <PublicNavbar onNavigate={onNavigate} onOpenChat={onOpenChat} />
 
       {/* MAIN LANDING CONTENT (With top padding to clear fixed navbar) */}
       <main className="flex-1 space-y-12 sm:space-y-16 pt-16 sm:pt-20 pb-8">
@@ -451,9 +451,19 @@ export const LandingPage = ({ onNavigate }) => {
                   <ArrowRightIcon size={18} color="#fff" />
                 </button>
 
+                {onOpenChat && (
+                  <button
+                    onClick={onOpenChat}
+                    className="w-full sm:w-auto bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-extrabold text-sm sm:text-base px-5 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95 border border-amber-300 ring-2 ring-amber-400/20"
+                  >
+                    <SparklesIcon size={18} className="text-slate-950 animate-pulse" />
+                    <span>Talk to Swasthya Mitr (AI)</span>
+                  </button>
+                )}
+
                 <button
                   onClick={() => handleNavClick('bento-features')}
-                  className="w-full sm:w-auto bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-bold text-sm sm:text-base px-6 py-3 rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer shadow-xs hover:border-slate-300"
+                  className="w-full sm:w-auto bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-bold text-sm sm:text-base px-5 py-3 rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer shadow-xs hover:border-slate-300"
                 >
                   <PlayIcon size={16} className="text-[#0F766E] dark:text-teal-400" />
                   <span>Explore Features</span>
