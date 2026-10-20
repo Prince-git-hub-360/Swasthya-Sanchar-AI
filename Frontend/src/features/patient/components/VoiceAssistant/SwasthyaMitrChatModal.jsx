@@ -144,29 +144,32 @@ export const SwasthyaMitrChatModal = ({ isOpen, onClose, initialMedicine = null 
     }
   };
 
-  const handleSendMessage = async (e, directQuery = null) => {
+  const handleSendMessage = async (e, directQuery = null, isProactive = false) => {
     if (e) e.preventDefault();
     
     const queryToUse = directQuery || inputQuery;
-    if (!queryToUse.trim() && !attachedImage) return;
+    if (!queryToUse.trim() && !attachedImage && !isProactive) return;
 
     const currentImg = attachedImage;
     const currentText = queryToUse.trim();
 
-    const userMsg = {
-      id: Date.now(),
-      sender: 'user',
-      text: currentText || 'Uploaded Prescription Photo',
-      image: currentImg?.preview,
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-    };
+    if (!isProactive) {
+      const userMsg = {
+        id: Date.now(),
+        sender: 'user',
+        text: currentText || 'Uploaded Prescription Photo',
+        image: currentImg?.preview,
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      };
+      setMessages((prev) => [...prev, userMsg]);
+    }
 
-    setMessages((prev) => [...prev, userMsg]);
     setInputQuery('');
     setAttachedImage(null);
     setIsProcessing(true);
 
     let aiAnswerText = '';
+    let executedAction = null;
 
     try {
       // 1. If photo attached, analyze prescription document first in selected language
@@ -187,38 +190,51 @@ export const SwasthyaMitrChatModal = ({ isOpen, onClose, initialMedicine = null 
         }
       }
 
-      // 2. Query Swasthya Mitr Gemini AI Assistant Backend
+      // 2. Query Swasthya Mitr Autonomous Agentic Brain (Meta Llama ReAct Loop)
       if (!aiAnswerText) {
         const langObj = LANGUAGES.find(l => l.code === selectedLang);
         const languageName = langObj ? langObj.name : 'English';
 
-        // Prepare conversation history
-        const convHistory = messages.map(m => ({
-          role: m.sender === 'user' ? 'user' : 'assistant',
-          text: m.text
-        }));
+        try {
+          const agentPayload = {
+            message: currentText || '',
+            language: selectedLang,
+            is_proactive: isProactive,
+            context: selectedMedicine
+          };
+          const agentRes = await api.queryAgenticAssistant(agentPayload);
+          if (agentRes && (agentRes.reply || agentRes.conversational_reply)) {
+            aiAnswerText = agentRes.reply || agentRes.conversational_reply;
+            executedAction = agentRes.action_executed;
+          }
+        } catch (agentErr) {
+          console.warn("Agentic API fallback:", agentErr);
+        }
 
-        const payload = {
-          question: currentText || 'Please explain this prescription medicine.',
-          medicine: selectedMedicine ? {
-            name: selectedMedicine.name || selectedMedicine.medicine_name || '',
-            medicine_name: selectedMedicine.name || selectedMedicine.medicine_name || '',
-            dosage: selectedMedicine.dosage || selectedMedicine.strength || '',
-            frequency: selectedMedicine.frequency || selectedMedicine.timing || '',
-            duration: selectedMedicine.duration || '',
-            instructions: selectedMedicine.instructions || '',
-            prescription_context: selectedMedicine.prescription_context || ''
-          } : null,
-          language: languageName,
-          conversation_history: convHistory
-        };
+        // Graceful fallback to legacy queryMedicineAssistant if agent response empty
+        if (!aiAnswerText) {
+          const convHistory = messages.map(m => ({
+            role: m.sender === 'user' ? 'user' : 'assistant',
+            text: m.text
+          }));
 
-        const response = await api.queryMedicineAssistant(payload);
-        
-        if (response && response.answer) {
-          aiAnswerText = response.answer;
-        } else {
-          aiAnswerText = "I'm unable to retrieve information right now. Please check your prescription or consult your doctor.";
+          const payload = {
+            question: currentText || 'Please explain this prescription medicine.',
+            medicine: selectedMedicine ? {
+              name: selectedMedicine.name || selectedMedicine.medicine_name || '',
+              medicine_name: selectedMedicine.name || selectedMedicine.medicine_name || '',
+              dosage: selectedMedicine.dosage || selectedMedicine.strength || '',
+              frequency: selectedMedicine.frequency || selectedMedicine.timing || '',
+              duration: selectedMedicine.duration || '',
+              instructions: selectedMedicine.instructions || '',
+              prescription_context: selectedMedicine.prescription_context || ''
+            } : null,
+            language: languageName,
+            conversation_history: convHistory
+          };
+
+          const response = await api.queryMedicineAssistant(payload);
+          aiAnswerText = response?.answer || "I'm unable to retrieve information right now. Please check your prescription.";
         }
       }
     } catch (err) {
@@ -232,11 +248,17 @@ export const SwasthyaMitrChatModal = ({ isOpen, onClose, initialMedicine = null 
       id: Date.now() + 1,
       sender: 'ai',
       text: aiAnswerText,
+      action: executedAction,
       language: selectedLang,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     };
 
     setMessages((prev) => [...prev, aiMsg]);
+
+    // Automatically speak aloud if proactive check-in
+    if (isProactive) {
+      handleToggleSpeech(aiMsg);
+    }
   };
 
   const handleToggleSpeech = async (msg) => {
@@ -292,6 +314,16 @@ export const SwasthyaMitrChatModal = ({ isOpen, onClose, initialMedicine = null 
           </div>
 
           <div className="flex items-center gap-2 shrink-0">
+            {/* PROACTIVE CHECK-IN DEMO BUTTON */}
+            <button
+              type="button"
+              onClick={() => handleSendMessage(null, '', true)}
+              className="bg-amber-400 hover:bg-amber-300 active:scale-95 text-slate-950 text-[11px] font-black px-3 py-1.5 rounded-xl shadow-xs flex items-center gap-1.5 transition-all cursor-pointer"
+              title="Simulate 8:30 AM autonomous voice check-in"
+            >
+              <span>⚡ Proactive Check-In</span>
+            </button>
+
             {/* GLOBAL STOP AUDIO BUTTON WHEN SPEAKING */}
             {speakingMsgId && (
               <button
@@ -393,6 +425,45 @@ export const SwasthyaMitrChatModal = ({ isOpen, onClose, initialMedicine = null 
                   ))}
                 </div>
 
+                {/* AUTONOMOUS AGENT ACTION BADGE (TOOL EXECUTION PROOF) */}
+                {msg.action && (
+                  <div className="mt-3 p-3 rounded-2xl text-xs font-semibold border transition-all">
+                    {msg.action.tool === 'confirm_dose' && (
+                      <div className="bg-emerald-50 dark:bg-emerald-950/80 border-emerald-300 dark:border-emerald-800 text-emerald-900 dark:text-emerald-200 p-2.5 rounded-xl flex items-center gap-2">
+                        <span className="text-base">✅</span>
+                        <div>
+                          <div className="font-extrabold text-[11px] uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
+                            Action: Dose Marked TAKEN in PostgreSQL
+                          </div>
+                          <div>{msg.action.message || `${msg.action.medicine_name} recorded as TAKEN at ${msg.action.timestamp}`}</div>
+                        </div>
+                      </div>
+                    )}
+                    {msg.action.tool === 'trigger_sos' && (
+                      <div className="bg-rose-50 dark:bg-rose-950/80 border-rose-400 dark:border-rose-800 text-rose-900 dark:text-rose-200 p-2.5 rounded-xl flex items-center gap-2 animate-pulse">
+                        <span className="text-base">🚨</span>
+                        <div>
+                          <div className="font-extrabold text-[11px] uppercase tracking-wider text-rose-700 dark:text-rose-400">
+                            Emergency SOS Beacon Dispatched
+                          </div>
+                          <div>{msg.action.message || 'ASHA Worker & emergency contacts notified with live coordinates.'}</div>
+                        </div>
+                      </div>
+                    )}
+                    {msg.action.tool === 'check_contraindication' && (
+                      <div className="bg-amber-50 dark:bg-amber-950/80 border-amber-300 dark:border-amber-800 text-amber-900 dark:text-amber-200 p-2.5 rounded-xl flex items-center gap-2">
+                        <span className="text-base">🛡️</span>
+                        <div>
+                          <div className="font-extrabold text-[11px] uppercase tracking-wider text-amber-700 dark:text-amber-400">
+                            Clinical Safety Check Grounded in Doctor Rx
+                          </div>
+                          <div>{msg.action.clinical_safety_note}</div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 {msg.sender === 'ai' && (
                   <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-700/80 flex items-center justify-between gap-2 flex-wrap">
                     <button
@@ -437,9 +508,27 @@ export const SwasthyaMitrChatModal = ({ isOpen, onClose, initialMedicine = null 
         {/* QUICK CONTEXTUAL SUGGESTION CHIPS */}
         <div className="px-4 py-2 bg-slate-100 dark:bg-slate-800/80 border-t border-slate-200 dark:border-slate-700 flex items-center gap-2 overflow-x-auto text-[11px] shrink-0 scrollbar-none">
           <span className="font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider shrink-0">
-            SUGGESTED:
+            ACTIONS:
           </span>
-          {medicineQuestions.map((q, idx) => (
+          <button
+            onClick={() => handleSendMessage(null, '', true)}
+            className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-black px-3 py-1 rounded-full whitespace-nowrap cursor-pointer transition-colors shadow-2xs"
+          >
+            ⚡ 8:30 AM Morning Check-In
+          </button>
+          <button
+            onClick={() => handleSendMessage(null, 'हाँ, नाश्ते के बाद Augmentin दवा ले ली')}
+            className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3 py-1 rounded-full whitespace-nowrap cursor-pointer transition-colors shadow-2xs"
+          >
+            ✅ हाँ, नाश्ते के बाद ले ली
+          </button>
+          <button
+            onClick={() => handleSendMessage(null, 'चक्कर आ रहे हैं और बहुत तेज दर्द है')}
+            className="bg-rose-600 hover:bg-rose-700 text-white font-bold px-3 py-1 rounded-full whitespace-nowrap cursor-pointer transition-colors shadow-2xs"
+          >
+            🚨 चक्कर आ रहे हैं (Emergency SOS)
+          </button>
+          {medicineQuestions.slice(0, 2).map((q, idx) => (
             <button
               key={idx}
               onClick={() => handleSendMessage(null, q)}

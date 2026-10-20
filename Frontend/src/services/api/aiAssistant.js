@@ -11,4 +11,15 @@ export const aiAssistantApi = {
       body: JSON.stringify(payload),
     });
   },
+
+  /**
+   * Query the Autonomous Swasthya Agentic Companion (Meta Llama ReAct loop with tool calling).
+   * @param {Object} payload - { message, language, is_proactive, patient_id, context }
+   */
+  async queryAgenticAssistant(payload) {
+    return request('/ai-assistant/agent/', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  },
 };

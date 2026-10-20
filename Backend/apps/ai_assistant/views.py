@@ -67,3 +67,58 @@ class MedicineAssistantView(APIView):
                 },
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+
+
+class AgenticAssistantView(APIView):
+    """
+    POST /api/v1/ai-assistant/agent/
+    POST /api/ai-assistant/agent/
+
+    Autonomous Healthcare Agent Endpoint (Meta Llama 3.3 ReAct Loop).
+    Handles proactive voice check-ins, tool-calling (confirm_dose, trigger_sos),
+    and Indic vernacular audio guidance.
+    """
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request, *args, **kwargs):
+        from .services.agentic_service import SwasthyaAgenticService
+
+        message = request.data.get("message", "").strip()
+        language = request.data.get("language", "hi")
+        is_proactive = bool(request.data.get("is_proactive", False))
+        patient_id = request.data.get("patient_id")
+
+        patient = None
+        if request.user and request.user.is_authenticated:
+            try:
+                patient = getattr(request.user, "patient_profile", None) or getattr(request.user, "patient", None)
+            except Exception:
+                pass
+
+        if not patient and patient_id:
+            try:
+                from patients.models import Patient
+                patient = Patient.objects.filter(id=patient_id).first()
+            except Exception:
+                pass
+
+        try:
+            result = SwasthyaAgenticService.run_agent(
+                patient=patient,
+                message=message,
+                language=language,
+                is_proactive=is_proactive,
+                context=request.data.get("context")
+            )
+            return Response(result, status=status.HTTP_200_OK)
+        except Exception as e:
+            logger.error(f"Error in AgenticAssistantView: {e}", exc_info=True)
+            return Response(
+                {
+                    "success": False,
+                    "reply": "नमस्ते! आपका संदेश मिल गया है। कृपया थोड़ी देर बाद पुनः प्रयास करें।",
+                    "audio_script": "नमस्ते! कृपया थोड़ी देर बाद पुनः प्रयास करें।",
+                    "error": str(e)
+                },
+                status=status.HTTP_200_OK
+            )
