@@ -316,3 +316,4 @@ git push -u origin main
 - **License**: Distributed under the [MIT License](LICENSE).
 - **Project Submission**: Submitted for **Infosys Springboard Virtual Internship**.
 - **Special Thanks**: Infosys Springboard mentors and instructors for guidance on domain-driven software architecture for social impact.
+- **Contributions**: Pull requests, issues, and feedback are welcome to advance rural healthcare accessibility.
