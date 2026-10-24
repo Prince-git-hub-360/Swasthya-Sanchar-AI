@@ -86,50 +86,51 @@ export const CinematicIntroSplash = ({ onFinish }) => {
       {/* ======================================================== */}
       {(phase === 'scan' || phase === 'transform') && (
         <div
-          className={`relative w-72 sm:w-80 transition-all duration-700 transform flex flex-col items-center ${
+          className={`relative w-[92vw] max-w-sm sm:w-88 transition-all duration-700 transform flex flex-col items-center ${
             phase === 'transform' ? 'opacity-0 scale-90 translate-y-4 pointer-events-none' : 'opacity-100 scale-100'
           }`}
         >
-          {/* Simulated Doctor Prescription Card */}
-          <div className="w-full bg-white/95 rounded-2xl p-4 shadow-2xl border-2 border-teal-400/40 relative overflow-hidden text-slate-900 font-sans">
+          {/* Simulated Doctor Prescription Card - Clearly legible on mobile */}
+          <div className="w-full bg-white rounded-2xl p-4 sm:p-5 shadow-2xl border-2 border-teal-400/50 relative overflow-hidden text-slate-900 font-sans">
             {/* Header: Clinic Watermark */}
-            <div className="flex items-center justify-between border-b border-slate-200 pb-2 mb-2">
-              <div className="flex items-center gap-1.5">
-                <span className="text-lg font-serif font-black text-teal-800">℞</span>
+            <div className="flex items-center justify-between border-b border-slate-200 pb-2 mb-3">
+              <div className="flex items-center gap-2">
+                <span className="text-xl font-serif font-black text-teal-800">℞</span>
                 <div>
-                  <div className="text-[11px] font-bold text-slate-800 leading-tight">Rural PHC Clinic</div>
-                  <div className="text-[9px] text-slate-500">Dr. Sharma, MBBS</div>
+                  <div className="text-xs font-bold text-slate-900 leading-tight">Primary Health Centre (PHC)</div>
+                  <div className="text-[10px] text-slate-500 font-medium">Dr. Sharma, MBBS • Reg #84920</div>
                 </div>
               </div>
-              <span className="text-[9px] font-mono bg-teal-50 text-teal-700 px-1.5 py-0.5 rounded border border-teal-200 font-bold">
-                OPD #482
+              <span className="text-[10px] font-mono bg-teal-50 text-teal-800 px-2 py-0.5 rounded-full border border-teal-200 font-bold">
+                OPD SLIP
               </span>
             </div>
 
-            {/* Handwritten Medical Notes (Doctor scribbles) */}
-            <div className="space-y-1.5 my-2 font-serif italic text-slate-700 text-xs tracking-wide">
-              <div className="flex items-center justify-between">
-                <span>Tab Paracetamol 650mg</span>
-                <span className="font-mono text-[10px] text-slate-500">1-0-1 (3d) PC</span>
+            {/* Handwritten Medical Notes with clear high-contrast typography */}
+            <div className="space-y-2 my-2 font-serif text-slate-800 text-xs sm:text-sm tracking-wide">
+              <div className="flex items-center justify-between bg-slate-50 p-1.5 rounded-lg border border-slate-100">
+                <span className="font-semibold italic">1. Tab Paracetamol 650mg</span>
+                <span className="font-mono text-[11px] font-bold text-teal-700 bg-teal-50 px-1.5 py-0.5 rounded">1-0-1 (3d) PC</span>
               </div>
-              <div className="flex items-center justify-between">
-                <span>Cap Amoxicillin 500mg</span>
-                <span className="font-mono text-[10px] text-slate-500">1-1-1 (5d) PC</span>
+              <div className="flex items-center justify-between bg-slate-50 p-1.5 rounded-lg border border-slate-100">
+                <span className="font-semibold italic">2. Cap Amoxicillin 500mg</span>
+                <span className="font-mono text-[11px] font-bold text-teal-700 bg-teal-50 px-1.5 py-0.5 rounded">1-1-1 (5d) PC</span>
               </div>
-              <div className="flex items-center justify-between">
-                <span>Tab Cetirizine 10mg</span>
-                <span className="font-mono text-[10px] text-slate-500">0-0-1 (3d) HS</span>
+              <div className="flex items-center justify-between bg-slate-50 p-1.5 rounded-lg border border-slate-100">
+                <span className="font-semibold italic">3. Tab Cetirizine 10mg</span>
+                <span className="font-mono text-[11px] font-bold text-teal-700 bg-teal-50 px-1.5 py-0.5 rounded">0-0-1 (3d) HS</span>
               </div>
             </div>
 
-            {/* Doctor's Signature scribbles */}
-            <div className="border-t border-slate-100 pt-1.5 flex justify-end">
-              <span className="font-serif italic text-slate-400 text-[10px]">Signed: Dr. S.~~</span>
+            {/* Doctor's Signature */}
+            <div className="border-t border-slate-100 pt-2 flex items-center justify-between">
+              <span className="text-[9px] text-slate-400 uppercase tracking-wider font-mono">Patient: Lakshmi Devi (48y)</span>
+              <span className="font-serif italic text-teal-900 text-xs font-bold">Signed: Dr. Sharma</span>
             </div>
 
             {/* Luminous Animated AI Laser Scanner Bar */}
             <div
-              className="absolute left-0 right-0 h-1 bg-gradient-to-r from-transparent via-teal-400 to-transparent shadow-[0_0_15px_#2dd4bf,0_0_30px_#14b8a6] pointer-events-none"
+              className="absolute left-0 right-0 h-1.5 bg-gradient-to-r from-transparent via-teal-400 to-transparent shadow-[0_0_20px_#2dd4bf,0_0_35px_#14b8a6] pointer-events-none"
               style={{
                 animation: 'aiLaserSweep 1.1s ease-in-out infinite alternate',
               }}
@@ -138,7 +139,7 @@ export const CinematicIntroSplash = ({ onFinish }) => {
 
           {/* AI Scan Label below card */}
           <div className="mt-4 flex items-center gap-2 text-teal-300 text-xs font-mono font-bold tracking-wider">
-            <span className="w-2 h-2 rounded-full bg-teal-400 animate-ping" />
+            <span className="w-2.5 h-2.5 rounded-full bg-teal-400 animate-ping" />
             <span>AI SCANNING HANDWRITTEN PRESCRIPTION...</span>
           </div>
         </div>
@@ -148,21 +149,21 @@ export const CinematicIntroSplash = ({ onFinish }) => {
       {/* STAGE 2: FLOATING REGIONAL LETTERS & VOICE WAVES         */}
       {/* ======================================================== */}
       {phase === 'transform' && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none transition-all duration-500">
+        <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none transition-all duration-500 px-4">
           {/* Floating Regional Indian Language Characters */}
-          <div className="relative w-72 h-48 flex items-center justify-center">
-            <span className="absolute text-2xl font-black text-teal-300 animate-bounce" style={{ top: '10%', left: '15%' }}>अ</span>
-            <span className="absolute text-2xl font-black text-amber-300 animate-pulse" style={{ top: '15%', right: '20%' }}>க</span>
-            <span className="absolute text-2xl font-black text-emerald-300 animate-ping" style={{ bottom: '25%', left: '20%' }}>త</span>
-            <span className="absolute text-2xl font-black text-teal-200 animate-bounce" style={{ bottom: '15%', right: '25%' }}>क</span>
-            <span className="absolute text-2xl font-black text-cyan-300 animate-pulse" style={{ top: '45%', left: '48%' }}>ব</span>
+          <div className="relative w-72 h-44 flex items-center justify-center">
+            <span className="absolute text-3xl font-black text-teal-300 animate-bounce" style={{ top: '8%', left: '12%' }}>अ</span>
+            <span className="absolute text-3xl font-black text-amber-300 animate-pulse" style={{ top: '12%', right: '15%' }}>க</span>
+            <span className="absolute text-3xl font-black text-emerald-300 animate-ping" style={{ bottom: '20%', left: '15%' }}>త</span>
+            <span className="absolute text-3xl font-black text-teal-200 animate-bounce" style={{ bottom: '10%', right: '20%' }}>क</span>
+            <span className="absolute text-3xl font-black text-cyan-300 animate-pulse" style={{ top: '40%', left: '46%' }}>ব</span>
 
             {/* Animated Audio Equalizer Soundwave Bars */}
-            <div className="flex items-center gap-1.5">
-              {[18, 36, 52, 64, 48, 32, 58, 24].map((h, i) => (
+            <div className="flex items-center gap-2">
+              {[24, 42, 60, 72, 54, 38, 64, 28].map((h, i) => (
                 <div
                   key={i}
-                  className="w-1.5 rounded-full bg-gradient-to-t from-teal-500 to-amber-300"
+                  className="w-2 rounded-full bg-gradient-to-t from-teal-500 via-teal-300 to-amber-300 shadow-[0_0_10px_rgba(45,212,191,0.5)]"
                   style={{
                     height: `${h}px`,
                     animation: `soundwavePulse 0.6s ease-in-out ${i * 0.08}s infinite alternate`,
@@ -172,14 +173,14 @@ export const CinematicIntroSplash = ({ onFinish }) => {
             </div>
           </div>
 
-          <div className="mt-3 text-amber-300 font-mono text-xs font-bold tracking-wider flex items-center gap-1.5">
+          <div className="mt-3 text-amber-300 font-mono text-xs font-bold tracking-wider flex items-center gap-1.5 bg-slate-900/60 px-3 py-1.5 rounded-full border border-amber-400/30">
             <span>🎙️ CONVERTING TO 22+ NATIVE VOICE LANGUAGES...</span>
           </div>
         </div>
       )}
 
       {/* ======================================================== */}
-      {/* STAGE 3: THE GRAND SWASTHYA SANCHAR LOGO REVEAL          */}
+      {/* STAGE 3: BALANCED SWASTHYA SANCHAR LOGO REVEAL          */}
       {/* ======================================================== */}
       {(phase === 'logo' || phase === 'exit') && (
         <div
@@ -187,40 +188,39 @@ export const CinematicIntroSplash = ({ onFinish }) => {
             phase === 'logo' ? 'opacity-100 scale-100 translate-y-0' : 'opacity-80 scale-105'
           }`}
         >
-          {/* THE OFFICIAL LOGO EMBLEM with Golden Aura */}
-          <div className="relative mb-4 group">
+          {/* THE OFFICIAL LOGO EMBLEM - Balanced, perfectly sized */}
+          <div className="relative mb-3 group">
             {/* Glowing background ring */}
-            <div className="absolute inset-0 rounded-3xl bg-teal-400/25 blur-xl animate-pulse" />
+            <div className="absolute inset-0 rounded-2xl bg-teal-400/30 blur-lg animate-pulse" />
 
-            <div className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-3xl bg-gradient-to-br from-[#0B4F42] via-[#07382F] to-[#041F1A] border-2 border-teal-300/60 p-3.5 shadow-[0_0_35px_rgba(20,184,166,0.5)] flex items-center justify-center transform transition-transform duration-300">
+            <div className="relative w-20 h-20 sm:w-22 sm:h-22 rounded-2xl bg-gradient-to-br from-[#0B4F42] via-[#07382F] to-[#041F1A] border border-teal-300/60 p-2.5 shadow-[0_0_25px_rgba(20,184,166,0.4)] flex items-center justify-center">
               <img
                 src="/assets/branding/swasthya-sanchar-mark-white.png"
                 alt="Swasthya Sanchar Logo"
-                className="w-full h-full object-contain filter drop-shadow-[0_4px_8px_rgba(0,0,0,0.4)]"
+                className="w-full h-full object-contain filter drop-shadow-[0_2px_6px_rgba(0,0,0,0.4)]"
                 onError={(e) => {
-                  // Graceful fallback to app icon if mark-white has issue
                   e.currentTarget.src = '/assets/branding/swasthya-sanchar-app-icon.png';
                 }}
               />
             </div>
           </div>
 
-          {/* BRAND TITLE LOCKUP */}
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">Swasthya</span>
-            <span className="text-2xl sm:text-3xl font-extrabold text-teal-400 tracking-tight">Sanchar</span>
-            <span className="bg-teal-400/20 text-teal-300 border border-teal-300/40 text-[10px] font-black px-1.5 py-0.5 rounded-md uppercase tracking-wider">
+          {/* BRAND TITLE LOCKUP - Crisp and proportional */}
+          <div className="flex items-center gap-1.5 mb-1">
+            <span className="text-xl sm:text-2xl font-black text-white tracking-tight">Swasthya</span>
+            <span className="text-xl sm:text-2xl font-black text-teal-400 tracking-tight">Sanchar</span>
+            <span className="bg-teal-400/20 text-teal-300 border border-teal-300/40 text-[9px] font-black px-1.5 py-0.5 rounded-md uppercase tracking-wider">
               AI
             </span>
           </div>
 
           {/* TAGLINE */}
-          <p className="text-xs sm:text-sm text-slate-300 font-medium tracking-wide max-w-xs mt-1">
+          <p className="text-xs text-slate-300 font-medium tracking-wide max-w-xs">
             Healthcare that speaks your language
           </p>
 
           {/* DYNAMIC VITALITY ECG HEARTBEAT SVG */}
-          <div className="w-56 h-8 my-2 flex items-center justify-center overflow-hidden">
+          <div className="w-44 h-6 my-2 flex items-center justify-center overflow-hidden">
             <svg viewBox="0 0 200 40" className="w-full h-full stroke-teal-400 fill-none stroke-[2.5]">
               <path
                 d="M 0 20 L 60 20 L 70 8 L 80 32 L 90 4 L 100 36 L 110 20 L 200 20"
@@ -234,7 +234,7 @@ export const CinematicIntroSplash = ({ onFinish }) => {
           </div>
 
           {/* STATUS PILL */}
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-teal-900/40 border border-teal-500/30 text-teal-300 text-[11px] font-mono font-bold mt-1">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-teal-900/40 border border-teal-500/30 text-teal-300 text-[10px] font-mono font-bold mt-1">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
             <span>AI Voice & Prescription Ready</span>
           </div>
