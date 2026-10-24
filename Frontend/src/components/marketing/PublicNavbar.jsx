@@ -100,14 +100,19 @@ export const PublicNavbar = ({ onNavigate, onOpenChat }) => {
           : 'bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200/60 dark:border-slate-800/60 py-2.5'
       }`}
     >
-      <div className="max-w-[1240px] mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
+      <div className="max-w-[1240px] mx-auto px-3 sm:px-6 lg:px-8 flex items-center justify-between">
         
         {/* LEFT: Brand Logo */}
         <div 
-          className="flex items-center cursor-pointer group" 
+          className="flex items-center cursor-pointer group shrink-0" 
           onClick={() => handleNav(ROUTES.PUBLIC.HOME, 'home')}
         >
-          <SwasthyaLogo variant={theme === 'dark' ? 'dark' : 'full'} height={44} />
+          <div className="hidden sm:block">
+            <SwasthyaLogo variant={theme === 'dark' ? 'dark' : 'full'} height={42} />
+          </div>
+          <div className="sm:hidden">
+            <SwasthyaLogo variant={theme === 'dark' ? 'dark' : 'full'} height={32} />
+          </div>
         </div>
 
         {/* CENTER: Compact Startup Navigation Links */}
@@ -204,12 +209,12 @@ export const PublicNavbar = ({ onNavigate, onOpenChat }) => {
         </nav>
 
         {/* RIGHT: Auth & Theme CTAs */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
           {/* Theme Toggle */}
           <button
             type="button"
             onClick={toggleTheme}
-            className="bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 px-2.5 py-1.5 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 transition-colors cursor-pointer flex items-center gap-1 shadow-xs"
+            className="bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 px-2 py-1.5 sm:px-2.5 sm:py-1.5 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 transition-colors cursor-pointer flex items-center gap-1 shadow-xs"
             title="Toggle Light / Dark Mode"
             aria-label="Toggle Theme Mode"
           >
@@ -217,7 +222,20 @@ export const PublicNavbar = ({ onNavigate, onOpenChat }) => {
             <span className="hidden sm:inline text-[11px]">{theme === 'dark' ? 'Dark' : 'Light'}</span>
           </button>
 
-          {/* Login Button */}
+          {/* Swasthya Mitr AI Companion Button - Hidden on mobile, shown on sm+ */}
+          {onOpenChat && (
+            <button
+              type="button"
+              onClick={onOpenChat}
+              className="hidden sm:inline-flex items-center gap-1.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 text-xs font-black px-3.5 py-1.5 rounded-xl shadow-md transition-all cursor-pointer border border-amber-300 ring-2 ring-amber-400/20 active:scale-95"
+              title="Open Swasthya Mitr Autonomous AI Assistant"
+            >
+              <SparklesIcon size={14} className="text-slate-950 animate-pulse" />
+              <span>✦ AI Assistant</span>
+            </button>
+          )}
+
+          {/* Login Button - Shown on md+ */}
           <button 
             onClick={() => handleNav(ROUTES.AUTH.LOGIN)} 
             className="hidden md:inline-flex items-center gap-1.5 border border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-bold px-3.5 py-1.5 rounded-xl transition-colors cursor-pointer"
@@ -226,23 +244,10 @@ export const PublicNavbar = ({ onNavigate, onOpenChat }) => {
             <span>Login</span>
           </button>
 
-          {/* Swasthya Mitr AI Companion Button */}
-          {onOpenChat && (
-            <button
-              type="button"
-              onClick={onOpenChat}
-              className="inline-flex items-center gap-1.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 text-xs font-black px-3.5 py-1.5 rounded-xl shadow-md transition-all cursor-pointer border border-amber-300 ring-2 ring-amber-400/20 active:scale-95"
-              title="Open Swasthya Mitr Autonomous AI Assistant"
-            >
-              <SparklesIcon size={14} className="text-slate-950 animate-pulse" />
-              <span>✦ AI Assistant</span>
-            </button>
-          )}
-
-          {/* Get Started Button */}
+          {/* Get Started Button - Hidden on mobile, shown on sm+ */}
           <button 
             onClick={() => handleNav(ROUTES.AUTH.REGISTER)} 
-            className="inline-flex items-center gap-1.5 bg-[#0F766E] hover:bg-[#095650] dark:bg-teal-600 dark:hover:bg-teal-500 text-white text-xs font-bold px-4 py-1.5 rounded-xl shadow-md transition-all cursor-pointer active:scale-95"
+            className="hidden sm:inline-flex items-center gap-1.5 bg-[#0F766E] hover:bg-[#095650] dark:bg-teal-600 dark:hover:bg-teal-500 text-white text-xs font-bold px-3.5 py-1.5 rounded-xl shadow-md transition-all cursor-pointer active:scale-95"
           >
             <span>Get Started</span>
             <ArrowRightIcon size={13} color="#fff" />
@@ -251,7 +256,7 @@ export const PublicNavbar = ({ onNavigate, onOpenChat }) => {
           {/* Mobile Hamburger Button */}
           <button 
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)} 
-            className="lg:hidden p-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-700 dark:text-slate-300 cursor-pointer text-xs"
+            className="lg:hidden p-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-700 dark:text-slate-300 cursor-pointer flex items-center justify-center transition-colors"
             aria-label="Toggle Navigation Menu"
           >
             {mobileMenuOpen ? <CloseIcon size={18} /> : <MenuIcon size={18} />}
