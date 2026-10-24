@@ -99,11 +99,13 @@ export const AppRoutes = () => {
         <button
           type="button"
           onClick={() => setChatModalOpen(true)}
-          className="fixed bottom-5 right-5 z-40 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 text-xs font-black px-4 py-2.5 rounded-full shadow-2xl transition-all transform hover:scale-105 flex items-center gap-2 cursor-pointer border border-amber-300 ring-4 ring-amber-400/20"
+          className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-40 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 text-xs font-black p-2.5 sm:px-4 sm:py-2.5 rounded-full shadow-2xl transition-all transform hover:scale-105 active:scale-95 flex items-center gap-1.5 sm:gap-2 cursor-pointer border border-amber-300 ring-4 ring-amber-400/20"
           title="Ask Swasthya AI Assistant (Swasthya Mitr)"
+          aria-label="Ask Swasthya AI Assistant"
         >
-          <SparklesIcon size={16} className="text-slate-950 animate-pulse" />
-          <span>✦ Talk to Swasthya Mitr (AI)</span>
+          <SparklesIcon size={18} className="text-slate-950 animate-pulse shrink-0" />
+          <span className="hidden sm:inline">✦ Talk to Swasthya Mitr (AI)</span>
+          <span className="sm:hidden text-[11px] font-black tracking-tight pr-1">AI Assistant</span>
         </button>
         <SwasthyaMitrChatModal
           isOpen={chatModalOpen}

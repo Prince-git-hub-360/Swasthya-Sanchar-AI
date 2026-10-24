@@ -40,13 +40,13 @@ export const SwasthyaLogo = ({ variant = 'full', className = '', height = 40, on
   }
 
   // Calculate proportional font size based on height to ensure whole logo fits without clipping
-  const textSizeClass = height >= 48 ? 'text-lg sm:text-xl' : height >= 38 ? 'text-base sm:text-lg' : 'text-sm sm:text-base';
+  const textSizeClass = height >= 48 ? 'text-lg sm:text-xl' : height >= 38 ? 'text-base sm:text-lg' : 'text-xs sm:text-sm';
   const taglineSizeClass = height >= 48 ? 'text-[11px]' : 'text-[9px]';
   const iconHeight = height;
 
   return (
     <div
-      className={`inline-flex items-center gap-2 select-none ${onClick ? 'cursor-pointer' : ''} ${className}`}
+      className={`inline-flex items-center gap-1.5 sm:gap-2 select-none ${onClick ? 'cursor-pointer' : ''} ${className}`}
       onClick={onClick}
     >
       {/* High-res transparent emblem mark with fallback */}
@@ -54,14 +54,14 @@ export const SwasthyaLogo = ({ variant = 'full', className = '', height = 40, on
 
       {/* Brand Typography Lockup */}
       <div className="flex flex-col justify-center leading-none min-w-0">
-        <div className={`font-heading font-extrabold ${textSizeClass} tracking-tight flex items-center gap-1.5 shrink-0`}>
+        <div className={`font-heading font-extrabold ${textSizeClass} tracking-tight flex items-center gap-1 sm:gap-1.5 shrink-0`}>
           <span className={isDark ? 'text-white font-black' : 'text-slate-900 dark:text-white'}>
             Swasthya
           </span>
           <span className={isDark ? 'text-teal-300 font-black' : 'text-teal-600 dark:text-teal-400'}>
             Sanchar
           </span>
-          <span className={`text-[9px] font-black uppercase px-1 py-0.5 rounded-md shrink-0 whitespace-nowrap ${
+          <span className={`text-[8px] sm:text-[9px] font-black uppercase px-1 py-0.5 rounded-md shrink-0 whitespace-nowrap ${
             isDark
               ? 'bg-teal-400/20 text-teal-300 border border-teal-300/40'
               : 'bg-teal-500/20 text-teal-600 dark:text-teal-400 border border-teal-400/30'
