@@ -10,6 +10,7 @@ import { speakNativeAudio } from '../shared/utils/speech';
 import { PublicNavbar } from '../components/marketing/PublicNavbar';
 import SwasthyaLogo from '../components/branding/SwasthyaLogo';
 import { MobileAppHome } from '../components/mobile/MobileAppHome';
+import { InteractiveProductShowcase } from '../components/marketing/InteractiveProductShowcase';
 
 // 🚀 Smooth Scroll-Triggered Animated Number Counter
 const AnimatedStat = ({ endValue, suffix = '', prefix = '', decimals = 0, duration = 1800 }) => {
@@ -614,53 +615,8 @@ export const LandingPage = ({ onNavigate, onOpenChat }) => {
           </div>
         </section>
 
-        {/* HOW IT WORKS (Connected Step Path Visual with Glowing Step Line) */}
-        <section id="how-it-works" className="scroll-mt-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 font-sans relative">
-          <div className="text-center max-w-3xl mx-auto mb-10 space-y-2">
-            <span className="text-xs font-extrabold text-[#0F766E] dark:text-teal-300 uppercase tracking-widest">
-              CONNECTED PRODUCT WORKFLOW
-            </span>
-            <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-              From Doctor's Slip to Everyday Understanding
-            </h2>
-            <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300">
-              A seamless 6-step communication journey designed for rural patients and elderly citizens.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 relative">
-            {[
-              { step: '01', title: 'Upload Slip', desc: 'Capture doctor slip via smartphone or ASHA tablet.', icon: DocumentIcon },
-              { step: '02', title: 'Vision OCR', desc: 'AI extracts medicines, dosage frequency & days.', icon: BrainIcon },
-              { step: '03', title: 'Translate', desc: 'Translates to mother tongue with simple vernacular terms.', icon: TranslateIcon },
-              { step: '04', title: 'Native Audio', desc: 'Clear spoken voice instructions for non-readers.', icon: SpeakerIcon },
-              { step: '05', title: 'Smart Pillbox', desc: 'Auto-schedules morning, lunch & night dosage slots.', icon: ClockIcon },
-              { step: '06', title: '2G Voice / SOS', desc: 'Offline IVR calls & 108 emergency ambulance dispatch.', icon: BellIcon },
-            ].map((s, idx) => {
-              const Icon = s.icon;
-              return (
-                <div key={idx} className="bg-white dark:bg-[#161F30] border border-slate-200/90 dark:border-slate-800 hover:border-teal-500 dark:hover:border-teal-400 p-4 rounded-2xl space-y-3 flex flex-col justify-between shadow-xs hover:shadow-md transition-all group">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-black text-[#0F766E] dark:text-teal-300 bg-teal-50 dark:bg-slate-800 px-2.5 py-0.5 rounded-lg border border-teal-200/60 dark:border-slate-700">
-                      Step {s.step}
-                    </span>
-                    <div className="w-7 h-7 rounded-lg bg-teal-50 dark:bg-slate-800 flex items-center justify-center group-hover:scale-110 transition-transform">
-                      <Icon size={16} className="text-[#0B4F42] dark:text-teal-400" />
-                    </div>
-                  </div>
-                  <div>
-                    <h3 className="font-extrabold text-sm text-slate-900 dark:text-white group-hover:text-teal-700 dark:group-hover:text-teal-300 transition-colors">
-                      {s.title}
-                    </h3>
-                    <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed mt-1">
-                      {s.desc}
-                    </p>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </section>
+        {/* HOW IT WORKS (Center Smartphone Mockup Flanked by 6 Interactive Step Cards) */}
+        <InteractiveProductShowcase onOpenChat={onOpenChat} />
 
         {/* INTERACTIVE JAN AUSHADHI GENERIC MEDICINE SAVINGS CALCULATOR */}
         <section className="scroll-mt-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 font-sans">
