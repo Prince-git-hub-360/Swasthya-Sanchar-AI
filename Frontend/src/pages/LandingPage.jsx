@@ -9,7 +9,6 @@ import { ROUTES, navigateTo } from '../utils/routes';
 import { speakNativeAudio } from '../shared/utils/speech';
 import { PublicNavbar } from '../components/marketing/PublicNavbar';
 import SwasthyaLogo from '../components/branding/SwasthyaLogo';
-import { MobileAppHome } from '../components/mobile/MobileAppHome';
 import { InteractiveProductShowcase } from '../components/marketing/InteractiveProductShowcase';
 import { VernacularLanguageSlider } from '../components/marketing/VernacularLanguageSlider';
 import { ScrollFusionWatermark } from '../components/marketing/ScrollFusionWatermark';
@@ -419,17 +418,10 @@ export const LandingPage = ({ onNavigate, onOpenChat }) => {
   };
 
   return (
-    <>
-      {/* 1. DEDICATED NATIVE MOBILE APPLICATION EXPERIENCE (Phones < 768px) */}
-      <div className="block md:hidden">
-        <MobileAppHome onNavigate={onNavigate} onOpenChat={onOpenChat} />
-      </div>
-
-      {/* 2. COMPREHENSIVE DESKTOP LANDING SHOWCASE (Tablets & Desktops >= 768px) */}
-      <div className="hidden md:flex min-h-screen flex-col bg-[#F8FAFC] dark:bg-[#0B0F17] bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-teal-500/8 via-[#F8FAFC] to-[#F8FAFC] dark:from-teal-950/30 dark:via-[#0B0F17] dark:to-[#0B0F17] text-slate-900 dark:text-slate-100 font-sans antialiased transition-colors duration-200 relative">
-        
-        {/* 🌟 PERSISTENT SCROLL-FUSION WATERMARK (Unites Two Full Logos & Remains to the End of the Site) */}
-        <ScrollFusionWatermark />
+    <div className="min-h-screen flex flex-col bg-[#F8FAFC] dark:bg-[#0B0F17] bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-teal-500/8 via-[#F8FAFC] to-[#F8FAFC] dark:from-teal-950/30 dark:via-[#0B0F17] dark:to-[#0B0F17] text-slate-900 dark:text-slate-100 font-sans antialiased transition-colors duration-200 relative">
+      
+      {/* 🌟 PERSISTENT SCROLL-FUSION WATERMARK (Unites Two Full Logos & Remains to the End of the Site) */}
+      <ScrollFusionWatermark />
 
         {/* 1. FIXED TOP PUBLIC NAVBAR (Always visible across all scrolls) */}
         <PublicNavbar onNavigate={onNavigate} onOpenChat={onOpenChat} />
@@ -1332,7 +1324,6 @@ export const LandingPage = ({ onNavigate, onOpenChat }) => {
       </footer>
 
     </div>
-    </>
   );
 };
 
