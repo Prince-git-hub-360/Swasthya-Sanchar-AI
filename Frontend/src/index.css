@@ -132,6 +132,24 @@
   50% { height: 26px; }
 }
 
+@keyframes soft-pulse {
+  0%, 100% { opacity: 0.65; transform: scale(0.96); }
+  50% { opacity: 1; transform: scale(1.04); }
+}
+
+.motion-safe\:animate-soft-pulse {
+  animation: soft-pulse 5s ease-in-out infinite;
+}
+
+@keyframes scan-line {
+  0%, 100% { transform: translateY(-105px); opacity: 0.35; }
+  50% { transform: translateY(105px); opacity: 1; }
+}
+
+.motion-safe\:animate-scan-line {
+  animation: scan-line 2.2s ease-in-out infinite;
+}
+
 .animate-wave-bar {
   animation: pulse-wave 1s ease-in-out infinite;
 }
@@ -212,7 +230,7 @@
   outline-offset: 2px;
 }
 
-/* Infinite Vernacular Marquee Sliders */
+/* Infinite Vernacular Marquee Sliders (Slow & Smooth) */
 @keyframes marquee-scroll-left {
   0% { transform: translateX(0%); }
   100% { transform: translateX(-50%); }
@@ -224,15 +242,116 @@
 }
 
 .animate-marquee-left {
-  animation: marquee-scroll-left 40s linear infinite;
+  animation: marquee-scroll-left 80s linear infinite;
 }
 
 .animate-marquee-right {
-  animation: marquee-scroll-right 40s linear infinite;
+  animation: marquee-scroll-right 80s linear infinite;
 }
 
 .animate-marquee-left:hover,
 .animate-marquee-right:hover {
   animation-play-state: paused;
+}
+
+/* 🌟 Levitating 3D Smartphone Animation */
+@keyframes phone-levitate {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-12px);
+  }
+}
+
+.animate-phone-float {
+  animation: phone-levitate 6s ease-in-out infinite;
+}
+
+/* 🌟 Dual-Converging Logo Assembly Animations */
+@keyframes converge-from-left {
+  0% {
+    opacity: 0;
+    transform: translateX(-160px) scale(0.65) rotate(-10deg);
+    filter: blur(6px);
+  }
+  70% {
+    opacity: 0.95;
+    transform: translateX(12px) scale(1.08) rotate(0deg);
+    filter: blur(0px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0px) scale(1);
+    filter: drop-shadow(0 0 25px rgba(15, 118, 110, 0.4));
+  }
+}
+
+@keyframes converge-from-right {
+  0% {
+    opacity: 0;
+    transform: translateX(160px) scale(0.65) rotate(10deg);
+    filter: blur(6px);
+  }
+  70% {
+    opacity: 0.95;
+    transform: translateX(-12px) scale(1.08) rotate(0deg);
+    filter: blur(0px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0px) scale(1);
+    filter: drop-shadow(0 0 25px rgba(245, 158, 11, 0.4));
+  }
+}
+
+@keyframes logo-fusion-pulse {
+  0%, 100% {
+    transform: scale(1);
+    filter: drop-shadow(0 0 25px rgba(15, 118, 110, 0.35));
+  }
+  50% {
+    transform: scale(1.03);
+    filter: drop-shadow(0 0 45px rgba(20, 184, 166, 0.65));
+  }
+}
+
+.animate-converge-left {
+  animation: converge-from-left 1.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-converge-right {
+  animation: converge-from-right 1.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-logo-pulse {
+  animation: logo-fusion-pulse 4.5s ease-in-out infinite;
+}
+
+/* Gentle Floating Keyframes for Healthcare Vitals Badges */
+@keyframes float-subtle-1 {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-9px) rotate(1.2deg);
+  }
+}
+
+@keyframes float-subtle-2 {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-11px) rotate(-1.2deg);
+  }
+}
+
+.animate-float-1 {
+  animation: float-subtle-1 5.2s ease-in-out infinite;
+}
+
+.animate-float-2 {
+  animation: float-subtle-2 6.8s ease-in-out infinite;
 }
 

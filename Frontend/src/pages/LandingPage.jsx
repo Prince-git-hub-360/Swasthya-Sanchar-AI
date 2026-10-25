@@ -12,6 +12,8 @@ import SwasthyaLogo from '../components/branding/SwasthyaLogo';
 import { MobileAppHome } from '../components/mobile/MobileAppHome';
 import { InteractiveProductShowcase } from '../components/marketing/InteractiveProductShowcase';
 import { VernacularLanguageSlider } from '../components/marketing/VernacularLanguageSlider';
+import { ScrollFusionWatermark } from '../components/marketing/ScrollFusionWatermark';
+
 
 // 🚀 Smooth Scroll-Triggered Animated Number Counter
 const AnimatedStat = ({ endValue, suffix = '', prefix = '', decimals = 0, duration = 1800 }) => {
@@ -424,13 +426,16 @@ export const LandingPage = ({ onNavigate, onOpenChat }) => {
       </div>
 
       {/* 2. COMPREHENSIVE DESKTOP LANDING SHOWCASE (Tablets & Desktops >= 768px) */}
-      <div className="hidden md:flex min-h-screen flex-col bg-[#F8FAFC] dark:bg-[#0B0F17] bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-teal-500/8 via-[#F8FAFC] to-[#F8FAFC] dark:from-teal-950/30 dark:via-[#0B0F17] dark:to-[#0B0F17] text-slate-900 dark:text-slate-100 font-sans antialiased transition-colors duration-200">
+      <div className="hidden md:flex min-h-screen flex-col bg-[#F8FAFC] dark:bg-[#0B0F17] bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-teal-500/8 via-[#F8FAFC] to-[#F8FAFC] dark:from-teal-950/30 dark:via-[#0B0F17] dark:to-[#0B0F17] text-slate-900 dark:text-slate-100 font-sans antialiased transition-colors duration-200 relative">
         
+        {/* 🌟 PERSISTENT SCROLL-FUSION WATERMARK (Unites Two Full Logos & Remains to the End of the Site) */}
+        <ScrollFusionWatermark />
+
         {/* 1. FIXED TOP PUBLIC NAVBAR (Always visible across all scrolls) */}
         <PublicNavbar onNavigate={onNavigate} onOpenChat={onOpenChat} />
 
       {/* MAIN LANDING CONTENT (With top padding to clear fixed navbar) */}
-      <main className="flex-1 space-y-12 sm:space-y-16 pt-16 sm:pt-20 pb-8">
+      <main className="flex-1 space-y-12 sm:space-y-16 pt-16 sm:pt-20 pb-8 relative z-10">
         
         {/* HERO SECTION */}
         <section id="home" className="scroll-mt-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 font-sans transition-colors relative overflow-hidden">
