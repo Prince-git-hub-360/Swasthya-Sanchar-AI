@@ -569,7 +569,7 @@ export const LandingPage = ({ onNavigate, onOpenChat }) => {
           <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-4 text-xs font-bold text-slate-600 dark:text-slate-300">
             <span className="flex items-center gap-2">🏥 Primary Health Centre Verified</span>
             <span className="flex items-center gap-2">🗣️ 22+ Native Dialects Audio</span>
-            <span className="flex items-center gap-2">⚡ Accelerated Groq Vision OCR</span>
+            <span className="flex items-center gap-2">⚡ Accelerated Clinical Vision OCR</span>
             <span className="flex items-center gap-2">🔒 Ayushman Bharat (ABDM) Data Standards</span>
           </div>
         </div>
@@ -830,7 +830,7 @@ export const LandingPage = ({ onNavigate, onOpenChat }) => {
                 ))}
               </div>
               <div className="text-[10px] text-slate-500 italic">
-                Simulating actual handwriting extracted with Groq Accelerated Vision OCR.
+                Simulating actual handwriting extracted with Clinical Vision OCR.
               </div>
             </div>
 

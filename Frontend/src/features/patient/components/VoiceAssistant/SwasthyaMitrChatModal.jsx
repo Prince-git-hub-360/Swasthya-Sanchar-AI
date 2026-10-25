@@ -308,7 +308,7 @@ export const SwasthyaMitrChatModal = ({ isOpen, onClose, initialMedicine = null 
                 </span>
               </div>
               <p className="text-[11px] text-teal-100 truncate">
-                Prescription-Aware • Multilingual Gemini AI
+                Prescription-Aware • Multilingual Health AI
               </p>
             </div>
           </div>

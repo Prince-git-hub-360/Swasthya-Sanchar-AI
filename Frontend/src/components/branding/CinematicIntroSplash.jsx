@@ -66,7 +66,7 @@ export const CinematicIntroSplash = ({ onFinish }) => {
       <div className="absolute top-4 left-0 right-0 px-5 flex items-center justify-between text-xs z-20 pointer-events-auto">
         <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-teal-950/60 border border-teal-500/30 text-teal-300 text-[10px] font-bold tracking-wider uppercase">
           <span className="w-1.5 h-1.5 rounded-full bg-teal-400 animate-pulse" />
-          <span>Unleash LLM 2026</span>
+          <span>Rural Healthcare Initiative</span>
         </div>
 
         <button

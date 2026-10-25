@@ -26,7 +26,7 @@ export const AuthLayout = ({ children, onNavigate }) => {
               </h3>
 
               <p className="text-xs text-teal-100/80 leading-relaxed">
-                Bridging prescription literacy and language barriers across rural India with Groq-accelerated AI and spoken voice guidance.
+                Bridging prescription literacy and language barriers across rural India with specialized healthcare AI and spoken voice guidance.
               </p>
             </div>
 

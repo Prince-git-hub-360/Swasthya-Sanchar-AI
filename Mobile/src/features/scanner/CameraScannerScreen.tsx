@@ -169,7 +169,7 @@ export const CameraScannerScreen: React.FC = () => {
             <View style={styles.processingOverlay}>
               <ActivityIndicator size="large" color={COLORS.surface} />
               <Text style={styles.processingText}>
-                Groq / Gemini AI Analyzing Prescription...
+                Clinical AI Analyzing Prescription...
               </Text>
               <Text style={styles.processingSub}>Converting medical text to regional speech</Text>
             </View>

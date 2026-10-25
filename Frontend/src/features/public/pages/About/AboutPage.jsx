@@ -45,7 +45,7 @@ export const AboutPage = ({ setCurrentView, openAuthModal, onNavigate }) => {
             Our AI-Powered Solution
           </h2>
           <p style={{ color: 'var(--color-text-secondary)', lineHeight: '1.6' }}>
-            Swasthya Sanchar AI acts as a human-centric communication bridge. Using Optical Character Recognition (OCR), specialized Medical NLP, and Gemini LLM simplification, complex medical notes are converted into simple, regional-language explanations delivered as both clear text and spoken audio.
+            Swasthya Sanchar AI acts as a human-centric communication bridge. Using Optical Character Recognition (OCR), specialized Medical NLP, and multilingual clinical AI simplification, complex medical notes are converted into simple, regional-language explanations delivered as both clear text and spoken audio.
           </p>
         </div>
       </div>

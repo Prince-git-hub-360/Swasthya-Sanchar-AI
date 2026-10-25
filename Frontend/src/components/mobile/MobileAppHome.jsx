@@ -109,7 +109,7 @@ export const MobileAppHome = ({ onNavigate, onOpenChat }) => {
           <div>
             <div className="text-[11px] font-bold text-[#0F766E] dark:text-teal-400 flex items-center gap-1.5 uppercase tracking-wider">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span>Unleash LLM Healthcare Portal</span>
+              <span>Rural Health Communication Portal</span>
             </div>
             <h1 className="text-xl font-black text-slate-900 dark:text-white mt-0.5 tracking-tight">
               नमस्ते, Rural Health Seeker 👋

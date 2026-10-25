@@ -372,7 +372,7 @@ export const PrescriptionScannerFlow: React.FC<{ navigation?: any }> = ({ naviga
             <ActivityIndicator size="large" color={COLORS.primary} />
             <Text style={styles.processingTitle}>Reading Doctor’s Handwriting...</Text>
             <Text style={styles.processingDesc}>
-              Groq Vision AI & Gemini are extracting medicines, dosages, and generating native voice guidance
+              Medical AI is extracting medicines, dosages, and generating native voice guidance
             </Text>
 
             <View style={styles.processSteps}>

@@ -183,7 +183,7 @@ export const SwasthyaMitrAiModal: React.FC<{
                   <Text style={styles.aiTitle}>Swasthya Mitr (स्वास्थ मित्र)</Text>
                   <View style={styles.onlineBadge}>
                     <View style={styles.onlineDot} />
-                    <Text style={styles.onlineText}>Gemini AI</Text>
+                    <Text style={styles.onlineText}>AI Active</Text>
                   </View>
                 </View>
                 <Text style={styles.aiSubtitle}>24x7 Multilingual AI Health Assistant</Text>
