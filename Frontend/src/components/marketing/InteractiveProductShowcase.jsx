@@ -13,11 +13,12 @@ export const InteractiveProductShowcase = ({ onOpenChat }) => {
     {
       id: 1,
       num: '1',
-      title: "Scan Doctor's Prescription",
-      desc: 'Capture paper prescription slip via smartphone camera or ASHA worker tablet with instant edge-detection.',
+      title: "Select a Prescription",
+      desc: 'Digitally capture doctor slip via smartphone camera or ASHA worker tablet with instant edge-detection.',
       icon: DocumentIcon,
-      color: 'from-teal-500 to-emerald-500',
       badge: '01 INTAKE',
+      glow: 'shadow-teal-500/15 border-teal-500/60',
+      badgeBg: 'bg-teal-50 text-teal-800 border-teal-300 dark:bg-teal-950 dark:text-teal-200 dark:border-teal-700',
     },
     {
       id: 2,
@@ -25,44 +26,49 @@ export const InteractiveProductShowcase = ({ onOpenChat }) => {
       title: 'Clinical Vision OCR',
       desc: 'Neural optical model decodes complex doctor handwriting, medicine dosages (1-0-1, PC, TDS) & durations.',
       icon: BrainIcon,
-      color: 'from-emerald-500 to-teal-600',
-      badge: '02 OCR',
+      badge: '02 VISION OCR',
+      glow: 'shadow-emerald-500/15 border-emerald-500/60',
+      badgeBg: 'bg-emerald-50 text-emerald-800 border-emerald-300 dark:bg-emerald-950 dark:text-emerald-200 dark:border-emerald-700',
     },
     {
       id: 3,
       num: '3',
-      title: 'Clinical Simplification',
-      desc: 'Converts complex pharmaceutical jargon and Latin abbreviations into plain, clear mother-tongue terms.',
+      title: 'Medical Simplification',
+      desc: 'Converts pharmaceutical jargon and Latin abbreviations into plain, clear mother-tongue instructions.',
       icon: TranslateIcon,
-      color: 'from-teal-600 to-cyan-600',
-      badge: '03 TRANSLATE',
+      badge: '03 SIMPLIFY',
+      glow: 'shadow-cyan-500/15 border-cyan-500/60',
+      badgeBg: 'bg-cyan-50 text-cyan-800 border-cyan-300 dark:bg-cyan-950 dark:text-cyan-200 dark:border-cyan-700',
     },
     {
       id: 4,
       num: '4',
-      title: '22+ Regional Voice Audio',
+      title: 'Transcribe to Native Audio',
       desc: 'Natural synthesized voice playback in Hindi, Tamil, Telugu, Marathi & more for non-readers & elderly.',
       icon: SpeakerIcon,
-      color: 'from-amber-500 to-orange-500',
       badge: '04 VOICE',
+      glow: 'shadow-amber-500/15 border-amber-500/60',
+      badgeBg: 'bg-amber-50 text-amber-800 border-amber-300 dark:bg-amber-950 dark:text-amber-200 dark:border-amber-700',
     },
     {
       id: 5,
       num: '5',
-      title: 'Swasthya Mitr (AI Companion)',
-      desc: 'Multilingual conversational AI answering food interactions, timing guidance, and medication precautions.',
+      title: 'Talk to Prescription (AI)',
+      desc: 'Engage in real-time multilingual dialogue answering food timing, interactions, and precautions.',
       icon: SparklesIcon,
-      color: 'from-amber-400 to-amber-600',
-      badge: '05 CHAT',
+      badge: '05 SWASTHYA MITR',
+      glow: 'shadow-orange-500/15 border-orange-500/60',
+      badgeBg: 'bg-orange-50 text-orange-800 border-orange-300 dark:bg-orange-950 dark:text-orange-200 dark:border-orange-700',
     },
     {
       id: 6,
       num: '6',
-      title: 'Smart Pillbox & Caregiver Sync',
-      desc: 'Visual treatment schedules with SMS alerts, 2G IVR automated voice calls, and village ASHA registry.',
+      title: 'Smart Pillbox & Caregiver',
+      desc: 'Visual treatment schedules with SMS alerts, 2G IVR automated voice calls, and village ASHA sync.',
       icon: BellIcon,
-      color: 'from-rose-500 to-teal-500',
-      badge: '06 CARE',
+      badge: '06 ADHERENCE',
+      glow: 'shadow-rose-500/15 border-rose-500/60',
+      badgeBg: 'bg-rose-50 text-rose-800 border-rose-300 dark:bg-rose-950 dark:text-rose-200 dark:border-rose-700',
     },
   ];
 
@@ -78,13 +84,16 @@ export const InteractiveProductShowcase = ({ onOpenChat }) => {
   return (
     <section 
       id="how-it-works" 
-      className="scroll-mt-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 font-sans relative py-12"
+      className="scroll-mt-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 font-sans relative py-16"
       onMouseEnter={() => setAutoPlay(false)}
       onMouseLeave={() => setAutoPlay(true)}
     >
+      {/* 🌟 WARM AMBIENT RADIANT BACKDROP GLOW (Just like the reference image) */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[750px] h-[650px] bg-gradient-to-tr from-amber-200/25 via-teal-200/25 to-emerald-100/30 dark:from-teal-950/20 dark:via-emerald-950/20 dark:to-amber-950/10 blur-[100px] rounded-full pointer-events-none -z-10" />
+
       {/* SECTION HEADER */}
-      <div className="text-center max-w-3xl mx-auto mb-12 space-y-2.5">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#0F766E]/10 dark:bg-teal-950/60 border border-[#0F766E]/30 text-[#0F766E] dark:text-teal-300 text-xs font-black tracking-widest uppercase shadow-2xs">
+      <div className="text-center max-w-3xl mx-auto mb-14 space-y-2.5">
+        <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-teal-50 dark:bg-teal-950/60 border border-teal-200/80 dark:border-teal-700/60 text-[#0F766E] dark:text-teal-300 text-xs font-black tracking-widest uppercase shadow-xs">
           <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
           <span>CONNECTED HEALTHCARE PIPELINE</span>
         </div>
@@ -96,14 +105,13 @@ export const InteractiveProductShowcase = ({ onOpenChat }) => {
         </p>
       </div>
 
-      {/* AMBIENT GLOW BACKDROP */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[550px] h-[550px] bg-gradient-to-tr from-teal-500/10 via-emerald-500/10 to-amber-500/5 blur-3xl rounded-full pointer-events-none -z-10" />
-
-      {/* 3-COLUMN SHOWCASE: LEFT 3 CARDS | CENTER PHONE | RIGHT 3 CARDS */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+      {/* 3-COLUMN SHOWCASE: LEFT 3 CARDS | CENTER METALLIC PHONE | RIGHT 3 CARDS */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-center">
         
-        {/* LEFT FLANK: Steps 1, 2, 3 */}
-        <div className="lg:col-span-4 space-y-4">
+        {/* ======================================================== */}
+        {/* LEFT FLANK: Steps 1, 2, 3                                */}
+        {/* ======================================================== */}
+        <div className="lg:col-span-4 space-y-5">
           {steps.slice(0, 3).map((s) => {
             const Icon = s.icon;
             const isActive = activeStep === s.id;
@@ -111,10 +119,10 @@ export const InteractiveProductShowcase = ({ onOpenChat }) => {
               <div
                 key={s.id}
                 onClick={() => setActiveStep(s.id)}
-                className={`p-5 rounded-2xl border transition-all duration-300 cursor-pointer text-left relative overflow-hidden group ${
+                className={`p-6 rounded-3xl border transition-all duration-300 cursor-pointer text-left relative overflow-hidden backdrop-blur-md ${
                   isActive
-                    ? 'bg-white dark:bg-slate-900 border-[#0F766E] dark:border-teal-400 shadow-xl shadow-teal-500/10 scale-[1.02] ring-2 ring-[#0F766E]/20'
-                    : 'bg-white/80 dark:bg-slate-900/70 border-slate-200/90 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 shadow-xs hover:shadow-md'
+                    ? `bg-white dark:bg-slate-900 border-[#0F766E] dark:border-teal-400 shadow-[0_16px_40px_-8px_rgba(15,118,110,0.22),0_0_20px_rgba(20,184,166,0.18)] scale-[1.03] ring-2 ring-[#0F766E]/20`
+                    : `bg-white/80 dark:bg-slate-900/70 border-slate-200/80 dark:border-slate-800 shadow-[0_8px_24px_-6px_rgba(0,0,0,0.04)] hover:shadow-[0_12px_32px_-6px_rgba(15,118,110,0.12)] hover:border-teal-300 dark:hover:border-slate-700 hover:scale-[1.01]`
                 }`}
               >
                 {/* Active Indicator Bar */}
@@ -122,28 +130,28 @@ export const InteractiveProductShowcase = ({ onOpenChat }) => {
                   <div className="absolute top-0 left-0 bottom-0 w-1.5 bg-gradient-to-b from-[#0F766E] to-emerald-400" />
                 )}
 
-                <div className="flex items-center justify-between mb-2.5">
-                  <div className="flex items-center gap-2.5">
-                    <span className={`w-7 h-7 rounded-lg flex items-center justify-center font-black text-xs transition-colors ${
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-3">
+                    <span className={`w-8 h-8 rounded-xl flex items-center justify-center font-black text-xs border transition-colors ${
                       isActive
-                        ? 'bg-[#0F766E] text-white shadow-xs'
-                        : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
+                        ? 'bg-[#0F766E] text-white border-[#0F766E] shadow-sm'
+                        : s.badgeBg
                     }`}>
                       {s.num}
                     </span>
-                    <Icon size={18} className={isActive ? 'text-[#0F766E] dark:text-teal-400' : 'text-slate-500 dark:text-slate-400'} />
+                    <Icon size={20} className={isActive ? 'text-[#0F766E] dark:text-teal-400' : 'text-slate-500 dark:text-slate-400'} />
                   </div>
                   <span className="text-[10px] font-mono font-bold tracking-wider text-slate-400 dark:text-slate-500 uppercase">
                     {s.badge}
                   </span>
                 </div>
 
-                <h3 className={`text-base font-extrabold tracking-tight transition-colors ${
+                <h3 className={`text-base sm:text-lg font-black tracking-tight transition-colors ${
                   isActive ? 'text-[#0F766E] dark:text-teal-300' : 'text-slate-900 dark:text-white'
                 }`}>
                   {s.title}
                 </h3>
-                <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed mt-1">
+                <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed mt-1.5 font-normal">
                   {s.desc}
                 </p>
               </div>
@@ -151,291 +159,281 @@ export const InteractiveProductShowcase = ({ onOpenChat }) => {
           })}
         </div>
 
-        {/* CENTER: HYPER-REALISTIC SMARTPHONE MOCKUP */}
+        {/* ======================================================== */}
+        {/* CENTER: CHAMPAGNE-GOLD METALLIC PHONE + RADIANT SCREEN   */}
+        {/* ======================================================== */}
         <div className="lg:col-span-4 flex justify-center py-4">
           <div className="relative">
-            {/* Luminous Phone Aura */}
-            <div className="absolute inset-0 bg-teal-400/20 dark:bg-teal-500/15 blur-2xl rounded-[50px] transform scale-95 pointer-events-none" />
+            
+            {/* Luminous Warm Diffuse Halo */}
+            <div className="absolute inset-0 bg-gradient-to-b from-amber-300/30 via-teal-300/30 to-emerald-300/20 blur-3xl rounded-[60px] transform scale-95 pointer-events-none" />
 
-            {/* Phone Outer Chassis (Titanium Bezel) */}
-            <div className="relative w-[300px] sm:w-[315px] rounded-[48px] p-3 bg-gradient-to-b from-slate-800 via-slate-900 to-slate-950 border-4 border-slate-700/80 shadow-[0_25px_60px_-15px_rgba(15,118,110,0.45)]">
+            {/* Premium Metallic Titanium-Gold Chassis (Reflective Bezel) */}
+            <div className="relative w-[305px] sm:w-[325px] rounded-[52px] p-2.5 bg-gradient-to-b from-[#E7CF9E] via-[#D8B46C] to-[#996C36] shadow-[0_25px_60px_-12px_rgba(180,130,50,0.35),0_15px_30px_-8px_rgba(15,118,110,0.25)] border-2 border-[#F7E7C4]">
               
-              {/* Phone Inner Display Screen */}
-              <div className="w-full h-[580px] rounded-[38px] bg-[#07131B] text-white flex flex-col overflow-hidden relative border border-slate-800 font-sans shadow-inner">
+              {/* Inner Metallic Bezel Ring */}
+              <div className="rounded-[44px] p-1 bg-gradient-to-b from-slate-900 via-slate-950 to-black shadow-inner">
                 
-                {/* Dynamic Island Notch */}
-                <div className="w-24 h-4 bg-black rounded-full mx-auto mt-2.5 mb-1.5 flex items-center justify-between px-2">
-                  <span className="w-2 h-2 rounded-full bg-slate-900 border border-slate-700" />
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                </div>
-
-                {/* Mockup Status Bar */}
-                <div className="px-5 py-1 flex items-center justify-between text-[10px] font-mono text-slate-400">
-                  <span className="font-bold text-white">9:41</span>
-                  <div className="flex items-center gap-1.5">
-                    <span>5G</span>
-                    <span>100%</span>
-                  </div>
-                </div>
-
-                {/* In-App App Bar */}
-                <div className="px-4 py-2 border-b border-slate-800/80 flex items-center justify-between bg-slate-900/60 backdrop-blur-xs">
-                  <div className="flex items-center gap-1.5">
-                    <span className="w-6 h-6 rounded-lg bg-[#0F766E] flex items-center justify-center text-xs font-black">
-                      🩺
-                    </span>
-                    <span className="text-xs font-black tracking-tight">Swasthya <span className="text-teal-400">AI</span></span>
-                  </div>
-                  <span className="text-[9px] bg-emerald-950 text-emerald-400 border border-emerald-800/80 px-2 py-0.5 rounded-full font-bold">
-                    Hindi (हिंदी)
-                  </span>
-                </div>
-
-                {/* Interactive Flow Stepper at Top of Phone */}
-                <div className="px-3 py-2 bg-slate-900/40 border-b border-slate-800/50 flex items-center justify-between">
-                  {[1, 2, 3, 4, 5, 6].map((st) => (
-                    <button
-                      key={st}
-                      onClick={() => setActiveStep(st)}
-                      className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black transition-all ${
-                        activeStep === st
-                          ? 'bg-gradient-to-r from-teal-400 to-emerald-400 text-slate-950 shadow-xs scale-110'
-                          : activeStep > st
-                          ? 'bg-teal-900/80 text-teal-300'
-                          : 'bg-slate-800 text-slate-500'
-                      }`}
-                    >
-                      {activeStep > st ? '✓' : st}
-                    </button>
-                  ))}
-                </div>
-
-                {/* Dynamic Screen Body based on activeStep */}
-                <div className="flex-1 p-3.5 flex flex-col justify-between overflow-y-auto no-scrollbar">
+                {/* 🌟 BRIGHT, RADIANT LIGHT HEALTHCARE SCREEN (Warm & Friendly!) */}
+                <div className="w-full h-[600px] rounded-[40px] bg-gradient-to-b from-[#FFFFFF] via-[#F8FAFC] to-[#F1F5F9] text-slate-900 flex flex-col overflow-hidden relative font-sans shadow-inner border border-slate-200/60">
                   
-                  {/* STEP 1: SCAN DOCTOR'S SLIP */}
-                  {activeStep === 1 && (
-                    <div className="space-y-3 animate-fadeIn">
-                      <div className="text-center pt-2">
-                        <span className="text-[10px] bg-teal-950 text-teal-300 px-2.5 py-0.5 rounded-full font-mono uppercase font-bold">
-                          Step 1 • Document Capture
-                        </span>
-                        <h4 className="text-sm font-black text-white mt-1">Optical Prescription Scanner</h4>
-                      </div>
+                  {/* Dynamic Island Notch */}
+                  <div className="w-22 h-4 bg-black rounded-full mx-auto mt-2 mb-1 flex items-center justify-between px-2.5 shadow-xs">
+                    <span className="w-2 h-2 rounded-full bg-slate-900 border border-slate-700" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  </div>
 
-                      {/* Doctor Slip Frame with Scanning Laser */}
-                      <div className="relative bg-white rounded-2xl p-3 text-slate-900 border-2 border-dashed border-teal-500/60 overflow-hidden shadow-lg">
-                        <div className="flex items-center justify-between border-b border-slate-200 pb-1 mb-2">
-                          <span className="text-xs font-serif font-black text-teal-800">℞ PHC Clinic</span>
-                          <span className="text-[9px] font-mono text-slate-500">Dr. Sharma</span>
-                        </div>
-                        <div className="space-y-1 font-serif text-[11px] text-slate-700 italic">
-                          <div>• Tab Paracetamol 650mg 1-0-1 PC (3d)</div>
-                          <div>• Cap Amoxicillin 500mg 1-1-1 PC (5d)</div>
-                          <div>• Tab Cetirizine 10mg 0-0-1 HS (3d)</div>
-                        </div>
-                        {/* Laser Scan Animation */}
-                        <div className="absolute left-0 right-0 h-1 bg-gradient-to-r from-transparent via-teal-500 to-transparent shadow-[0_0_12px_#14b8a6] animate-pulse top-1/2" />
-                      </div>
-
-                      <div className="bg-slate-900/90 p-2.5 rounded-xl border border-teal-500/30 text-center">
-                        <span className="text-[11px] font-mono text-teal-300 font-bold flex items-center justify-center gap-1.5">
-                          <span className="w-2 h-2 rounded-full bg-teal-400 animate-ping" />
-                          <span>Auto-Detecting Prescription Edges...</span>
-                        </span>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* STEP 2: CLINICAL VISION OCR */}
-                  {activeStep === 2 && (
-                    <div className="space-y-3 animate-fadeIn">
-                      <div className="text-center pt-2">
-                        <span className="text-[10px] bg-emerald-950 text-emerald-300 px-2.5 py-0.5 rounded-full font-mono uppercase font-bold">
-                          Step 2 • Vision OCR Parsing
-                        </span>
-                        <h4 className="text-sm font-black text-white mt-1">Handwriting Neural Extraction</h4>
-                      </div>
-
-                      <div className="space-y-2">
-                        <div className="p-2.5 rounded-xl bg-slate-900/80 border border-slate-800 flex items-center justify-between">
-                          <div>
-                            <div className="text-xs font-bold text-white">Paracetamol 650mg</div>
-                            <div className="text-[10px] text-teal-400 font-mono">1-0-1 • Twice daily after meals</div>
-                          </div>
-                          <span className="text-[10px] bg-emerald-900/60 text-emerald-300 px-2 py-0.5 rounded font-mono font-bold">
-                            99.4%
-                          </span>
-                        </div>
-
-                        <div className="p-2.5 rounded-xl bg-slate-900/80 border border-slate-800 flex items-center justify-between">
-                          <div>
-                            <div className="text-xs font-bold text-white">Amoxicillin 500mg</div>
-                            <div className="text-[10px] text-teal-400 font-mono">1-1-1 • Thrice daily after food</div>
-                          </div>
-                          <span className="text-[10px] bg-emerald-900/60 text-emerald-300 px-2 py-0.5 rounded font-mono font-bold">
-                            98.8%
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="text-center text-[10px] text-slate-400 font-mono">
-                        ✓ Doctor signature and registration #84920 validated
-                      </div>
-                    </div>
-                  )}
-
-                  {/* STEP 3: VERNACULAR SIMPLIFICATION */}
-                  {activeStep === 3 && (
-                    <div className="space-y-3 animate-fadeIn">
-                      <div className="text-center pt-2">
-                        <span className="text-[10px] bg-cyan-950 text-cyan-300 px-2.5 py-0.5 rounded-full font-mono uppercase font-bold">
-                          Step 3 • Clinical Simplification
-                        </span>
-                        <h4 className="text-sm font-black text-white mt-1">Plain Mother Tongue Guidance</h4>
-                      </div>
-
-                      <div className="bg-gradient-to-br from-teal-950/80 to-slate-900 p-3.5 rounded-2xl border border-teal-500/40 space-y-2">
-                        <div className="text-[11px] font-mono text-teal-300 font-bold">
-                          💊 खुराक की सरल जानकारी:
-                        </div>
-                        <div className="text-xs font-semibold text-slate-200 leading-relaxed">
-                          सुबह नाश्ते के बाद और रात को खाने के बाद 1-1 गोली लें। बुखार उतरने पर बंद कर सकते हैं।
-                        </div>
-                      </div>
-
-                      <div className="flex items-center justify-around text-center text-xs pt-1">
-                        <div className="p-2 bg-slate-900 rounded-xl border border-slate-800 w-[48%]">
-                          <div className="text-lg">☀️</div>
-                          <div className="text-[10px] font-bold text-slate-300">सुबह 1 गोली</div>
-                        </div>
-                        <div className="p-2 bg-slate-900 rounded-xl border border-slate-800 w-[48%]">
-                          <div className="text-lg">🌙</div>
-                          <div className="text-[10px] font-bold text-slate-300">रात 1 गोली</div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* STEP 4: 22+ REGIONAL AUDIO */}
-                  {activeStep === 4 && (
-                    <div className="space-y-3 animate-fadeIn text-center pt-2">
-                      <span className="text-[10px] bg-amber-950 text-amber-300 px-2.5 py-0.5 rounded-full font-mono uppercase font-bold">
-                        Step 4 • Voice Synthesis
-                      </span>
-                      <h4 className="text-sm font-black text-white">Audio in Your Mother Tongue</h4>
-
-                      {/* Animated Soundwave Visualizer */}
-                      <div className="p-4 bg-slate-900 rounded-2xl border border-amber-400/30 space-y-3">
-                        <div className="flex items-center justify-center gap-1.5 h-12">
-                          {[16, 32, 48, 28, 42, 50, 36, 20].map((h, i) => (
-                            <div
-                              key={i}
-                              className="w-1.5 bg-gradient-to-t from-amber-500 to-amber-300 rounded-full animate-pulse"
-                              style={{ height: `${h}px`, animationDelay: `${i * 0.1}s` }}
-                            />
-                          ))}
-                        </div>
-                        <div className="text-xs font-bold text-amber-300">
-                          "नमस्ते, अपनी सुबह की दवा नाश्ते के बाद 1 गोली पानी से लें।"
-                        </div>
-                      </div>
-
-                      <button
-                        onClick={() => setIsPlayingAudio(!isPlayingAudio)}
-                        className="w-full bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-black text-xs py-2.5 rounded-xl shadow-md flex items-center justify-center gap-2"
-                      >
-                        <SpeakerIcon size={14} />
-                        <span>{isPlayingAudio ? 'Pause Spoken Audio' : '🔊 Listen Voice Guidance'}</span>
-                      </button>
-                    </div>
-                  )}
-
-                  {/* STEP 5: SWASTHYA MITR (AI COMPANION) */}
-                  {activeStep === 5 && (
-                    <div className="space-y-3 animate-fadeIn">
-                      <div className="text-center pt-2">
-                        <span className="text-[10px] bg-amber-950 text-amber-300 px-2.5 py-0.5 rounded-full font-mono uppercase font-bold">
-                          Step 5 • Conversational AI
-                        </span>
-                        <h4 className="text-sm font-black text-white mt-1">Swasthya Mitr Dialogue</h4>
-                      </div>
-
-                      {/* Chat Bubbles */}
-                      <div className="space-y-2 text-xs">
-                        <div className="bg-slate-800 p-2.5 rounded-2xl rounded-tl-xs max-w-[85%] text-slate-200">
-                          क्या मैं यह दवा खाली पेट ले सकता हूँ?
-                        </div>
-                        <div className="bg-[#0F766E] p-2.5 rounded-2xl rounded-tr-xs max-w-[90%] ml-auto text-white leading-relaxed font-medium">
-                          नहीं, डॉक्टर की सलाह के अनुसार यह दवा हमेशा भोजन या नाश्ते के बाद ही लेनी चाहिए ताकि पेट में जलन न हो।
-                        </div>
-                      </div>
-
-                      {onOpenChat && (
-                        <button
-                          onClick={onOpenChat}
-                          className="w-full bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs py-2 rounded-xl flex items-center justify-center gap-1.5 shadow-md"
-                        >
-                          <SparklesIcon size={14} />
-                          <span>Open Live AI Health Assistant</span>
-                        </button>
-                      )}
-                    </div>
-                  )}
-
-                  {/* STEP 6: SMART PILLBOX & ASHA SYNC */}
-                  {activeStep === 6 && (
-                    <div className="space-y-3 animate-fadeIn">
-                      <div className="text-center pt-2">
-                        <span className="text-[10px] bg-rose-950 text-rose-300 px-2.5 py-0.5 rounded-full font-mono uppercase font-bold">
-                          Step 6 • Care Coordination
-                        </span>
-                        <h4 className="text-sm font-black text-white mt-1">Smart Pillbox & ASHA Sync</h4>
-                      </div>
-
-                      <div className="space-y-2 text-xs">
-                        <div className="p-2 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between">
-                          <span className="text-slate-300">☀️ Morning Dose (8:30 AM)</span>
-                          <span className="bg-emerald-950 text-emerald-400 px-2 py-0.5 rounded font-bold">✓ Taken</span>
-                        </div>
-                        <div className="p-2 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between">
-                          <span className="text-slate-300">🌙 Night Dose (9:00 PM)</span>
-                          <span className="bg-amber-950 text-amber-300 px-2 py-0.5 rounded font-bold">⏰ Pending</span>
-                        </div>
-                        <div className="p-2.5 rounded-xl bg-rose-950/40 border border-rose-900/60 flex items-center justify-between">
-                          <div className="text-[11px] text-rose-200">
-                            <span className="font-bold">ASHA Worker:</span> Sunita Devi notified
-                          </div>
-                          <span className="text-xs">👩‍⚕️</span>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Mockup Interactive Footer Input */}
-                  <div className="pt-2 border-t border-slate-800/60 mt-auto">
-                    <div 
-                      onClick={onOpenChat}
-                      className="bg-slate-900 rounded-full px-3 py-2 border border-slate-700/80 flex items-center justify-between text-xs text-slate-400 cursor-pointer hover:border-amber-400/50 transition-colors"
-                    >
-                      <span className="truncate">Ask Swasthya Mitr...</span>
-                      <div className="w-5 h-5 rounded-full bg-amber-400 text-slate-950 flex items-center justify-center font-bold text-[10px]">
-                        🎙️
-                      </div>
+                  {/* Status Bar */}
+                  <div className="px-5 py-0.5 flex items-center justify-between text-[10px] font-mono text-slate-600 font-bold">
+                    <span>9:41</span>
+                    <div className="flex items-center gap-1.5">
+                      <span>5G</span>
+                      <span className="text-[11px]">🔋</span>
                     </div>
                   </div>
 
-                </div>
+                  {/* Top Healthcare App Bar */}
+                  <div className="px-4 py-2 border-b border-slate-200/80 flex items-center justify-between bg-white/90 backdrop-blur-md">
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-6 h-6 rounded-lg bg-[#0F766E] flex items-center justify-center text-xs text-white font-black shadow-xs">
+                        🩺
+                      </span>
+                      <span className="text-xs font-black tracking-tight text-slate-900">
+                        Swasthya <span className="text-[#0F766E]">AI</span>
+                      </span>
+                    </div>
+                    <span className="text-[9px] bg-teal-50 text-[#0F766E] border border-teal-200 px-2 py-0.5 rounded-full font-bold">
+                      Hindi (हिंदी)
+                    </span>
+                  </div>
 
-                {/* Phone Bottom Home Bar */}
-                <div className="w-24 h-1 bg-slate-600 rounded-full mx-auto my-1.5" />
+                  {/* 🌟 Stepper Track Matching Reference Image */}
+                  <div className="px-3 py-2 bg-slate-100/70 border-b border-slate-200/60 flex items-center justify-between">
+                    {[1, 2, 3, 4, 5, 6].map((st) => (
+                      <button
+                        key={st}
+                        onClick={() => setActiveStep(st)}
+                        className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black transition-all ${
+                          activeStep === st
+                            ? 'bg-gradient-to-r from-[#0F766E] to-emerald-500 text-white shadow-md scale-110 ring-2 ring-teal-400/30'
+                            : activeStep > st
+                            ? 'bg-teal-100 text-teal-800'
+                            : 'bg-white text-slate-400 border border-slate-200'
+                        }`}
+                      >
+                        {activeStep > st ? '✓' : st}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* 🌟 Namaste Greeting Header (Like Reference Image) */}
+                  <div className="pt-2 pb-1 text-center">
+                    <span className="text-xl">🙏</span>
+                    <h4 className="text-xs font-black text-slate-900 tracking-tight mt-0.5">
+                      Namaste! What can Swasthya AI help with?
+                    </h4>
+                    <span className="inline-block mt-0.5 text-[9px] font-extrabold bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 px-2 py-0.5 rounded-full shadow-2xs">
+                      ✦ Rural Healthcare AI Companion
+                    </span>
+                  </div>
+
+                  {/* Screen Body Content Based on activeStep */}
+                  <div className="flex-1 px-3.5 py-1.5 flex flex-col justify-between overflow-y-auto no-scrollbar">
+                    
+                    {/* STEP 1: SELECT A PRESCRIPTION */}
+                    {activeStep === 1 && (
+                      <div className="space-y-2.5 animate-fadeIn">
+                        {/* Doctor Slip with Scanning Laser */}
+                        <div className="relative bg-white rounded-2xl p-3 text-slate-900 border border-teal-200 shadow-md overflow-hidden">
+                          <div className="flex items-center justify-between border-b border-slate-100 pb-1 mb-2">
+                            <span className="text-xs font-serif font-black text-teal-900">℞ Primary Health Centre</span>
+                            <span className="text-[9px] font-mono text-slate-500">Dr. Sharma, MBBS</span>
+                          </div>
+                          <div className="space-y-1 font-serif text-[11px] text-slate-700 italic">
+                            <div>• Tab Paracetamol 650mg 1-0-1 PC (3d)</div>
+                            <div>• Cap Amoxicillin 500mg 1-1-1 PC (5d)</div>
+                            <div>• Tab Cetirizine 10mg 0-0-1 HS (3d)</div>
+                          </div>
+                          {/* Animated Luminous Laser Scan Bar */}
+                          <div className="absolute left-0 right-0 h-1 bg-gradient-to-r from-transparent via-[#0F766E] to-transparent shadow-[0_0_12px_#14b8a6] animate-pulse top-1/2" />
+                        </div>
+
+                        <div className="bg-teal-50/80 p-2.5 rounded-xl border border-teal-200 text-center">
+                          <span className="text-[11px] font-mono text-[#0F766E] font-bold flex items-center justify-center gap-1.5">
+                            <span className="w-2 h-2 rounded-full bg-[#0F766E] animate-ping" />
+                            <span>Prescription Auto-Detection Active</span>
+                          </span>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* STEP 2: CLINICAL VISION OCR */}
+                    {activeStep === 2 && (
+                      <div className="space-y-2 animate-fadeIn">
+                        <div className="space-y-1.5">
+                          <div className="p-2.5 rounded-xl bg-white border border-slate-200 shadow-xs flex items-center justify-between">
+                            <div>
+                              <div className="text-xs font-extrabold text-slate-900">Paracetamol 650mg</div>
+                              <div className="text-[10px] text-teal-700 font-bold">1-0-1 • Twice daily after meals</div>
+                            </div>
+                            <span className="text-[10px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full font-mono font-bold">
+                              99.4%
+                            </span>
+                          </div>
+
+                          <div className="p-2.5 rounded-xl bg-white border border-slate-200 shadow-xs flex items-center justify-between">
+                            <div>
+                              <div className="text-xs font-extrabold text-slate-900">Amoxicillin 500mg</div>
+                              <div className="text-[10px] text-teal-700 font-bold">1-1-1 • Thrice daily after food</div>
+                            </div>
+                            <span className="text-[10px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full font-mono font-bold">
+                              98.8%
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="text-center text-[10px] text-slate-500 font-medium">
+                          ✓ Validated against National Formulary (Jan Aushadhi)
+                        </div>
+                      </div>
+                    )}
+
+                    {/* STEP 3: MEDICAL SIMPLIFICATION */}
+                    {activeStep === 3 && (
+                      <div className="space-y-2.5 animate-fadeIn">
+                        <div className="bg-gradient-to-br from-teal-50 to-emerald-50 p-3 rounded-2xl border border-teal-200 space-y-1.5 shadow-xs">
+                          <div className="text-[10px] font-mono text-[#0F766E] font-black uppercase tracking-wider">
+                            💊 सरल खुराक निर्देश (Hindi):
+                          </div>
+                          <div className="text-xs font-bold text-slate-800 leading-relaxed">
+                            सुबह नाश्ते के बाद और रात को खाने के बाद 1-1 गोली पानी से लें।
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-around text-center text-xs">
+                          <div className="p-2 bg-white rounded-xl border border-slate-200 shadow-2xs w-[48%]">
+                            <div className="text-lg">☀️</div>
+                            <div className="text-[10px] font-bold text-slate-800">सुबह 1 गोली</div>
+                            <div className="text-[9px] text-slate-500">नाश्ते के बाद</div>
+                          </div>
+                          <div className="p-2 bg-white rounded-xl border border-slate-200 shadow-2xs w-[48%]">
+                            <div className="text-lg">🌙</div>
+                            <div className="text-[10px] font-bold text-slate-800">रात 1 गोली</div>
+                            <div className="text-[9px] text-slate-500">भोजन के बाद</div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* STEP 4: TRANSCRIBE TO NATIVE AUDIO */}
+                    {activeStep === 4 && (
+                      <div className="space-y-2.5 animate-fadeIn text-center">
+                        {/* Audio Waveform Card */}
+                        <div className="p-3 bg-amber-50/80 rounded-2xl border border-amber-200 space-y-2 shadow-xs">
+                          <div className="flex items-center justify-center gap-1.5 h-10">
+                            {[14, 28, 44, 24, 38, 46, 32, 18].map((h, i) => (
+                              <div
+                                key={i}
+                                className="w-1.5 bg-gradient-to-t from-amber-500 to-amber-600 rounded-full animate-pulse"
+                                style={{ height: `${h}px`, animationDelay: `${i * 0.1}s` }}
+                              />
+                            ))}
+                          </div>
+                          <div className="text-[11px] font-bold text-amber-900 leading-tight">
+                            "नमस्ते, अपनी सुबह की दवा नाश्ते के बाद 1 गोली पानी से लें।"
+                          </div>
+                        </div>
+
+                        <button
+                          onClick={() => setIsPlayingAudio(!isPlayingAudio)}
+                          className="w-full bg-[#0F766E] hover:bg-[#0A4D48] text-white font-black text-xs py-2 rounded-xl shadow-xs flex items-center justify-center gap-2"
+                        >
+                          <SpeakerIcon size={14} color="#fff" />
+                          <span>{isPlayingAudio ? 'Playing Spoken Voice...' : '🔊 Listen Audio Guidance'}</span>
+                        </button>
+                      </div>
+                    )}
+
+                    {/* STEP 5: TALK TO PRESCRIPTION (AI COMPANION) */}
+                    {activeStep === 5 && (
+                      <div className="space-y-2 animate-fadeIn text-xs">
+                        <div className="space-y-2">
+                          <div className="bg-slate-100 p-2.5 rounded-2xl rounded-tl-xs max-w-[85%] text-slate-800 font-medium">
+                            क्या मैं यह दवा खाली पेट ले सकता हूँ?
+                          </div>
+                          <div className="bg-[#0F766E] p-2.5 rounded-2xl rounded-tr-xs max-w-[90%] ml-auto text-white leading-relaxed font-semibold shadow-xs">
+                            नहीं, डॉक्टर की सलाह के अनुसार यह दवा हमेशा भोजन के बाद ही लें ताकि पेट में जलन न हो।
+                          </div>
+                        </div>
+
+                        {onOpenChat && (
+                          <button
+                            onClick={onOpenChat}
+                            className="w-full bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-black text-xs py-2 rounded-xl shadow-xs flex items-center justify-center gap-1.5"
+                          >
+                            <SparklesIcon size={14} />
+                            <span>Ask Live AI Medical Assistant</span>
+                          </button>
+                        )}
+                      </div>
+                    )}
+
+                    {/* STEP 6: SMART PILLBOX & CAREGIVER */}
+                    {activeStep === 6 && (
+                      <div className="space-y-2 animate-fadeIn text-xs">
+                        <div className="space-y-1.5">
+                          <div className="p-2 rounded-xl bg-white border border-slate-200 shadow-2xs flex items-center justify-between">
+                            <span className="font-semibold text-slate-800">☀️ Morning Dose (8:30 AM)</span>
+                            <span className="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full font-bold text-[10px]">✓ Taken</span>
+                          </div>
+                          <div className="p-2 rounded-xl bg-white border border-slate-200 shadow-2xs flex items-center justify-between">
+                            <span className="font-semibold text-slate-800">🌙 Night Dose (9:00 PM)</span>
+                            <span className="bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full font-bold text-[10px]">⏰ Pending</span>
+                          </div>
+                          <div className="p-2 rounded-xl bg-rose-50 border border-rose-200 flex items-center justify-between">
+                            <span className="text-[11px] font-bold text-rose-900">ASHA Worker: Sunita Devi Notified</span>
+                            <span className="text-xs">👩‍⚕️</span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* 🌟 Bottom Conversational Bar (Exact Layout from Reference Image!) */}
+                    <div className="pt-2 border-t border-slate-200/80 mt-auto">
+                      <div 
+                        onClick={onOpenChat}
+                        className="bg-white rounded-full px-3 py-1.5 border border-slate-300 shadow-sm flex items-center justify-between text-xs text-slate-500 cursor-pointer hover:border-[#0F766E] transition-colors"
+                      >
+                        <span className="truncate text-[11px] font-medium">Ask Swasthya Mitr...</span>
+                        
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <span className="text-[10px] font-bold bg-slate-100 px-1.5 py-0.5 rounded text-slate-600">
+                            हि ▾
+                          </span>
+                          <div className="w-5 h-5 rounded-full bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 flex items-center justify-center font-bold text-[10px] shadow-2xs">
+                            🎙️
+                          </div>
+                          <div className="w-5 h-5 rounded-full bg-[#0F766E] text-white flex items-center justify-center font-bold text-[10px] shadow-2xs">
+                            ➔
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                  </div>
+
+                  {/* Phone Bottom Home Bar Indicator */}
+                  <div className="w-24 h-1 bg-slate-400 rounded-full mx-auto my-1.5" />
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* RIGHT FLANK: Steps 4, 5, 6 */}
-        <div className="lg:col-span-4 space-y-4">
+        {/* ======================================================== */}
+        {/* RIGHT FLANK: Steps 4, 5, 6                               */}
+        {/* ======================================================== */}
+        <div className="lg:col-span-4 space-y-5">
           {steps.slice(3, 6).map((s) => {
             const Icon = s.icon;
             const isActive = activeStep === s.id;
@@ -443,10 +441,10 @@ export const InteractiveProductShowcase = ({ onOpenChat }) => {
               <div
                 key={s.id}
                 onClick={() => setActiveStep(s.id)}
-                className={`p-5 rounded-2xl border transition-all duration-300 cursor-pointer text-left relative overflow-hidden group ${
+                className={`p-6 rounded-3xl border transition-all duration-300 cursor-pointer text-left relative overflow-hidden backdrop-blur-md ${
                   isActive
-                    ? 'bg-white dark:bg-slate-900 border-[#0F766E] dark:border-teal-400 shadow-xl shadow-teal-500/10 scale-[1.02] ring-2 ring-[#0F766E]/20'
-                    : 'bg-white/80 dark:bg-slate-900/70 border-slate-200/90 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 shadow-xs hover:shadow-md'
+                    ? `bg-white dark:bg-slate-900 border-[#0F766E] dark:border-teal-400 shadow-[0_16px_40px_-8px_rgba(15,118,110,0.22),0_0_20px_rgba(20,184,166,0.18)] scale-[1.03] ring-2 ring-[#0F766E]/20`
+                    : `bg-white/80 dark:bg-slate-900/70 border-slate-200/80 dark:border-slate-800 shadow-[0_8px_24px_-6px_rgba(0,0,0,0.04)] hover:shadow-[0_12px_32px_-6px_rgba(15,118,110,0.12)] hover:border-teal-300 dark:hover:border-slate-700 hover:scale-[1.01]`
                 }`}
               >
                 {/* Active Indicator Bar */}
@@ -454,28 +452,28 @@ export const InteractiveProductShowcase = ({ onOpenChat }) => {
                   <div className="absolute top-0 left-0 bottom-0 w-1.5 bg-gradient-to-b from-[#0F766E] to-emerald-400" />
                 )}
 
-                <div className="flex items-center justify-between mb-2.5">
-                  <div className="flex items-center gap-2.5">
-                    <span className={`w-7 h-7 rounded-lg flex items-center justify-center font-black text-xs transition-colors ${
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-3">
+                    <span className={`w-8 h-8 rounded-xl flex items-center justify-center font-black text-xs border transition-colors ${
                       isActive
-                        ? 'bg-[#0F766E] text-white shadow-xs'
-                        : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
+                        ? 'bg-[#0F766E] text-white border-[#0F766E] shadow-sm'
+                        : s.badgeBg
                     }`}>
                       {s.num}
                     </span>
-                    <Icon size={18} className={isActive ? 'text-[#0F766E] dark:text-teal-400' : 'text-slate-500 dark:text-slate-400'} />
+                    <Icon size={20} className={isActive ? 'text-[#0F766E] dark:text-teal-400' : 'text-slate-500 dark:text-slate-400'} />
                   </div>
                   <span className="text-[10px] font-mono font-bold tracking-wider text-slate-400 dark:text-slate-500 uppercase">
                     {s.badge}
                   </span>
                 </div>
 
-                <h3 className={`text-base font-extrabold tracking-tight transition-colors ${
+                <h3 className={`text-base sm:text-lg font-black tracking-tight transition-colors ${
                   isActive ? 'text-[#0F766E] dark:text-teal-300' : 'text-slate-900 dark:text-white'
                 }`}>
                   {s.title}
                 </h3>
-                <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed mt-1">
+                <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed mt-1.5 font-normal">
                   {s.desc}
                 </p>
               </div>
