@@ -4,8 +4,8 @@
 > **Challenge:** UNLEASH LLM Innovation Challenge | Final Pitch  
 > **Organizers:** Together with **Meta** | In collaboration with **IndiaAI** & **AICTE** | Implemented by **1M1B**  
 > **Initiative:** Under the YuvAI Initiative for Skilling and Capacity Building  
-> **Generated Presentation File:** [`docs/presentation/UNLEASH_LLM_Final_Pitch_Deck_Swasthya_AI.pptx`](file:///d:/Captures/AI-Powered%20Healthcare%20Communication%20Assistant%20for%20Rural%20Communities/docs/presentation/UNLEASH_LLM_Final_Pitch_Deck_Swasthya_AI.pptx)  
-> **Impact Track:** **Applied AI for People** (Healthcare & Vernacular Accessibility)
+> **Generated Presentation File:** [`docs/presentation/UNLEASH_LLM_Final_Pitch_Deck_Change_The_World.pptx`](file:///d:/Captures/AI-Powered%20Healthcare%20Communication%20Assistant%20for%20Rural%20Communities/docs/presentation/UNLEASH_LLM_Final_Pitch_Deck_Change_The_World.pptx)  
+> **Impact Track (Theme):** **Inclusive Health** (LLM-driven healthcare solutions for diverse populations, improving patient engagement and supporting healthcare workers with multilingual resources)
 
 ---
 
@@ -14,19 +14,19 @@
 ---
 
 ### 🌟 Slide 1: Project Title & Team Details
-- **Header:** INDIAai | AICTE | Together with Meta | 1M1B  
+- **Header:** INDIAai | AICTE | Together with Meta | 1M1B (Official Vector Logos Embedded)  
 - **Competition:** UNLEASH LLM Innovation Challenge | Final Pitch  
-- **Project Title:** **Swasthya Sanchar AI™**  
+- **Project Title:** **Swasthya Sanchar AI**  
 - **Subtitle:** Rural Healthcare Communication & Prescription Voice Guidance Assistant  
 - **One-line Tagline / Value Proposition:**  
   *"Bridging India's rural health-literacy divide through vernacular voice guidance, multimodal prescription OCR, and Llama 3-powered medication simplification."*  
-- **Team Name:** Team Swasthya AI  
-- **Team Members:** Prince Kumar (Lead Full-Stack & AI Engineer)  
-- **Impact Track:** **Applied AI for People**  
-- **Visual Design:** Premium Midnight Navy (`#0B132B`) with the 3 Pillars from the official challenge template: **People** (Blue, Primary Focus), **Planet** (Green), **Progress** (Amber).
+- **Team Name:** **Change_The_World**  
+- **Team Members:** **Nafees Hyder   |   Prince Kumar**  
+- **Impact Track:** **Inclusive Health**  
+- **Visual Design:** Official UNLEASH LLM template styling with original logos for IndiaAI, AICTE, Meta, and 1M1B, plus the 3 challenge pillars: **People** (Inclusive Health focus), **Planet**, **Progress**.
 
 #### 🎙️ Speaker Script (Slide 1 — ~30 seconds):
-> *"Respected jury members from Meta, IndiaAI, AICTE, and 1M1B, good morning. I am Prince Kumar representing Team Swasthya AI. Today, we are presenting Swasthya Sanchar AI—a vernacular, voice-first healthcare communication assistant engineered to solve one of the most neglected yet fatal crises in rural Bharat: the prescription literacy divide. Under the Applied AI for People track, our mission is to ensure that no Indian ever suffers because they couldn't read what their doctor wrote."*
+> *"Respected jury members from Meta, IndiaAI, AICTE, and 1M1B, good morning. We are Nafees Hyder and Prince Kumar, representing Team Change_The_World. Today, we are presenting Swasthya Sanchar AI under the Inclusive Health track—an LLM-powered healthcare communication assistant engineered to solve one of the most neglected yet fatal crises in rural Bharat: the prescription literacy divide. Our mission is to empower frontline health workers and diverse rural populations with language-inclusive, voice-first medical comprehension."*
 
 ---
 
@@ -262,10 +262,10 @@
   3. **Ready to Scale:** Production-grade architecture designed directly for Ayushman Bharat Digital Mission (ABDM) national standards.  
 - **Final Impact Statement:**  
   *“Swasthya Sanchar AI transforms cold medical slips into caring, vernacular voice companions—bringing humanity, safety, and health dignity to rural Bharat.”*  
-- **Contact:** Team Swasthya AI | `kumariafprince@gmail.com` | [GitHub: Prince-git-hub-360](https://github.com/Prince-git-hub-360/AI-Healthcare-Assistant-for-Rural-Communities)
+- **Contact:** Team Change_The_World | Nafees Hyder & Prince Kumar | `kumariafprince@gmail.com` | [GitHub: Prince-git-hub-360](https://github.com/Prince-git-hub-360/AI-Healthcare-Assistant-for-Rural-Communities)
 
 #### 🎙️ Speaker Script (Slide 12 — ~35 seconds):
-> *"In closing, we leave the jury with one core thought: Healthcare equality in India will not be achieved when everyone owns a smartphone, but when every grandmother in every village can take her medication safely in her own voice and tongue. With a proven need, real open-source Llama 3 innovation, and a working prototype ready to scale, Swasthya Sanchar AI is ready to partner with Meta, IndiaAI, and AICTE to bring health dignity to millions. Thank you."*
+> *"In closing, we leave the jury with one core thought: Healthcare equality in India will not be achieved when everyone owns a smartphone, but when every grandmother in every village can take her medication safely in her own voice and tongue. With a proven need, real open-source Llama 3 innovation under the Inclusive Health track, and a working prototype ready to scale, Team Change_The_World is ready to partner with Meta, IndiaAI, and AICTE to bring health dignity to millions. Thank you."*
 
 ---
 
