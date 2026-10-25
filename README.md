@@ -1,6 +1,5 @@
-# 🏥 AI-Powered Healthcare Communication Assistant for Rural Communities
+# 🏥 Swasthya Sanchar AI™ — Rural Healthcare Communication Assistant
 
-[![Infosys Springboard](https://img.shields.io/badge/Infosys%20Springboard-Virtual%20Internship-orange.svg)](https://infyspringboard.onwingspan.com/)
 [![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 [![Django](https://img.shields.io/badge/Django-5.2-092E20?logo=django&logoColor=white)](https://www.djangoproject.com/)
 [![Django REST Framework](https://img.shields.io/badge/DRF-3.17-red?logo=django&logoColor=white)](https://www.django-rest-framework.org/)
@@ -9,8 +8,8 @@
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15%2B-4169E1?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-> **Infosys Springboard Virtual Internship Project Submission**  
-> **Official Repository:** [Springboard-Internship-2026/AI-Powered-Healthcare-Communication-Assistant-for-Rural-Communities-July-2026](https://github.com/Springboard-Internship-2026/AI-Powered-Healthcare-Communication-Assistant-for-Rural-Communities-July-2026)  
+> **Swasthya Sanchar AI™** — AI-Powered Healthcare Communication Assistant for Rural Communities  
+> **Official Repository:** [Prince-git-hub-360/AI-Healthcare-Assistant-for-Rural-Communities](https://github.com/Prince-git-hub-360/AI-Healthcare-Assistant-for-Rural-Communities)  
 > **Author:** Prince (`kumariafprince@gmail.com`)
 
 ---
@@ -135,6 +134,17 @@ AI-Healthcare-Assistant-for-Rural-Communities/
 │   ├── vite.config.js                  # Vite Dev Server & Proxy Settings
 │   └── README.md                       # Frontend Specification
 │
+├── Mobile/                             # React Native + Expo Mobile Application
+│   ├── assets/                         # Mobile App Icons, Splash Screens & Audio
+│   ├── src/                            # Mobile TypeScript & React Native Application
+│   │   ├── components/                 # Visual Pillbox, Multilingual Audio & QR Wallet
+│   │   ├── navigation/                 # App Navigators & Role Flow
+│   │   ├── screens/                    # Patient Home, ASHA Worker, SOS & OCR Screens
+│   │   └── services/                   # Backend API Integration & Offline Cache
+│   ├── app.json                        # Expo App Configuration
+│   ├── package.json                    # React Native Dependencies
+│   └── README.md                       # Mobile Application Specification
+│
 ├── .gitignore                          # Configured for Node, Python venv, env & media files
 ├── LICENSE                             # MIT License
 ├── pyrightconfig.json                  # Python Type Checking Config
@@ -220,7 +230,7 @@ python manage.py runserver
 
 ---
 
-### 2️⃣ Frontend Setup (React + Vite)
+### 2️⃣ Frontend Setup (React 19 + Vite)
 
 Open a **new terminal tab**:
 
@@ -231,11 +241,47 @@ cd Frontend
 # Install node dependencies
 npm install
 
-# Launch Vite development server
+# Launch Vite development server (configured on port 3000)
 npm run dev
 ```
 
-> 🌐 **Frontend Application:** `http://localhost:5173/`
+> 🌐 **Frontend Application:** `http://localhost:3000/`
+
+---
+
+### 3️⃣ Mobile App Setup (React Native + Expo)
+
+Open a **new terminal tab**:
+
+```powershell
+# Navigate to Mobile directory
+cd Mobile
+
+# Install dependencies
+npm install
+
+# Start Expo Metro bundler for Web preview
+npm run web
+
+# Or start for Expo Go mobile app (Android / iOS)
+npm start
+```
+
+> 📱 **Mobile Expo Web Preview:** `http://localhost:8081/` (or `http://localhost:8082/`)  
+> 📲 **Mobile Device Testing:** Scan the terminal QR code with the **Expo Go** app on Android or iOS
+
+---
+
+### 🧭 Active Local Services & Ports Reference
+
+| Service | Technology | Local URL | Port |
+| :--- | :--- | :--- | :--- |
+| **Frontend Web App** | React 19 + Vite | `http://localhost:3000/` | `3000` |
+| **Backend REST API** | Django 5.2 + DRF | `http://localhost:8000/api/v1/` | `8000` |
+| **Master API Root** | Django REST Framework | `http://localhost:8000/api/` | `8000` |
+| **API Swagger Docs** | drf-spectacular | `http://localhost:8000/api/schema/swagger-ui/` | `8000` |
+| **Mobile App (Web)** | React Native + Expo | `http://localhost:8081/` | `8081` / `8082` |
+| **Database** | PostgreSQL | `localhost:5432` | `5432` |
 
 ---
 
@@ -284,23 +330,23 @@ All endpoints are versioned under `/api/v1/` (or accessible via DRF master route
 
 ---
 
-## 📤 Infosys Springboard GitHub Push Instructions
+## 📤 Git Repository & Deployment Guide
 
-Follow these exact steps to push this project to the repository assigned by Infosys Springboard:
+Follow these steps to synchronize the repository with GitHub:
 
 ### 1. Verify Git Remote Configuration
 ```powershell
 git remote -v
 ```
-To set your remote origin to the official Infosys Springboard repository URL:
+To set your remote origin to the official repository URL:
 ```powershell
-git remote set-url origin https://github.com/Springboard-Internship-2026/AI-Powered-Healthcare-Communication-Assistant-for-Rural-Communities-July-2026.git
+git remote set-url origin https://github.com/Prince-git-hub-360/AI-Healthcare-Assistant-for-Rural-Communities.git
 ```
 
 ### 2. Stage and Commit All Project Files
 ```powershell
 git add .
-git commit -m "docs: complete enterprise README specification and Infosys Springboard submission updates"
+git commit -m "docs: update system documentation, ports, and architecture guide"
 ```
 
 ### 3. Push to GitHub Repository
@@ -314,6 +360,6 @@ git push -u origin main
 ## 📜 License & Acknowledgments
 
 - **License**: Distributed under the [MIT License](LICENSE).
-- **Project Submission**: Submitted for **Infosys Springboard Virtual Internship**.
-- **Special Thanks**: Infosys Springboard mentors and instructors for guidance on domain-driven software architecture for social impact.
+- **Core Mission**: Dedicated to empowering rural patients, frontline health workers (ASHA & ANM), and primary healthcare providers across India with language-inclusive, voice-first AI healthcare assistance.
+- **Special Thanks**: Dedicated to frontline healthcare workers, rural community health volunteers, and healthcare mentors working to advance the Ayushman Bharat Digital Mission (ABDM) and universal health accessibility.
 - **Contributions**: Pull requests, issues, and feedback are welcome to advance rural healthcare accessibility.

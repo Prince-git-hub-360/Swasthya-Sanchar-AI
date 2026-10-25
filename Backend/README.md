@@ -5,7 +5,7 @@
 [![REST Framework](https://img.shields.io/badge/DRF-3.17-red)](https://www.django-rest-framework.org/)
 [![Database](https://img.shields.io/badge/database-PostgreSQL-blue)](https://www.postgresql.org/)
 
-> **Infosys Springboard Virtual Internship Project Submission**  
+> **Swasthya Sanchar AI™ REST API Gateway**  
 > Scalable, domain-driven Django REST Framework backend powering OCR prescription scanning, multilingual voice synthesis (gTTS), patient health vault (ABHA), medication reminders, and caregiver escalation.
 
 ---

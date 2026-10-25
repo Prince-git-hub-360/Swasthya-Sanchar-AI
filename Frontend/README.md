@@ -4,7 +4,7 @@
 [![Vite](https://img.shields.io/badge/vite-8.2-purple)](https://vitejs.dev/)
 [![Tailwind CSS](https://img.shields.io/badge/tailwindcss-3.4-38B2AC)](https://tailwindcss.com/)
 
-> **Infosys Springboard Virtual Internship Project Submission**  
+> **Swasthya Sanchar AI™ Web Application**  
 > Modern, accessible Single Page Application (SPA) built for rural patients, healthcare workers (ASHA Workers & Doctors), and family caregivers. Provides voice-guided medication instructions, OCR prescription display, visual pillbox calendars, and ABHA digital health cards.
 
 ---
@@ -66,7 +66,7 @@ Frontend/
    npm run dev
    ```
 4. Access the web interface in your browser:
-   > 🌐 `http://localhost:5173/`
+   > 🌐 `http://localhost:3000/`
 
 The frontend is configured to communicate with the Django backend REST API running on `http://127.0.0.1:8000/api/v1/`.
 
