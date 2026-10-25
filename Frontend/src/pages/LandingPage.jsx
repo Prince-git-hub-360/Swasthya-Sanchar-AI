@@ -11,6 +11,7 @@ import { PublicNavbar } from '../components/marketing/PublicNavbar';
 import SwasthyaLogo from '../components/branding/SwasthyaLogo';
 import { MobileAppHome } from '../components/mobile/MobileAppHome';
 import { InteractiveProductShowcase } from '../components/marketing/InteractiveProductShowcase';
+import { VernacularLanguageSlider } from '../components/marketing/VernacularLanguageSlider';
 
 // 🚀 Smooth Scroll-Triggered Animated Number Counter
 const AnimatedStat = ({ endValue, suffix = '', prefix = '', decimals = 0, duration = 1800 }) => {
@@ -574,6 +575,9 @@ export const LandingPage = ({ onNavigate, onOpenChat }) => {
             <span className="flex items-center gap-2">🔒 Ayushman Bharat (ABDM) Data Standards</span>
           </div>
         </div>
+
+        {/* 🌟 VERNACULAR DUAL-TRACK LANGUAGE SLIDER WITH CENTER-CONVERGING LOGO CREATION */}
+        <VernacularLanguageSlider />
 
         {/* NEW DYNAMIC STATS BAND WITH LIVE METRICS & ECG PULSE */}
         <section className="bg-slate-900 text-white py-12 px-4 sm:px-6 lg:px-8 font-sans transition-colors relative overflow-hidden">
