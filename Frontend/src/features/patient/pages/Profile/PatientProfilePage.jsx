@@ -710,12 +710,12 @@ export const PatientProfilePage = () => {
 
       {/* ── 3. DIGITAL EMERGENCY MEDICAL ID CARD MODAL ── */}
       {showMedicalIdModal && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in">
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-lg w-full shadow-2xl overflow-hidden p-6 relative">
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-2.5 sm:p-4 animate-in fade-in overflow-y-auto">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl sm:rounded-3xl max-w-lg w-full shadow-2xl p-3.5 sm:p-6 relative my-auto max-h-[94vh] overflow-y-auto">
             <button
               type="button"
               onClick={() => setShowMedicalIdModal(false)}
-              className="absolute top-4 right-4 text-slate-500 hover:text-slate-800 dark:hover:text-white p-1 rounded-lg cursor-pointer z-10"
+              className="absolute top-3 right-3 sm:top-4 sm:right-4 text-slate-500 hover:text-slate-800 dark:hover:text-white p-1 rounded-lg cursor-pointer z-10"
             >
               <CloseIcon size={20} />
             </button>

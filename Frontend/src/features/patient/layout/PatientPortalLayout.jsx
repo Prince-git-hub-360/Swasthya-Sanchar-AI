@@ -3,7 +3,7 @@ import { useAuth, LANGUAGES } from '../../../shared/context/AuthContext';
 import { ROUTES } from '../../../utils/routes';
 import { 
   HospitalIcon, UserIcon, ClockIcon, ActivityIcon, 
-  DocumentIcon, PhoneIcon, SparklesIcon, PillIcon, TranslateIcon
+  DocumentIcon, PhoneIcon, SparklesIcon, PillIcon, TranslateIcon, CameraIcon
 } from '../../../shared/icons/Icons';
 
 export const PatientPortalLayout = ({ currentPath, onNavigate, onOpenChat, children }) => {
@@ -374,7 +374,7 @@ export const PatientPortalLayout = ({ currentPath, onNavigate, onOpenChat, child
             <span className="text-[10px] mt-0.5 tracking-tight">Home</span>
           </button>
 
-          {/* Vision AI */}
+          {/* AI Prescription Scanner */}
           <button
             type="button"
             onClick={() => handleNav(ROUTES.APP.PATIENT.TRANSLATE)}
@@ -385,10 +385,10 @@ export const PatientPortalLayout = ({ currentPath, onNavigate, onOpenChat, child
             }`}
           >
             <div className="relative">
-              <TranslateIcon size={18} />
+              <CameraIcon size={18} />
               <span className="absolute -top-1 -right-2 text-[8px] font-black bg-indigo-600 text-white px-1 rounded-full leading-tight">AI</span>
             </div>
-            <span className="text-[10px] mt-0.5 tracking-tight">Vision AI</span>
+            <span className="text-[10px] mt-0.5 tracking-tight font-bold">AI Scanner</span>
           </button>
 
           {/* Pillbox */}
