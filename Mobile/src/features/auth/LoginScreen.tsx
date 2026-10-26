@@ -19,8 +19,10 @@ import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { authApi } from '../../api';
 import { RegisterScreen } from './RegisterScreen';
+import { useAppSafeArea } from '../../hooks/useAppSafeArea';
 
 export const LoginScreen: React.FC = () => {
+  const insets = useAppSafeArea();
   const { loginAsDemo, login, sendOtp, verifyOtp, isLoading } = useAuth();
   const { currentLanguage, setLanguage, languages, t } = useLanguage();
 
@@ -40,7 +42,7 @@ export const LoginScreen: React.FC = () => {
   const [showResetPass, setShowResetPass] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
 
-  const activeLang = languages.find((l) => l.code === currentLanguage) || languages[0];
+  const activeLang = languages.find((l: any) => l.code === currentLanguage) || languages[0];
 
   if (authView === 'REGISTER') {
     return <RegisterScreen onNavigateToLogin={() => setAuthView('LOGIN')} />;
@@ -134,7 +136,10 @@ export const LoginScreen: React.FC = () => {
       style={styles.container}
     >
       <ScrollView
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[
+          styles.scrollContent,
+          { paddingTop: insets.top + SPACING.md, paddingBottom: insets.bottom + 40 },
+        ]}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
@@ -441,8 +446,6 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: SPACING.lg,
-    paddingTop: SPACING.md,
-    paddingBottom: 60,
   },
   topBar: {
     flexDirection: 'row',

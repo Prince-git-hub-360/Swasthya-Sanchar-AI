@@ -3,12 +3,13 @@ import { useAuth, LANGUAGES } from '../../shared/context/AuthContext';
 import { ROUTES, navigateTo, getRoleDefaultRoute } from '../../utils/routes';
 import { INDIAN_STATES_LIST, getDistrictsForState } from '../../shared/data/indianStatesAndDistricts';
 
-export const RegisterForm = ({ onNavigateLogin, onSuccess }) => {
+export const RegisterForm = ({ onNavigateLogin, onSuccess, initialUsername = '' }) => {
   const { register, loading, showToast } = useAuth();
   const [selectedRole, setSelectedRole] = useState('patient');
+  const [usernameTakenError, setUsernameTakenError] = useState(null);
 
   const [formData, setFormData] = useState({
-    username: '',
+    username: initialUsername || '',
     first_name: '',
     last_name: '',
     email: '',
@@ -26,11 +27,11 @@ export const RegisterForm = ({ onNavigateLogin, onSuccess }) => {
     // Doctor Specific
     medical_reg_no: '',
     specialization: 'General Medicine / MBBS',
-    hospital_name: 'Mandya Primary Health Centre #2',
+    hospital_name: '',
 
     // ASHA Specific
     asha_id: '',
-    sub_centre: 'Sector 1 - North Colony Sub-Centre',
+    sub_centre: '',
 
     // Caregiver Specific
     relationship_to_patient: 'Son',
@@ -38,14 +39,24 @@ export const RegisterForm = ({ onNavigateLogin, onSuccess }) => {
     linked_patient_phone: '',
   });
 
+  React.useEffect(() => {
+    if (initialUsername) {
+      setFormData((prev) => ({ ...prev, username: initialUsername }));
+    }
+  }, [initialUsername]);
+
   const availableDistricts = getDistrictsForState(formData.state);
 
   const handleRoleChange = (role) => {
     setSelectedRole(role);
+    if (usernameTakenError) setUsernameTakenError(null);
   };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+    if (name === 'username' && usernameTakenError) {
+      setUsernameTakenError(null);
+    }
     setFormData((prev) => {
       const updated = { ...prev, [name]: value };
       if (name === 'date_of_birth' && value) {
@@ -76,6 +87,7 @@ export const RegisterForm = ({ onNavigateLogin, onSuccess }) => {
     }
 
     try {
+      setUsernameTakenError(null);
       const payload = {
         ...formData,
         role: selectedRole,
@@ -117,11 +129,15 @@ export const RegisterForm = ({ onNavigateLogin, onSuccess }) => {
       if (showToast) showToast(`✅ ${roleDisplayName} account created successfully for ${formData.first_name}! Please sign in.`, 'success');
       
       if (onNavigateLogin) {
-        onNavigateLogin();
+        onNavigateLogin(formData.username);
       } else {
         navigateTo(ROUTES.AUTH.LOGIN);
       }
     } catch (err) {
+      const msg = String(err.message || '');
+      if (err.errorCode === 'USERNAME_TAKEN' || msg.toLowerCase().includes('already registered') || msg.toLowerCase().includes('taken')) {
+        setUsernameTakenError(`Username "${formData.username}" is already taken.`);
+      }
       if (showToast) showToast(err.message || 'Registration failed. Please try again.', 'error');
     }
   };
@@ -214,12 +230,31 @@ export const RegisterForm = ({ onNavigateLogin, onSuccess }) => {
               type="text"
               name="username"
               autoComplete="off"
-              className="w-full bg-white dark:bg-slate-800 border border-stone-300 dark:border-slate-700 text-stone-900 dark:text-white text-xs rounded-xl px-3.5 py-2.5 outline-none focus:border-[#0F766E] dark:focus:border-teal-400 shadow-2xs"
+              className={`w-full bg-white dark:bg-slate-800 border text-stone-900 dark:text-white text-xs rounded-xl px-3.5 py-2.5 outline-none transition-all shadow-2xs ${
+                usernameTakenError
+                  ? 'border-amber-400 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20'
+                  : 'border-stone-300 dark:border-slate-700 focus:border-[#0F766E] dark:focus:border-teal-400'
+              }`}
               placeholder="e.g. ramesh_kumar"
               value={formData.username}
               onChange={handleChange}
               required
             />
+            {usernameTakenError && (
+              <div className="mt-1.5 p-2 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-700/60 flex items-center justify-between text-[11px] text-amber-900 dark:text-amber-200">
+                <span>⚠️ {usernameTakenError}</span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (onNavigateLogin) onNavigateLogin(formData.username);
+                    else navigateTo(ROUTES.AUTH.LOGIN);
+                  }}
+                  className="font-bold underline text-amber-900 dark:text-amber-300 hover:text-amber-950 cursor-pointer ml-1.5 whitespace-nowrap"
+                >
+                  Sign In →
+                </button>
+              </div>
+            )}
           </div>
           <div>
             <label className="block text-xs font-bold text-stone-800 dark:text-slate-200 mb-1">
@@ -546,7 +581,10 @@ export const RegisterForm = ({ onNavigateLogin, onSuccess }) => {
         Already have an account?{' '}
         <button
           type="button"
-          onClick={onNavigateLogin || (() => navigateTo(ROUTES.AUTH.LOGIN))}
+          onClick={() => {
+            if (onNavigateLogin) onNavigateLogin(formData.username);
+            else navigateTo(ROUTES.AUTH.LOGIN);
+          }}
           className="font-bold text-[#0F766E] dark:text-teal-300 hover:text-teal-800 dark:hover:text-teal-200 cursor-pointer underline"
         >
           Sign In

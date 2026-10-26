@@ -13,6 +13,7 @@ from .views import (
     PhonePasswordResetView,
     SendOtpView,
     VerifyOtpView,
+    CheckUsernameView,
 )
 
 DecoratedTokenRefreshView = extend_schema(tags=['01. Authentication & User Profile'])(TokenRefreshView)
@@ -23,6 +24,7 @@ urlpatterns = [
     path('login/', LoginView.as_view(), name='login'),
     path('logout/', LogoutView.as_view(), name='logout'),
     path('profile/', UserProfileView.as_view(), name='user-profile'),
+    path('check-username/', CheckUsernameView.as_view(), name='check-username'),
 
     # 4-Digit OTP Endpoints
     path('otp/send/', SendOtpView.as_view(), name='send-otp'),

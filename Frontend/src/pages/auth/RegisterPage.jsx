@@ -2,10 +2,14 @@ import React from 'react';
 import { AuthLayout } from '../../components/auth/AuthLayout';
 import { RegisterForm } from '../../components/auth/RegisterForm';
 
-export const RegisterPage = ({ onNavigate, onSuccess }) => {
+export const RegisterPage = ({ onNavigate, onSuccess, initialUsername }) => {
   return (
     <AuthLayout onNavigate={onNavigate}>
-      <RegisterForm onNavigateLogin={() => onNavigate('/login')} onSuccess={onSuccess} />
+      <RegisterForm 
+        initialUsername={initialUsername}
+        onNavigateLogin={(uname) => onNavigate('/login', { username: uname })} 
+        onSuccess={onSuccess} 
+      />
     </AuthLayout>
   );
 };

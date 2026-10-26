@@ -251,8 +251,8 @@ export const RemindersPage = () => {
   const nightMeds = pendingReminders.filter((r) => getSlot(r) === 'night');
 
   return (
-    <div className="max-w-[1240px] mx-auto px-4 md:px-6 py-6 space-y-6 font-sans text-slate-900 dark:text-slate-100 transition-colors">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-6 shadow-sm transition-colors">
+    <div className="max-w-[1240px] mx-auto px-2.5 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6 font-sans text-slate-900 dark:text-slate-100 transition-colors">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-4 sm:p-6 shadow-sm transition-colors">
         <div className="space-y-1">
           <span className="text-[10px] font-extrabold uppercase tracking-wider text-teal-700 dark:text-teal-400">
             MEDICATION COMPLIANCE

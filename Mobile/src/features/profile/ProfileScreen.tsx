@@ -6,6 +6,8 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
+  Modal,
+  TextInput,
 } from 'react-native';
 import {
   User,
@@ -19,15 +21,39 @@ import {
   Calendar,
   Building,
   Mail,
+  Users,
+  MessageSquare,
+  Edit3,
+  CheckCircle2,
+  ShieldAlert,
+  X,
 } from 'lucide-react-native';
 import { COLORS, SPACING, TYPOGRAPHY, BORDER_RADIUS, SHADOWS } from '../../constants/theme';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { AbhaCardView } from '../../components/health/AbhaCardView';
+import { useAppSafeArea } from '../../hooks/useAppSafeArea';
+import { EmergencySosService, EmergencyContact, DEFAULT_EMERGENCY_CONTACT } from '../../services/emergencySosService';
 
 export const ProfileScreen: React.FC = () => {
+  const insets = useAppSafeArea();
   const { user, logout } = useAuth();
   const { currentLanguage, setLanguage, languages } = useLanguage();
+
+  const [contact, setContact] = React.useState<EmergencyContact>(DEFAULT_EMERGENCY_CONTACT);
+  const [editModalVisible, setEditModalVisible] = React.useState(false);
+  const [editName, setEditName] = React.useState(DEFAULT_EMERGENCY_CONTACT.name);
+  const [editPhone, setEditPhone] = React.useState(DEFAULT_EMERGENCY_CONTACT.phone);
+  const [editRelation, setEditRelation] = React.useState(DEFAULT_EMERGENCY_CONTACT.relationship);
+
+  React.useEffect(() => {
+    EmergencySosService.getEmergencyContact().then((c) => {
+      setContact(c);
+      setEditName(c.name);
+      setEditPhone(c.phone);
+      setEditRelation(c.relationship);
+    });
+  }, []);
 
   const displayName = user?.first_name || (user?.username && !/^\d+$/.test(user.username) ? user.username : 'Prince Kumar');
   const displayPhone = user?.phone_number || (user?.username && /^\d+$/.test(user.username) ? user.username : '9008802105');
@@ -38,13 +64,46 @@ export const ProfileScreen: React.FC = () => {
   const displayAge = user?.age || 28;
   const displayGender = user?.gender || 'Male';
 
+  const handleSaveContact = async () => {
+    if (!editPhone || editPhone.trim().length < 10) {
+      Alert.alert('Invalid Number', 'Please enter a valid 10-digit mobile number.');
+      return;
+    }
+    const updated: EmergencyContact = {
+      name: editName.trim() || 'Family Member',
+      phone: editPhone.trim(),
+      relationship: editRelation.trim() || 'Caregiver',
+    };
+    await EmergencySosService.saveEmergencyContact(updated);
+    setContact(updated);
+    setEditModalVisible(false);
+    Alert.alert('Updated 🎉', `Family emergency contact updated to ${updated.name} (+91 ${updated.phone}).`);
+  };
+
+  const handleTestSms = async () => {
+    const loc = await EmergencySosService.getLiveLocation();
+    const msg = EmergencySosService.generateDistressMessage({
+      patientName: displayName,
+      village: displayVillage,
+      latitude: loc.latitude,
+      longitude: loc.longitude,
+    });
+    await EmergencySosService.sendNativeSms(contact.phone, msg);
+  };
+
   const handleLogout = async () => {
     await logout();
   };
 
   return (
     <View style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={[
+          styles.scrollContent,
+          { paddingTop: insets.top + SPACING.md, paddingBottom: insets.bottom + 80 },
+        ]}
+        showsVerticalScrollIndicator={false}
+      >
         {/* Header */}
         <View style={styles.header}>
           <Text style={styles.screenTitle}>Settings & Profile / प्रोफ़ाइल</Text>
@@ -113,6 +172,36 @@ export const ProfileScreen: React.FC = () => {
           </View>
         </View>
 
+        {/* Emergency Family Contact Card */}
+        <Text style={styles.sectionHeader}>Emergency Family Member / आपातकालीन संपर्क</Text>
+        <View style={styles.emergencyContactCard}>
+          <View style={styles.emergencyContactTop}>
+            <View style={styles.emergencyIconCircle}>
+              <Users size={20} color="#047857" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.emergencyContactName}>{contact.name} ({contact.relationship})</Text>
+              <Text style={styles.emergencyContactPhone}>+91 {contact.phone}</Text>
+              <Text style={styles.emergencyContactSub}>Receives 1-tap SOS SMS with live Google Maps link</Text>
+            </View>
+            <TouchableOpacity
+              style={styles.editContactButton}
+              onPress={() => setEditModalVisible(true)}
+              activeOpacity={0.8}
+            >
+              <Edit3 size={14} color="#047857" />
+              <Text style={styles.editContactBtnText}>Edit</Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.emergencyActionRow}>
+            <TouchableOpacity style={styles.testSmsBtn} onPress={handleTestSms} activeOpacity={0.85}>
+              <MessageSquare size={14} color="#047857" />
+              <Text style={styles.testSmsText}>Test Emergency SMS / टेस्ट एसएमएस</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
         {/* Official ABHA Card Component */}
         <Text style={styles.sectionHeader}>My ABHA Digital Health Card</Text>
         <AbhaCardView />
@@ -146,6 +235,51 @@ export const ProfileScreen: React.FC = () => {
           <Text style={styles.logoutBtnText}>Sign Out / लॉग आउट करें</Text>
         </TouchableOpacity>
       </ScrollView>
+
+      {/* Edit Contact Modal */}
+      <Modal visible={editModalVisible} transparent animationType="fade">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalCard}>
+            <View style={styles.modalHeaderRow}>
+              <Text style={styles.modalTitle}>Update Family Emergency Contact</Text>
+              <TouchableOpacity onPress={() => setEditModalVisible(false)}>
+                <X size={20} color="#64748B" />
+              </TouchableOpacity>
+            </View>
+
+            <Text style={styles.fieldLabel}>Contact Name / नाम</Text>
+            <TextInput
+              style={styles.fieldInput}
+              value={editName}
+              onChangeText={setEditName}
+              placeholder="e.g. Ramesh Kumar"
+            />
+
+            <Text style={styles.fieldLabel}>Relationship / रिश्ता</Text>
+            <TextInput
+              style={styles.fieldInput}
+              value={editRelation}
+              onChangeText={setEditRelation}
+              placeholder="e.g. Son, Daughter, Brother"
+            />
+
+            <Text style={styles.fieldLabel}>10-Digit Mobile Number / मोबाइल नंबर</Text>
+            <TextInput
+              style={styles.fieldInput}
+              value={editPhone}
+              onChangeText={setEditPhone}
+              placeholder="e.g. 9008802105"
+              keyboardType="phone-pad"
+              maxLength={13}
+            />
+
+            <TouchableOpacity style={styles.modalSaveBtn} onPress={handleSaveContact}>
+              <CheckCircle2 size={18} color="#FFFFFF" />
+              <Text style={styles.modalSaveText}>Save Emergency Contact</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -157,8 +291,6 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: SPACING.md,
-    paddingTop: SPACING.lg,
-    paddingBottom: 60,
   },
   header: {
     marginBottom: SPACING.md,
@@ -316,5 +448,136 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '800',
     color: COLORS.emergency,
+  },
+  emergencyContactCard: {
+    backgroundColor: '#F0FDF4',
+    borderWidth: 1.5,
+    borderColor: '#BBF7D0',
+    borderRadius: BORDER_RADIUS.lg,
+    padding: SPACING.md,
+    marginBottom: SPACING.sm,
+  },
+  emergencyContactTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  emergencyIconCircle: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#DCFCE7',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emergencyContactName: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#065F46',
+  },
+  emergencyContactPhone: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: '#047857',
+    marginTop: 1,
+  },
+  emergencyContactSub: {
+    fontSize: 10,
+    color: '#059669',
+    marginTop: 2,
+  },
+  editContactButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#DCFCE7',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
+  },
+  editContactBtnText: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#047857',
+  },
+  emergencyActionRow: {
+    marginTop: SPACING.sm,
+    borderTopWidth: 1,
+    borderTopColor: '#DCFCE7',
+    paddingTop: SPACING.xs,
+  },
+  testSmsBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#86EFAC',
+    borderRadius: 8,
+    paddingVertical: 8,
+  },
+  testSmsText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#047857',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.65)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: SPACING.lg,
+  },
+  modalCard: {
+    width: '100%',
+    maxWidth: 380,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    padding: SPACING.lg,
+    ...SHADOWS.elevated,
+  },
+  modalHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: SPACING.md,
+  },
+  modalTitle: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: '#0F172A',
+  },
+  fieldLabel: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#475569',
+    marginBottom: 4,
+    marginTop: 8,
+  },
+  fieldInput: {
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    fontSize: 13,
+    color: '#0F172A',
+  },
+  modalSaveBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    backgroundColor: COLORS.primary,
+    paddingVertical: 12,
+    borderRadius: 12,
+    marginTop: SPACING.lg,
+  },
+  modalSaveText: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#FFFFFF',
   },
 });

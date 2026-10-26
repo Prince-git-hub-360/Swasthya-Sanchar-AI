@@ -21,6 +21,9 @@ import {
   Camera,
   Bot,
   Plus,
+  PhoneCall,
+  Bell,
+  Clock,
 } from 'lucide-react-native';
 import { COLORS, SPACING, TYPOGRAPHY, BORDER_RADIUS, SHADOWS } from '../../constants/theme';
 import { useLanguage } from '../../context/LanguageContext';
@@ -29,18 +32,25 @@ import { MOCK_TODAY_MEDICINES, MockMedicine } from '../../mock/healthData';
 import { VoiceAssistantService } from '../../services/speechService';
 import { SafeStorage } from '../../services/safeStorage';
 import { SwasthyaMitrAiModal } from '../../components/ai/SwasthyaMitrAiModal';
+import { AddCustomMedicineModal } from '../../components/pillbox/AddCustomMedicineModal';
+import { IvrCallSimulatorModal } from '../../components/pillbox/IvrCallSimulatorModal';
+import { useAppSafeArea } from '../../hooks/useAppSafeArea';
 
 const HINDI_DAYS = ['रवि', 'सोम', 'मंगल', 'बुध', 'गुरु', 'शुक्र', 'शनि'];
 const ENG_DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 export const PatientMedicinesScreen: React.FC<{ navigation?: any }> = ({ navigation }) => {
+  const insets = useAppSafeArea();
   const { currentLanguage } = useLanguage();
   const { user } = useAuth();
   const [selectedDay, setSelectedDay] = useState(0);
   const [medicines, setMedicines] = useState<MockMedicine[]>([]);
   const [speakingMedId, setSpeakingMedId] = useState<string | null>(null);
   const [aiModalVisible, setAiModalVisible] = useState<boolean>(false);
+  const [addMedModalVisible, setAddMedModalVisible] = useState<boolean>(false);
+  const [ivrModalVisible, setIvrModalVisible] = useState<boolean>(false);
+  const [ivrTargetMed, setIvrTargetMed] = useState<MockMedicine | null>(null);
   const [courseDurationDays, setCourseDurationDays] = useState<number>(7);
 
   // Generate dynamic day pills starting from Today
@@ -147,6 +157,16 @@ export const PatientMedicinesScreen: React.FC<{ navigation?: any }> = ({ navigat
     Alert.alert('Dose Recorded / खुराक दर्ज की गई! 🎉', 'Great job maintaining your medication adherence!');
   };
 
+  const handleTriggerIvrCall = (med?: MockMedicine) => {
+    const target = med || medicines.find((m) => m.status === 'PENDING') || medicines[0];
+    setIvrTargetMed(target);
+    setIvrModalVisible(true);
+  };
+
+  const handleMedicineAdded = (newMed: MockMedicine) => {
+    setMedicines((prev) => [newMed, ...prev]);
+  };
+
   const handleSpeak = (id: string) => {
     const med = medicines.find((m) => m.id === id);
     if (!med) return;
@@ -170,15 +190,32 @@ export const PatientMedicinesScreen: React.FC<{ navigation?: any }> = ({ navigat
 
   return (
     <View style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={[
+          styles.scrollContent,
+          { paddingTop: insets.top + SPACING.md, paddingBottom: insets.bottom + 80 },
+        ]}
+        showsVerticalScrollIndicator={false}
+      >
         {/* Header */}
         <View style={styles.header}>
-          <View style={styles.titleRow}>
-            <Calendar size={22} color={COLORS.primary} />
-            <Text style={styles.screenTitle}>{courseDurationDays}-Day Visual Pillbox</Text>
-            <View style={styles.courseBadge}>
-              <Text style={styles.courseBadgeText}>{courseDurationDays} Days Course</Text>
+          <View style={styles.headerTopRow}>
+            <View style={styles.titleRow}>
+              <Calendar size={22} color={COLORS.primary} />
+              <Text style={styles.screenTitle}>{courseDurationDays}-Day Pillbox</Text>
+              <View style={styles.courseBadge}>
+                <Text style={styles.courseBadgeText}>{courseDurationDays} Days</Text>
+              </View>
             </View>
+
+            <TouchableOpacity
+              style={styles.addMedHeaderBtn}
+              onPress={() => setAddMedModalVisible(true)}
+              activeOpacity={0.8}
+            >
+              <Plus size={15} color="#FFFFFF" />
+              <Text style={styles.addMedHeaderBtnText}>+ Add Med / जोड़ें</Text>
+            </TouchableOpacity>
           </View>
           <Text style={styles.screenSubtitle}>
             दैनिक दवा दिनचर्या • Visual schedule with food instructions & voice assistance
@@ -231,6 +268,32 @@ export const PatientMedicinesScreen: React.FC<{ navigation?: any }> = ({ navigat
           </View>
         </View>
 
+        {/* Automated IVR Phone Call Reminder Banner */}
+        <View style={styles.ivrBanner}>
+          <View style={styles.ivrBannerLeft}>
+            <View style={styles.ivrIconPulse}>
+              <PhoneCall size={18} color="#FFFFFF" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <View style={styles.ivrBadgeRow}>
+                <Text style={styles.ivrBannerTitle}>Automated IVR Call Reminder</Text>
+                <View style={styles.ivrTag}><Text style={styles.ivrTagText}>Vernacular Voice</Text></View>
+              </View>
+              <Text style={styles.ivrBannerSub}>
+                स्वचालित फोन कॉल रिमाइंडर • Rings phone & speaks in Hindi for rural elders
+              </Text>
+            </View>
+          </View>
+          <TouchableOpacity
+            style={styles.ivrTestBtn}
+            onPress={() => handleTriggerIvrCall()}
+            activeOpacity={0.85}
+          >
+            <PhoneCall size={13} color="#FFFFFF" />
+            <Text style={styles.ivrTestBtnText}>Test Call / कॉल सुनें</Text>
+          </TouchableOpacity>
+        </View>
+
         {/* Morning Slot */}
         <View style={styles.slotSection}>
           <View style={styles.slotHeader}>
@@ -264,6 +327,13 @@ export const PatientMedicinesScreen: React.FC<{ navigation?: any }> = ({ navigat
                   onPress={() => handleSpeak(med.id)}
                 >
                   <Volume2 size={16} color={speakingMedId === med.id ? '#DC2626' : COLORS.primary} />
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.ivrActionBtn}
+                  onPress={() => handleTriggerIvrCall(med)}
+                >
+                  <PhoneCall size={14} color="#059669" />
                 </TouchableOpacity>
 
                 <TouchableOpacity
@@ -318,6 +388,13 @@ export const PatientMedicinesScreen: React.FC<{ navigation?: any }> = ({ navigat
                 </TouchableOpacity>
 
                 <TouchableOpacity
+                  style={styles.ivrActionBtn}
+                  onPress={() => handleTriggerIvrCall(med)}
+                >
+                  <PhoneCall size={14} color="#059669" />
+                </TouchableOpacity>
+
+                <TouchableOpacity
                   style={[styles.takeBtn, med.status === 'TAKEN' && styles.takeBtnDone]}
                   onPress={() => handleTakeDose(med.id)}
                   disabled={med.status === 'TAKEN'}
@@ -369,6 +446,13 @@ export const PatientMedicinesScreen: React.FC<{ navigation?: any }> = ({ navigat
                 </TouchableOpacity>
 
                 <TouchableOpacity
+                  style={styles.ivrActionBtn}
+                  onPress={() => handleTriggerIvrCall(med)}
+                >
+                  <PhoneCall size={14} color="#059669" />
+                </TouchableOpacity>
+
+                <TouchableOpacity
                   style={[styles.takeBtn, med.status === 'TAKEN' && styles.takeBtnDone]}
                   onPress={() => handleTakeDose(med.id)}
                   disabled={med.status === 'TAKEN'}
@@ -410,6 +494,21 @@ export const PatientMedicinesScreen: React.FC<{ navigation?: any }> = ({ navigat
         visible={aiModalVisible}
         onClose={() => setAiModalVisible(false)}
       />
+
+      {/* Add Custom Medicine Modal */}
+      <AddCustomMedicineModal
+        visible={addMedModalVisible}
+        onClose={() => setAddMedModalVisible(false)}
+        onMedicineAdded={handleMedicineAdded}
+      />
+
+      {/* Automated IVR Call Simulator Modal */}
+      <IvrCallSimulatorModal
+        visible={ivrModalVisible}
+        onClose={() => setIvrModalVisible(false)}
+        medicine={ivrTargetMed}
+        onConfirmDoseTaken={(medId) => handleTakeDose(medId)}
+      />
     </View>
   );
 };
@@ -421,11 +520,15 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: SPACING.md,
-    paddingTop: SPACING.md,
-    paddingBottom: 90,
   },
   header: {
     marginBottom: SPACING.md,
+  },
+  headerTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 4,
   },
   titleRow: {
     flexDirection: 'row',
@@ -449,10 +552,98 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: '#15803D',
   },
+  addMedHeaderBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: '#047857',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 18,
+    ...SHADOWS.subtle,
+  },
+  addMedHeaderBtnText: {
+    color: '#FFFFFF',
+    fontSize: 11,
+    fontWeight: '800',
+  },
   screenSubtitle: {
     ...TYPOGRAPHY.caption,
     color: COLORS.textSecondary,
     marginTop: 2,
+  },
+  ivrBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#0F172A',
+    borderRadius: 14,
+    padding: SPACING.md,
+    marginBottom: SPACING.md,
+    gap: 12,
+    ...SHADOWS.card,
+  },
+  ivrBannerLeft: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  ivrIconPulse: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: '#059669',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  ivrBadgeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    flexWrap: 'wrap',
+  },
+  ivrBannerTitle: {
+    color: '#FFFFFF',
+    fontSize: 13,
+    fontWeight: '800',
+  },
+  ivrTag: {
+    backgroundColor: 'rgba(16, 185, 129, 0.2)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  ivrTagText: {
+    color: '#34D399',
+    fontSize: 9,
+    fontWeight: '800',
+  },
+  ivrBannerSub: {
+    color: '#94A3B8',
+    fontSize: 11,
+    marginTop: 2,
+  },
+  ivrTestBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: '#059669',
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    borderRadius: 10,
+  },
+  ivrTestBtnText: {
+    color: '#FFFFFF',
+    fontSize: 10,
+    fontWeight: '800',
+  },
+  ivrActionBtn: {
+    padding: 6,
+    backgroundColor: '#ECFDF5',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#A7F3D0',
   },
   daySelectorScroll: {
     marginBottom: SPACING.md,

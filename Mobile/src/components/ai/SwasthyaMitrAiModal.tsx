@@ -40,17 +40,44 @@ interface ChatMessage {
   isSpeaking?: boolean;
 }
 
+const RURAL_CLINICAL_KNOWLEDGE: Record<string, { hi: string; en: string }> = {
+  snakebite: {
+    hi: '🚨 **सर्पदंश (सांप काटने पर) आपातकालीन प्राथमिक चिकित्सा:**\n\n1. **मरीज को शांत रखें और बिल्कुल हिलने-डुलने न दें** — घबराने से जहर तेजी से फैलता है।\n2. **काटे गए अंग को दिल के स्तर से नीचे रखें** और खपच्ची (लकड़ी) से स्थिर करें।\n3. ❌ चीरा न लगाएं, मुंह से जहर न चूसें, और तंग रस्सी न बांधें।\n4. अंगूठियां, कड़े या तंग कपड़े तुरंत उतार लें।\n5. **बिना समय गंवाए 108 एम्बुलेंस बुलाएं या सीधे रामपूर पीएचसी (PHC) ले जाएं**, जहां एंटी-स्नेक वेनम (ASV) उपलब्ध है।',
+    en: '🚨 **Snakebite Emergency First Aid Protocol:**\n\n1. **Keep the patient calm and completely still** — movement spreads venom faster.\n2. **Keep the bitten limb below heart level** and immobilize with a splint or sling.\n3. ❌ Do NOT cut the wound, suck venom, or tie tight tourniquets.\n4. Remove rings, watches, or tight clothes before swelling begins.\n5. **Immediately call 108 Ambulance or rush to Rampur PHC**, where Anti-Snake Venom (ASV) is stocked 24x7.',
+  },
+  ors: {
+    hi: '💧 **उल्टी-दस्त में ओआरएस (ORS) घोल बनाने की सही विधि:**\n\n1. **1 लीटर पीने योग्य साफ या उबला हुआ ठंडा पानी लें।**\n2. पूरा 1 पैकेट WHO-प्रमाणित ORS घोलें (अथवा 1 लीटर पानी में 6 चम्मच चीनी + आधा चम्मच नमक)।\n3. हर बार दस्त या उल्टी होने के बाद 1 कप (वयस्क) या आधा कप (शिशु) घूंट-घूंट करके पिलाएं।\n4. जिंक की गोली 14 दिनों तक रोज दें।\n5. यदि बच्चा सुस्त पड़े या पेशाब बंद हो जाए, तो तुरंत नजदीकी स्वास्थ्य केंद्र ले जाएं।',
+    en: '💧 **How to Prepare and Administer ORS for Diarrhea & Dehydration:**\n\n1. **Take 1 liter of clean, boiled and cooled drinking water.**\n2. Dissolve the complete WHO ORS packet (or 6 teaspoons sugar + 1/2 teaspoon salt).\n3. Give sips after every loose stool (1 cup for adults, 1/2 cup for children).\n4. Administer daily Zinc tablet for 14 days.\n5. If severe dehydration occurs (sunken eyes, no urine), visit Rampur PHC immediately.',
+  },
+  bp: {
+    hi: '🩸 **हाई ब्लड प्रेशर (140/90 से अधिक) होने पर आवश्यक कदम:**\n\n1. शांत होकर बैठ जाएं या आराम करें।\n2. यदि डॉक्टर ने दवा (जैसे Amlodipine 5mg या Telmisartan) दी है, तो तुरंत लें।\n3. **भोजन में नमक की मात्रा कम करें** (अचार, पापड़ से परहेज करें)।\n4. तंबाकू और बीड़ी का सेवन बंद करें।\n5. यदि सिर में तेज दर्द, चक्कर, छाती में भारीपन या धुंधला दिखे, तो 108 पर कॉल करें।',
+    en: '🩸 **Steps to Take for High Blood Pressure (>140/90 mmHg):**\n\n1. Sit down quietly and rest in a calm position.\n2. Take your prescribed anti-hypertensive medication (e.g. Amlodipine 5mg) without delay.\n3. **Strictly reduce salt and sodium intake** (avoid pickles and processed snacks).\n4. Avoid tobacco, beedi, and caffeine.\n5. If severe headache, chest tightness, or blurry vision occurs, seek immediate PHC care or dial 108.',
+  },
+  empty_stomach: {
+    hi: '🌅 **खाली पेट कौन सी दवाइयां लेनी चाहिए?**\n\n1. **गैस व एसिडिटी की दवाएं** (Pantoprazole, Omeprazole, Rabeprazole) — सुबह नाश्ते से 30–45 मिनट पहले एक गिलास ताजे पानी के साथ लें।\n2. **थायरॉइड की दवा** (Thyronorm / Eltroxin) — सुबह उठते ही खाली पेट लें और 45 मिनट तक चाय या भोजन न लें।\n3. अधिकांश दर्द निवारक और एंटीबायोटिक भोजन के बाद ही लेने चाहिए।',
+    en: '🌅 **Which Medicines Must Strictly Be Taken on an Empty Stomach?**\n\n1. **Antacids / PPIs** (Pantoprazole 40mg, Omeprazole) — take 30 to 45 minutes before morning breakfast with clean water.\n2. **Thyroid Hormone** (Thyroxine) — take immediately upon waking with water, wait 45 mins before tea or food.\n3. Painkillers and antibiotics should generally be taken AFTER meals to protect the stomach lining.',
+  },
+  paracetamol: {
+    hi: '💊 **पैरासिटामोल 650mg के उपयोग और सावधानियां:**\n\n1. **उपयोग:** बुखार, सिरदर्द, बदन दर्द और जोड़ों के दर्द में राहत।\n2. **समय:** भोजन के 20 मिनट बाद गुनगुने पानी से लें।\n3. **खुराक अंतराल:** दो खुराकों के बीच कम से कम 6 घंटे का अंतर रखें।\n4. ⚠️ 24 घंटे में 4 गोलियों (2600mg) से अधिक कभी न लें, अन्यथा लीवर पर असर पड़ सकता है।',
+    en: '💊 **Paracetamol 650mg Clinical Guidelines & Safety:**\n\n1. **Indication:** Relief from fever, headache, body aches, and mild infection pain.\n2. **Timing:** Take after food with a full glass of water.\n3. **Interval:** Maintain at least a 6 to 8 hour gap between doses.\n4. ⚠️ Never exceed 4 tablets (2600mg) in 24 hours to prevent liver toxicity.',
+  },
+};
+
 const QUICK_PROMPTS: Record<string, string[]> = {
   hi: [
-    'पैरासिटामोल के क्या फायदे और सावधानियां हैं?',
-    'खाली पेट कौन सी दवाइयां लेनी चाहिए?',
-    'ब्लड प्रेशर और शुगर कैसे नियंत्रित करें?',
+    '🐍 सर्पदंश (सांप काटने पर) तुरंत क्या करें?',
+    '💧 उल्टी-दस्त में ओआरएस (ORS) घोल कैसे बनाएं?',
+    '🩸 ब्लड प्रेशर और शुगर कैसे नियंत्रित करें?',
+    '🌅 खाली पेट कौन सी दवाइयां लेनी चाहिए?',
+    '💊 पैरासिटामोल 650mg कब और कैसे लें?',
     'आभा (ABHA) हेल्थ कार्ड के क्या लाभ हैं?',
   ],
   en: [
-    'What are the main uses and precautions for Paracetamol 650mg?',
-    'Which medicines should strictly be taken on an empty stomach?',
-    'How can I manage high blood pressure and blood sugar naturally?',
+    '🐍 Snakebite Emergency First Aid Protocol?',
+    '💧 How to prepare and give ORS for dehydration?',
+    '🩸 How to manage high blood pressure & blood sugar?',
+    '🌅 Which medicines should strictly be taken on empty stomach?',
+    '💊 Safe usage & dosage for Paracetamol 650mg?',
     'What benefits does the ABHA Ayushman Health Card provide?',
   ],
 };
@@ -67,7 +94,7 @@ export const SwasthyaMitrAiModal: React.FC<{
   const [isLoading, setIsLoading] = useState(false);
   const [speakingMsgId, setSpeakingMsgId] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const scrollViewRef = useRef<ScrollView>(null);
+  const scrollViewRef = useRef<any>(null);
 
   // Initialize greeting on open
   useEffect(() => {
@@ -102,6 +129,59 @@ export const SwasthyaMitrAiModal: React.FC<{
     setIsLoading(true);
 
     setTimeout(() => scrollViewRef.current?.scrollToEnd({ animated: true }), 100);
+
+    // Fast match against localized clinical knowledge
+    const lower = query.toLowerCase();
+    let localMatch: string | null = null;
+    const langKey = currentLanguage === 'hi' ? 'hi' : 'en';
+
+    if (lower.includes('सांप') || lower.includes('सर्पदंश') || lower.includes('snake')) {
+      localMatch = RURAL_CLINICAL_KNOWLEDGE.snakebite[langKey];
+    } else if (
+      lower.includes('ors') ||
+      lower.includes('ओआरएस') ||
+      lower.includes('दस्त') ||
+      lower.includes('diarrhea') ||
+      lower.includes('उल्टी')
+    ) {
+      localMatch = RURAL_CLINICAL_KNOWLEDGE.ors[langKey];
+    } else if (
+      lower.includes('bp') ||
+      lower.includes('ब्लड प्रेशर') ||
+      lower.includes('blood pressure') ||
+      lower.includes('बीपी')
+    ) {
+      localMatch = RURAL_CLINICAL_KNOWLEDGE.bp[langKey];
+    } else if (
+      lower.includes('खाली पेट') ||
+      lower.includes('empty stomach') ||
+      lower.includes('पैंटोप्राजोल') ||
+      lower.includes('pantoprazole')
+    ) {
+      localMatch = RURAL_CLINICAL_KNOWLEDGE.empty_stomach[langKey];
+    } else if (
+      lower.includes('पैरासिटामोल') ||
+      lower.includes('paracetamol') ||
+      lower.includes('dolo') ||
+      lower.includes('बुखार')
+    ) {
+      localMatch = RURAL_CLINICAL_KNOWLEDGE.paracetamol[langKey];
+    }
+
+    if (localMatch) {
+      setTimeout(() => {
+        const aiMsg: ChatMessage = {
+          id: `msg_ai_${Date.now()}`,
+          sender: 'ai',
+          text: localMatch!,
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        };
+        setMessages((prev) => [...prev, aiMsg]);
+        setIsLoading(false);
+        setTimeout(() => scrollViewRef.current?.scrollToEnd({ animated: true }), 150);
+      }, 350);
+      return;
+    }
 
     try {
       const targetLang = currentLanguage === 'hi' ? 'Hindi' : 'English';

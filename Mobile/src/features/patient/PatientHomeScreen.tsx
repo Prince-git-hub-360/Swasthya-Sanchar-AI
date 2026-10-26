@@ -38,6 +38,8 @@ import { Header } from '../../components/common/Header';
 import { VoiceAssistantService } from '../../services/speechService';
 import { MobileEmergencySosModal } from '../../components/emergency/MobileEmergencySosModal';
 import { SwasthyaMitrAiModal } from '../../components/ai/SwasthyaMitrAiModal';
+import { RecordVitalsModal } from '../../components/asha/RecordVitalsModal';
+import { IvrCallSimulatorModal } from '../../components/pillbox/IvrCallSimulatorModal';
 import { SafeStorage } from '../../services/safeStorage';
 
 export const PatientHomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
@@ -48,6 +50,17 @@ export const PatientHomeScreen: React.FC<{ navigation: any }> = ({ navigation })
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
   const [sosModalVisible, setSosModalVisible] = useState(false);
   const [aiModalVisible, setAiModalVisible] = useState(false);
+  const [vitalsModalVisible, setVitalsModalVisible] = useState(false);
+  const [ivrModalVisible, setIvrModalVisible] = useState(false);
+  const [latestVitals, setLatestVitals] = useState<any>({
+    bp: '120/80 mmHg',
+    bloodSugar: '110 mg/dL',
+    pulse: '74 bpm',
+    spo2: '98%',
+    recordedAt: 'Today (आज)',
+    isHighBp: false,
+    isHighSugar: false,
+  });
 
   useEffect(() => {
     const loadActiveMeds = async () => {
@@ -66,8 +79,25 @@ export const PatientHomeScreen: React.FC<{ navigation: any }> = ({ navigation })
       setMedicines(MOCK_TODAY_MEDICINES);
     };
 
+    const loadSavedVitals = async () => {
+      try {
+        const storedV = await SafeStorage.getItem('@swasthya_vitals_logs');
+        if (storedV) {
+          const parsed = JSON.parse(storedV);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setLatestVitals(parsed[0]);
+          }
+        }
+      } catch (e) {}
+    };
+
     loadActiveMeds();
+    loadSavedVitals();
   }, [user]);
+
+  const handleSaveVitals = (record: any) => {
+    setLatestVitals(record);
+  };
 
   const completedCount = medicines.filter((m) => m.status === 'TAKEN').length;
   const totalCount = medicines.length;
@@ -214,7 +244,7 @@ export const PatientHomeScreen: React.FC<{ navigation: any }> = ({ navigation })
             <Text style={styles.quickCardSub}>AI camera scanner</Text>
           </TouchableOpacity>
 
-          {/* Health Map */}
+          {/* Health Map & Facilities */}
           <TouchableOpacity
             style={[styles.quickCard, { backgroundColor: '#F0FDFA' }]}
             onPress={() => navigation.navigate('Health')}
@@ -223,8 +253,8 @@ export const PatientHomeScreen: React.FC<{ navigation: any }> = ({ navigation })
             <View style={[styles.quickIconCircle, { backgroundColor: COLORS.secondaryLight }]}>
               <Activity size={20} color={COLORS.secondary} />
             </View>
-            <Text style={styles.quickCardTitle}>My Health Map</Text>
-            <Text style={styles.quickCardSub}>3D Body & Organ Guide</Text>
+            <Text style={styles.quickCardTitle}>Rural Health Map</Text>
+            <Text style={styles.quickCardSub}>PHCs & Jan Aushadhi</Text>
           </TouchableOpacity>
 
           {/* Health Records */}
@@ -238,6 +268,32 @@ export const PatientHomeScreen: React.FC<{ navigation: any }> = ({ navigation })
             </View>
             <Text style={styles.quickCardTitle}>Health Records</Text>
             <Text style={styles.quickCardSub}>Prescriptions & Labs</Text>
+          </TouchableOpacity>
+
+          {/* Test IVR Call Simulator */}
+          <TouchableOpacity
+            style={[styles.quickCard, { backgroundColor: '#F5F3FF' }]}
+            onPress={() => setIvrModalVisible(true)}
+            activeOpacity={0.8}
+          >
+            <View style={[styles.quickIconCircle, { backgroundColor: '#EDE9FE' }]}>
+              <PhoneCall size={20} color="#7C3AED" />
+            </View>
+            <Text style={styles.quickCardTitle}>IVR Voice Reminder</Text>
+            <Text style={styles.quickCardSub}>स्वचालित फोन कॉल</Text>
+          </TouchableOpacity>
+
+          {/* Record Vitals */}
+          <TouchableOpacity
+            style={[styles.quickCard, { backgroundColor: '#ECFDF5' }]}
+            onPress={() => setVitalsModalVisible(true)}
+            activeOpacity={0.8}
+          >
+            <View style={[styles.quickIconCircle, { backgroundColor: '#D1FAE5' }]}>
+              <HeartPulse size={20} color="#059669" />
+            </View>
+            <Text style={styles.quickCardTitle}>Record Vitals</Text>
+            <Text style={styles.quickCardSub}>BP, Sugar & Pulse</Text>
           </TouchableOpacity>
 
           {/* Voice Assistant */}
@@ -256,6 +312,72 @@ export const PatientHomeScreen: React.FC<{ navigation: any }> = ({ navigation })
               {isPlayingAudio ? 'बोल रहे हैं...' : 'आवाज में सुनें'}
             </Text>
           </TouchableOpacity>
+        </View>
+
+        {/* Clinical Vitals & Wellness Card */}
+        <View style={styles.vitalsSectionCard}>
+          <View style={styles.vitalsSectionHeader}>
+            <View style={styles.vitalsTitleRow}>
+              <Activity size={18} color="#059669" />
+              <Text style={styles.vitalsSectionTitle}>Doorstep Clinical Vitals / स्वास्थ्य जांच</Text>
+              <View
+                style={[
+                  styles.vitalsStatusBadge,
+                  (latestVitals.isHighBp || latestVitals.isHighSugar) && {
+                    backgroundColor: '#FEE2E2',
+                    borderColor: '#FCA5A5',
+                  },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.vitalsStatusBadgeText,
+                    (latestVitals.isHighBp || latestVitals.isHighSugar) && { color: '#DC2626' },
+                  ]}
+                >
+                  {latestVitals.isHighBp || latestVitals.isHighSugar ? '⚠️ Alert: High Risk' : '🟢 Normal & Stable'}
+                </Text>
+              </View>
+            </View>
+
+            <TouchableOpacity
+              style={styles.recordVitalsBtn}
+              onPress={() => setVitalsModalVisible(true)}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.recordVitalsBtnText}>+ Record / जांचें</Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.vitalsGrid}>
+            <View style={styles.vitalTile}>
+              <Text style={styles.vitalTileLabel}>Blood Pressure (BP)</Text>
+              <Text style={[styles.vitalTileValue, latestVitals.isHighBp && { color: '#EF4444' }]}>
+                {latestVitals.bp || '120/80 mmHg'}
+              </Text>
+              <Text style={styles.vitalTileSub}>Target: &lt;130/85</Text>
+            </View>
+
+            <View style={styles.vitalTile}>
+              <Text style={styles.vitalTileLabel}>Blood Sugar (शुगर)</Text>
+              <Text style={[styles.vitalTileValue, latestVitals.isHighSugar && { color: '#EF4444' }]}>
+                {latestVitals.bloodSugar || '110 mg/dL'}
+              </Text>
+              <Text style={styles.vitalTileSub}>Random Test</Text>
+            </View>
+
+            <View style={styles.vitalTile}>
+              <Text style={styles.vitalTileLabel}>Pulse (नाड़ी)</Text>
+              <Text style={styles.vitalTileValue}>{latestVitals.pulse || '74 bpm'}</Text>
+              <Text style={styles.vitalTileSub}>Resting Normal</Text>
+            </View>
+
+            <View style={styles.vitalTile}>
+              <Text style={styles.vitalTileLabel}>SpO2 (ऑक्सीजन)</Text>
+              <Text style={styles.vitalTileValue}>{latestVitals.spo2 || '98%'}</Text>
+              <Text style={styles.vitalTileSub}>Healthy Range</Text>
+            </View>
+          </View>
         </View>
 
         {/* Today's Medicines Timeline */}
@@ -330,6 +452,22 @@ export const PatientHomeScreen: React.FC<{ navigation: any }> = ({ navigation })
       <SwasthyaMitrAiModal
         visible={aiModalVisible}
         onClose={() => setAiModalVisible(false)}
+      />
+
+      {/* Doorstep Clinical Vitals Recording Modal */}
+      <RecordVitalsModal
+        visible={vitalsModalVisible}
+        onClose={() => setVitalsModalVisible(false)}
+        defaultPatient={user}
+        onSaveVitals={handleSaveVitals}
+      />
+
+      {/* Automated IVR Call Simulator Modal */}
+      <IvrCallSimulatorModal
+        visible={ivrModalVisible}
+        onClose={() => setIvrModalVisible(false)}
+        medicine={medicines.find((m) => m.status === 'PENDING') || medicines[0]}
+        onConfirmDoseTaken={(medId) => handleMarkTaken(medId)}
       />
     </View>
   );
@@ -992,6 +1130,89 @@ const styles = StyleSheet.create({
     ...TYPOGRAPHY.bodyBold,
     color: COLORS.textSecondary,
     fontSize: 13,
+  },
+  vitalsSectionCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: SPACING.md,
+    marginBottom: SPACING.md,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    ...SHADOWS.subtle,
+  },
+  vitalsSectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: SPACING.md,
+  },
+  vitalsTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    flexWrap: 'wrap',
+  },
+  vitalsSectionTitle: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#0F172A',
+  },
+  vitalsStatusBadge: {
+    backgroundColor: '#ECFDF5',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#A7F3D0',
+  },
+  vitalsStatusBadgeText: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: '#059669',
+  },
+  recordVitalsBtn: {
+    backgroundColor: '#ECFDF5',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#A7F3D0',
+  },
+  recordVitalsBtnText: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#047857',
+  },
+  vitalsGrid: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  vitalTile: {
+    flex: 1,
+    backgroundColor: '#F8FAFC',
+    borderRadius: 10,
+    padding: 8,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    alignItems: 'center',
+  },
+  vitalTileLabel: {
+    fontSize: 9,
+    fontWeight: '700',
+    color: '#64748B',
+    textAlign: 'center',
+  },
+  vitalTileValue: {
+    fontSize: 12,
+    fontWeight: '900',
+    color: '#0F172A',
+    marginVertical: 3,
+    textAlign: 'center',
+  },
+  vitalTileSub: {
+    fontSize: 8,
+    color: '#94A3B8',
+    textAlign: 'center',
   },
 });
 

@@ -33,6 +33,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { VoiceAssistantService } from '../../services/speechService';
 import { apiClient } from '../../api/client';
 import { SafeStorage } from '../../services/safeStorage';
+import { useAppSafeArea } from '../../hooks/useAppSafeArea';
 
 interface ScannedMedication {
   medicine_name: string;
@@ -45,6 +46,7 @@ interface ScannedMedication {
 }
 
 export const PrescriptionScannerFlow: React.FC<{ navigation?: any }> = ({ navigation }) => {
+  const insets = useAppSafeArea();
   const { currentLanguage, t } = useLanguage();
   const { user } = useAuth();
 
@@ -298,7 +300,13 @@ export const PrescriptionScannerFlow: React.FC<{ navigation?: any }> = ({ naviga
 
   return (
     <View style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={[
+          styles.scrollContent,
+          { paddingTop: insets.top + SPACING.md, paddingBottom: insets.bottom + 60 },
+        ]}
+        showsVerticalScrollIndicator={false}
+      >
         {/* Top Sticky Navigation Bar with Back Button */}
         <View style={styles.topNavBar}>
           <TouchableOpacity
@@ -502,8 +510,6 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: SPACING.md,
-    paddingTop: SPACING.lg,
-    paddingBottom: 60,
   },
   header: {
     alignItems: 'center',

@@ -2,13 +2,19 @@ import React, { useState } from 'react';
 import { useAuth } from '../../shared/context/AuthContext';
 import { ROUTES, navigateTo, getRoleDefaultRoute } from '../../utils/routes';
 
-export const LoginForm = ({ onNavigateRegister, onSuccess }) => {
+export const LoginForm = ({ onNavigateRegister, onSuccess, initialUsername = '' }) => {
   const { login, loading, showToast } = useAuth();
   const [selectedRole, setSelectedRole] = useState('patient');
-  const [username, setUsername] = useState('');
+  const [username, setUsername] = useState(initialUsername || '');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [authError, setAuthError] = useState(null);
+
+  React.useEffect(() => {
+    if (initialUsername) {
+      setUsername(initialUsername);
+    }
+  }, [initialUsername]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -124,10 +130,13 @@ export const LoginForm = ({ onNavigateRegister, onSuccess }) => {
               <p className="text-amber-800 dark:text-amber-300 mb-3 leading-relaxed">{authError.message}</p>
               <button
                 type="button"
-                onClick={onNavigateRegister || (() => navigateTo(ROUTES.AUTH.REGISTER))}
+                onClick={() => {
+                  if (onNavigateRegister) onNavigateRegister(username);
+                  else navigateTo(ROUTES.AUTH.REGISTER);
+                }}
                 className="bg-[#0B4F42] hover:bg-[#07362d] dark:bg-teal-600 dark:hover:bg-teal-500 text-white font-bold px-4 py-2 rounded-xl text-xs shadow-md transition-all cursor-pointer inline-flex items-center gap-1.5"
               >
-                📝 Register Account Now →
+                📝 Register {username ? `"${username}" ` : ''}Now →
               </button>
             </div>
           </div>
@@ -229,7 +238,10 @@ export const LoginForm = ({ onNavigateRegister, onSuccess }) => {
         Don't have an account?{' '}
         <button
           type="button"
-          onClick={onNavigateRegister || (() => navigateTo(ROUTES.AUTH.REGISTER))}
+          onClick={() => {
+            if (onNavigateRegister) onNavigateRegister(username);
+            else navigateTo(ROUTES.AUTH.REGISTER);
+          }}
           className="font-bold text-[#0F766E] dark:text-teal-300 hover:text-teal-800 dark:hover:text-teal-200 cursor-pointer underline"
         >
           Create Account

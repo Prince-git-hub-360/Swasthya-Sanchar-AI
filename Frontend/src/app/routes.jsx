@@ -44,6 +44,7 @@ export const AppRoutes = () => {
   const { user } = useAuth();
   const [currentPath, setCurrentPath] = useState(window.location.pathname || ROUTES.PUBLIC.HOME);
   const [chatModalOpen, setChatModalOpen] = useState(false);
+  const [prefillUsername, setPrefillUsername] = useState('');
 
   useEffect(() => {
     const handlePopState = () => {
@@ -53,17 +54,20 @@ export const AppRoutes = () => {
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
-  const navigate = (path, sectionId) => {
+  const navigate = (path, extra) => {
     if (window.location.pathname !== path) {
       window.history.pushState({}, '', path);
     }
     setCurrentPath(path);
 
-    if (sectionId) {
+    if (typeof extra === 'string') {
       setTimeout(() => {
-        const el = document.getElementById(sectionId);
+        const el = document.getElementById(extra);
         if (el) el.scrollIntoView({ behavior: 'smooth' });
       }, 100);
+    } else if (extra && typeof extra === 'object') {
+      if (extra.username) setPrefillUsername(extra.username);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     } else {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
@@ -121,12 +125,12 @@ export const AppRoutes = () => {
 
   // ROUTE 3: AUTH LOGIN (/login)
   if (currentPath === ROUTES.AUTH.LOGIN) {
-    return <LoginPage onNavigate={navigate} onSuccess={(targetRoute) => navigate(targetRoute)} />;
+    return <LoginPage initialUsername={prefillUsername} onNavigate={navigate} onSuccess={(targetRoute) => navigate(targetRoute)} />;
   }
 
   // ROUTE 4: AUTH REGISTER (/register)
   if (currentPath === ROUTES.AUTH.REGISTER) {
-    return <RegisterPage onNavigate={navigate} onSuccess={(targetRoute) => navigate(targetRoute)} />;
+    return <RegisterPage initialUsername={prefillUsername} onNavigate={navigate} onSuccess={(targetRoute) => navigate(targetRoute)} />;
   }
 
   // ROUTE 5: AUTHENTICATED APPLICATION (/app/*)

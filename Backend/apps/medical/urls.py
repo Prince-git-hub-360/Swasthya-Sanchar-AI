@@ -44,6 +44,7 @@ urlpatterns = [
     path('emergency/nearby-facilities/', NearbyHealthcareFacilitiesAPIView.as_view(), name='emergency-facilities'),
     path('emergency/ambulance-request/', AmbulanceRequestAPIView.as_view(), name='emergency-ambulance'),
     path('emergency/start/', StartEmergencySessionAPIView.as_view(), name='emergency-start'),
+    path('emergency/sos/', StartEmergencySessionAPIView.as_view(), name='emergency-sos'),
     path('emergency/location/', UpdateEmergencyLocationAPIView.as_view(), name='emergency-location-update'),
     path('emergency/stop/', StopEmergencySessionAPIView.as_view(), name='emergency-stop'),
     path('emergency/session/<str:token>/', GetEmergencySessionCardAPIView.as_view(), name='emergency-session-card'),

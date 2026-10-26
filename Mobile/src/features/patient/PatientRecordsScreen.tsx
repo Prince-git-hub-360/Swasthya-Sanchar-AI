@@ -31,8 +31,10 @@ import { COLORS, SPACING, TYPOGRAPHY, BORDER_RADIUS, SHADOWS } from '../../const
 import { useAuth } from '../../context/AuthContext';
 import { MOCK_HEALTH_RECORDS, HealthRecordItem } from '../../mock/healthData';
 import { SafeStorage } from '../../services/safeStorage';
+import { useAppSafeArea } from '../../hooks/useAppSafeArea';
 
 export const PatientRecordsScreen: React.FC<{ navigation?: any }> = ({ navigation }) => {
+  const insets = useAppSafeArea();
   const { user } = useAuth();
   const [activeCategory, setActiveCategory] = useState<string>('ALL');
   const [selectedRecord, setSelectedRecord] = useState<HealthRecordItem | null>(null);
@@ -105,7 +107,13 @@ export const PatientRecordsScreen: React.FC<{ navigation?: any }> = ({ navigatio
 
   return (
     <View style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={[
+          styles.scrollContent,
+          { paddingTop: insets.top + SPACING.md, paddingBottom: insets.bottom + 80 },
+        ]}
+        showsVerticalScrollIndicator={false}
+      >
         {/* Header */}
         <View style={styles.header}>
           <Text style={styles.screenTitle}>Digital Health Vault / स्वास्थ्य रिकॉर्ड</Text>
@@ -273,8 +281,6 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: SPACING.md,
-    paddingTop: SPACING.md,
-    paddingBottom: SPACING.xxxl,
   },
   header: {
     marginBottom: SPACING.sm,

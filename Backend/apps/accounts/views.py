@@ -47,11 +47,26 @@ class RegisterView(generics.GenericAPIView):
     @extend_schema(tags=['01. Authentication & User Profile'])
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
+        if not serializer.is_valid():
+            errors = serializer.errors
+            if 'username' in errors:
+                err_text = str(errors['username'][0]) if isinstance(errors['username'], list) else str(errors['username'])
+                return Response({
+                    'status': 'error',
+                    'error_code': 'USERNAME_TAKEN',
+                    'detail': err_text,
+                }, status=status.HTTP_400_BAD_REQUEST)
+            serializer.is_valid(raise_exception=True)
+
         user = serializer.save()
+        refresh = RefreshToken.for_user(user)
         return Response({
             'status': 'ok',
             'message': 'User registered successfully.',
+            'tokens': {
+                'access': str(refresh.access_token),
+                'refresh': str(refresh),
+            },
             'user': UserSerializer(user, context={'request': request}).data,
         }, status=status.HTTP_201_CREATED)
 
@@ -111,77 +126,99 @@ class LogoutView(APIView):
 import random
 
 @extend_schema(tags=['01. Authentication & User Profile'])
+class CheckUsernameView(APIView):
+    """Check if a username or email is already registered."""
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request, *args, **kwargs):
+        username = request.query_params.get('username', '').strip()
+        email = request.query_params.get('email', '').strip()
+        phone = request.query_params.get('phone', '').strip()
+
+        if username:
+            taken = User.objects.filter(username__iexact=username).exists()
+            return Response({'available': not taken, 'username': username, 'message': f"Username '{username}' is already taken." if taken else 'Username available.'})
+        if email:
+            taken = User.objects.filter(email__iexact=email).exists()
+            return Response({'available': not taken, 'email': email, 'message': f"Email '{email}' is already registered." if taken else 'Email available.'})
+        if phone:
+            taken = UserProfile.objects.filter(phone_number__icontains=phone).exists()
+            return Response({'available': not taken, 'phone': phone, 'message': f"Phone number '{phone}' is already registered." if taken else 'Phone available.'})
+
+        return Response({'available': True})
+
+
+@extend_schema(tags=['01. Authentication & User Profile'])
 class SendOtpView(APIView):
-    """Generates and sends 4-digit OTP for phone authentication.
-    Prints OTP to Django server console for zero-cost developer testing.
-    """
+    """Generates and sends 4-digit OTP for phone or email verification."""
     permission_classes = [permissions.AllowAny]
 
     def post(self, request, *args, **kwargs):
-        phone = request.data.get('phone', '9876543210').strip()
-        # Generate 4-digit OTP
+        phone = request.data.get('phone', '').strip()
+        email = request.data.get('email', '').strip()
+
         otp_code = f"{random.randint(1000, 9999)}"
-        # Print clearly in server console
+
+        if email:
+            print(f"\n=======================================================")
+            print(f"📧 [SWASTHYA AI EMAIL OTP SERVICE] Email: {email}")
+            print(f"🔑 [YOUR 4-DIGIT VERIFICATION CODE]: {otp_code}")
+            print(f"=======================================================\n")
+            try:
+                send_mail(
+                    subject="Swasthya Sanchar AI • Your Verification Code",
+                    message=f"Namaste,\n\nYour 4-digit verification code is: {otp_code}\n\nGovernment of India • National Health Authority (ABDM)",
+                    from_email="noreply@swasthya-sanchar.gov.in",
+                    recipient_list=[email],
+                    fail_silently=True,
+                )
+            except Exception as e:
+                print(f"send_mail note: {e}")
+
+            return Response({
+                'status': 'ok',
+                'type': 'email',
+                'destination': email,
+                'otp': otp_code,
+                'message': f'4-digit verification code sent to {email}.',
+            }, status=status.HTTP_200_OK)
+
+        # Phone fallback (default to rural phone)
+        phone = phone or '9876543210'
         print(f"\n=======================================================")
-        print(f"📲 [SWASTHYA AI OTP SERVICE] Phone: +91 {phone}")
+        print(f"📲 [SWASTHYA AI SMS OTP SERVICE] Phone: +91 {phone}")
         print(f"🔑 [YOUR 4-DIGIT VERIFICATION CODE]: {otp_code}")
         print(f"=======================================================\n")
 
         return Response({
             'status': 'ok',
-            'phone': phone,
+            'type': 'phone',
+            'destination': phone,
             'otp': otp_code,
-            'message': f'4-digit OTP {otp_code} generated successfully.',
+            'message': f'4-digit SMS verification code sent to +91 {phone}.',
         }, status=status.HTTP_200_OK)
 
 
 @extend_schema(tags=['01. Authentication & User Profile'])
 class VerifyOtpView(APIView):
-    """Verifies 4-digit OTP and authenticates/registers user."""
+    """Verifies 4-digit OTP for dual email and phone authentication."""
     permission_classes = [permissions.AllowAny]
 
     def post(self, request, *args, **kwargs):
-        phone = request.data.get('phone', '9876543210').strip()
-        otp = request.data.get('otp', '4089').strip()
-        role = request.data.get('role', 'patient').lower()
-        first_name = request.data.get('first_name', 'Lakshmi')
+        otp = str(request.data.get('otp', '')).strip()
+        expected_otp = str(request.data.get('expected_otp', '')).strip()
 
-        username = f"user_{phone[-10:]}"
-        user, created = User.objects.get_or_create(
-            username=username,
-            defaults={
-                'first_name': first_name,
-                'email': f"{username}@swasthya.ai",
-            }
-        )
+        if not otp:
+            return Response({'status': 'error', 'message': 'OTP code is required.'}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Build or fetch profile
-        profile, _ = UserProfile.objects.get_or_create(
-            user=user,
-            defaults={
-                'role': role,
-                'phone_number': phone,
-                'preferred_language': 'hi',
-            }
-        )
-
-        refresh = RefreshToken.for_user(user)
+        # Valid if matches expected OTP, or standard developer/demo bypasses (1234, 4089, or matches)
+        if expected_otp and otp != expected_otp and otp not in ('1234', '4089'):
+            return Response({'status': 'error', 'message': 'Invalid verification code. Please check and re-enter.'}, status=status.HTTP_400_BAD_REQUEST)
 
         return Response({
             'status': 'ok',
-            'message': 'OTP verified successfully.',
-            'tokens': {
-                'access': str(refresh.access_token),
-                'refresh': str(refresh),
-            },
-            'user': {
-                'id': user.id,
-                'username': user.username,
-                'first_name': user.first_name,
-                'phone_number': profile.phone_number,
-                'role': profile.role,
-                'preferred_language': profile.preferred_language,
-            }
+            'verified': True,
+            'message': 'Identity verified successfully.',
         }, status=status.HTTP_200_OK)
 
 
@@ -324,4 +361,24 @@ class PhonePasswordResetView(APIView):
             'status': 'ok',
             'message': 'Password has been reset successfully. You can now log in with your new password.',
         }, status=status.HTTP_200_OK)
+
+
+@extend_schema(tags=['01. Authentication & User Profile'])
+class CheckUsernameView(APIView):
+    """Checks whether a username is already taken or available."""
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request, *args, **kwargs):
+        username = request.query_params.get('username', '').strip()
+        if not username:
+            return Response({'available': False, 'message': 'Username is required.'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        taken = User.objects.filter(username__iexact=username).exists()
+        return Response({
+            'username': username,
+            'available': not taken,
+            'taken': taken,
+            'message': f'Username "@{username}" is already taken. Please sign in or choose another.' if taken else f'Username "@{username}" is available!',
+        }, status=status.HTTP_200_OK)
+
 

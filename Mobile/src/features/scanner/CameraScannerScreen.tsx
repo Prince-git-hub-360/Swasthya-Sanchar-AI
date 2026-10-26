@@ -17,8 +17,10 @@ import { prescriptionApi } from '../../api';
 import { PrescriptionRecord } from '../../types';
 import { VoiceSpeakerButton } from '../../components/voice/VoiceSpeakerButton';
 import { BigButton } from '../../components/common/BigButton';
+import { useAppSafeArea } from '../../hooks/useAppSafeArea';
 
 export const CameraScannerScreen: React.FC = () => {
+  const insets = useAppSafeArea();
   const { t, currentLanguage } = useLanguage();
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
@@ -132,7 +134,13 @@ export const CameraScannerScreen: React.FC = () => {
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={[
+        styles.scrollContent,
+        { paddingTop: insets.top + SPACING.md, paddingBottom: insets.bottom + 80 },
+      ]}
+    >
       {/* Top Instructions Banner */}
       <View style={styles.banner}>
         <Sparkles size={24} color={COLORS.secondary} />
@@ -235,8 +243,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.background,
   },
   scrollContent: {
-    padding: SPACING.md,
-    paddingBottom: SPACING.xxxl,
+    paddingHorizontal: SPACING.md,
   },
   banner: {
     flexDirection: 'row',

@@ -276,25 +276,25 @@ export const PatientHomePage = ({ setCurrentView, onOpenChat }) => {
   return (
     <>
       <div className="bg-[#F8FAFC] dark:bg-[#0B0F17] min-h-screen font-sans text-slate-900 dark:text-slate-100 pb-28 transition-colors duration-200">
-      <div className="max-w-[1200px] mx-auto space-y-5 px-0.5">
+      <div className="max-w-[1200px] mx-auto space-y-4 sm:space-y-5 px-3 sm:px-4 md:px-2">
 
         {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
             SECTION 1 — COMPACT HEADER ROW
         ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-stone-200/70 dark:border-slate-800 pb-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-stone-200/70 dark:border-slate-800 pb-3 sm:pb-4">
           {/* Greeting */}
           <div>
-            <div className="text-[11px] font-extrabold uppercase tracking-widest text-[#D97706] dark:text-[#E2A233] mb-0.5">{todayStr}</div>
-            <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight leading-tight">
+            <div className="text-[10px] sm:text-[11px] font-extrabold uppercase tracking-widest text-[#D97706] dark:text-[#E2A233] mb-0.5">{todayStr}</div>
+            <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight leading-tight">
               {greeting}, {userName} 👋
             </h1>
             <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">Your personal healthcare assistant is ready.</p>
           </div>
 
           {/* Status row */}
-          <div className="flex flex-wrap items-center gap-2 shrink-0">
+          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 shrink-0">
             {/* Dose status pill */}
-            <div className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] font-extrabold border ${
+            <div className={`flex items-center gap-1.5 rounded-lg px-2 sm:px-2.5 py-1 sm:py-1.5 text-[10px] sm:text-[11px] font-extrabold border ${
               pendingCount > 0
                 ? 'bg-amber-50 dark:bg-amber-950/50 border-amber-200 dark:border-amber-800/60 text-amber-900 dark:text-amber-200'
                 : 'bg-emerald-50 dark:bg-emerald-950/60 border-emerald-200 dark:border-emerald-800/80 text-emerald-900 dark:text-emerald-200'
@@ -304,12 +304,12 @@ export const PatientHomePage = ({ setCurrentView, onOpenChat }) => {
             </div>
 
             {/* ASHA pill */}
-            <div className="bg-[#E2A233]/12 border border-[#E2A233]/35 rounded-lg px-2.5 py-1.5 text-[11px] font-bold text-[#8A5B00] dark:text-[#E2A233]">
+            <div className="bg-[#E2A233]/12 border border-[#E2A233]/35 rounded-lg px-2 sm:px-2.5 py-1 sm:py-1.5 text-[10px] sm:text-[11px] font-bold text-[#8A5B00] dark:text-[#E2A233]">
               📅 ASHA: Tomorrow
             </div>
 
             {/* ABHA pill */}
-            <div className="bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800/80 rounded-lg px-2.5 py-1.5 text-[11px] font-bold text-emerald-800 dark:text-emerald-300">
+            <div className="bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800/80 rounded-lg px-2 sm:px-2.5 py-1 sm:py-1.5 text-[10px] sm:text-[11px] font-bold text-emerald-800 dark:text-emerald-300">
               ✓ ABHA Active
             </div>
 
@@ -317,7 +317,7 @@ export const PatientHomePage = ({ setCurrentView, onOpenChat }) => {
             <select
               value={currentLang}
               onChange={(e) => updateLanguage(e.target.value)}
-              className="bg-white dark:bg-slate-800 border-2 border-[#E2A233]/70 text-slate-900 dark:text-white font-extrabold text-[11px] rounded-lg px-2.5 py-1.5 cursor-pointer outline-none focus:ring-2 focus:ring-[#E2A233]/50 shadow-2xs"
+              className="bg-white dark:bg-slate-800 border-2 border-[#E2A233]/70 text-slate-900 dark:text-white font-extrabold text-[10px] sm:text-[11px] rounded-lg px-2 sm:px-2.5 py-1 sm:py-1.5 cursor-pointer outline-none focus:ring-2 focus:ring-[#E2A233]/50 shadow-2xs"
               title="Change Language"
             >
               {LANGUAGES.map((lang) => (
@@ -330,20 +330,20 @@ export const PatientHomePage = ({ setCurrentView, onOpenChat }) => {
         {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
             SECTION 1.5 — 4-COLOR QUICK ACTION SHORTCUTS
         ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3">
           
           {/* Prescription AI (Indigo) */}
           <button
             type="button"
             onClick={() => setCurrentView?.('translate')}
-            className="group bg-indigo-50/70 hover:bg-indigo-100/80 dark:bg-indigo-950/40 dark:hover:bg-indigo-900/60 border border-indigo-200 dark:border-indigo-800/60 p-3.5 rounded-2xl flex items-center gap-3 transition-all text-left shadow-2xs hover:shadow-xs cursor-pointer"
+            className="group bg-indigo-50/70 hover:bg-indigo-100/80 active:bg-indigo-100 dark:bg-indigo-950/40 dark:hover:bg-indigo-900/60 border border-indigo-200 dark:border-indigo-800/60 p-3 sm:p-3.5 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 transition-all text-left shadow-2xs hover:shadow-xs active:scale-[0.98] cursor-pointer"
           >
-            <div className="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center text-lg font-black shrink-0 shadow-xs group-hover:scale-105 transition-transform">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center text-base sm:text-lg font-black shrink-0 shadow-xs group-hover:scale-105 transition-transform">
               📷
             </div>
-            <div className="min-w-0">
-              <span className="text-[10px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-wider block">AI VISION</span>
-              <span className="text-xs font-black text-slate-900 dark:text-white truncate block">Prescription AI</span>
+            <div className="w-full min-w-0">
+              <span className="text-[9px] sm:text-[10px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-wider block">AI VISION</span>
+              <span className="text-xs sm:text-xs font-black text-slate-900 dark:text-white leading-tight block whitespace-normal">Prescription AI</span>
             </div>
           </button>
 
@@ -351,14 +351,14 @@ export const PatientHomePage = ({ setCurrentView, onOpenChat }) => {
           <button
             type="button"
             onClick={() => setCurrentView?.('reminders')}
-            className="group bg-amber-50/70 hover:bg-amber-100/80 dark:bg-amber-950/40 dark:hover:bg-amber-900/60 border border-amber-200 dark:border-amber-800/60 p-3.5 rounded-2xl flex items-center gap-3 transition-all text-left shadow-2xs hover:shadow-xs cursor-pointer"
+            className="group bg-amber-50/70 hover:bg-amber-100/80 active:bg-amber-100 dark:bg-amber-950/40 dark:hover:bg-amber-900/60 border border-amber-200 dark:border-amber-800/60 p-3 sm:p-3.5 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 transition-all text-left shadow-2xs hover:shadow-xs active:scale-[0.98] cursor-pointer"
           >
-            <div className="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center text-lg font-black shrink-0 shadow-xs group-hover:scale-105 transition-transform">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center text-base sm:text-lg font-black shrink-0 shadow-xs group-hover:scale-105 transition-transform">
               💊
             </div>
-            <div className="min-w-0">
-              <span className="text-[10px] font-black text-amber-700 dark:text-amber-400 uppercase tracking-wider block">DAILY DOSE</span>
-              <span className="text-xs font-black text-slate-900 dark:text-white truncate block">Pillbox Reminders</span>
+            <div className="w-full min-w-0">
+              <span className="text-[9px] sm:text-[10px] font-black text-amber-700 dark:text-amber-400 uppercase tracking-wider block">DAILY DOSE</span>
+              <span className="text-xs sm:text-xs font-black text-slate-900 dark:text-white leading-tight block whitespace-normal">Pillbox Reminders</span>
             </div>
           </button>
 
@@ -366,14 +366,14 @@ export const PatientHomePage = ({ setCurrentView, onOpenChat }) => {
           <button
             type="button"
             onClick={() => setCurrentView?.('medical_vault')}
-            className="group bg-teal-50/70 hover:bg-teal-100/80 dark:bg-teal-950/40 dark:hover:bg-teal-900/60 border border-teal-200 dark:border-teal-800/60 p-3.5 rounded-2xl flex items-center gap-3 transition-all text-left shadow-2xs hover:shadow-xs cursor-pointer"
+            className="group bg-teal-50/70 hover:bg-teal-100/80 active:bg-teal-100 dark:bg-teal-950/40 dark:hover:bg-teal-900/60 border border-teal-200 dark:border-teal-800/60 p-3 sm:p-3.5 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 transition-all text-left shadow-2xs hover:shadow-xs active:scale-[0.98] cursor-pointer"
           >
-            <div className="w-10 h-10 rounded-xl bg-[#0B4F42] text-white flex items-center justify-center text-lg font-black shrink-0 shadow-xs group-hover:scale-105 transition-transform">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-[#0B4F42] text-white flex items-center justify-center text-base sm:text-lg font-black shrink-0 shadow-xs group-hover:scale-105 transition-transform">
               📂
             </div>
-            <div className="min-w-0">
-              <span className="text-[10px] font-black text-teal-700 dark:text-teal-400 uppercase tracking-wider block">ABDM VAULT</span>
-              <span className="text-xs font-black text-slate-900 dark:text-white truncate block">Health Records</span>
+            <div className="w-full min-w-0">
+              <span className="text-[9px] sm:text-[10px] font-black text-teal-700 dark:text-teal-400 uppercase tracking-wider block">ABDM VAULT</span>
+              <span className="text-xs sm:text-xs font-black text-slate-900 dark:text-white leading-tight block whitespace-normal">Health Records</span>
             </div>
           </button>
 
@@ -381,14 +381,14 @@ export const PatientHomePage = ({ setCurrentView, onOpenChat }) => {
           <button
             type="button"
             onClick={() => setCurrentView?.('emergency')}
-            className="group bg-rose-50/70 hover:bg-rose-100/80 dark:bg-rose-950/40 dark:hover:bg-rose-900/60 border border-rose-200 dark:border-rose-800/60 p-3.5 rounded-2xl flex items-center gap-3 transition-all text-left shadow-2xs hover:shadow-xs cursor-pointer"
+            className="group bg-rose-50/70 hover:bg-rose-100/80 active:bg-rose-100 dark:bg-rose-950/40 dark:hover:bg-rose-900/60 border border-rose-200 dark:border-rose-800/60 p-3 sm:p-3.5 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 transition-all text-left shadow-2xs hover:shadow-xs active:scale-[0.98] cursor-pointer"
           >
-            <div className="w-10 h-10 rounded-xl bg-rose-600 text-white flex items-center justify-center text-lg font-black shrink-0 shadow-xs group-hover:scale-105 transition-transform">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-rose-600 text-white flex items-center justify-center text-base sm:text-lg font-black shrink-0 shadow-xs group-hover:scale-105 transition-transform">
               🚨
             </div>
-            <div className="min-w-0">
-              <span className="text-[10px] font-black text-rose-600 dark:text-rose-400 uppercase tracking-wider block">24x7 SOS</span>
-              <span className="text-xs font-black text-slate-900 dark:text-white truncate block">Emergency Care</span>
+            <div className="w-full min-w-0">
+              <span className="text-[9px] sm:text-[10px] font-black text-rose-600 dark:text-rose-400 uppercase tracking-wider block">24x7 SOS</span>
+              <span className="text-xs sm:text-xs font-black text-slate-900 dark:text-white leading-tight block whitespace-normal">Emergency Care</span>
             </div>
           </button>
 
@@ -447,11 +447,11 @@ export const PatientHomePage = ({ setCurrentView, onOpenChat }) => {
                   </div>
 
                   {/* CTA row */}
-                  <div className="flex flex-wrap gap-2.5 pt-1">
+                  <div className="flex flex-col sm:flex-row gap-2.5 pt-1">
                     <button
                       type="button"
                       onClick={() => toggleReminderStatus(nextDose.id, nextDose.is_taken)}
-                      className={`flex items-center gap-2 text-sm font-extrabold px-5 py-2.5 rounded-xl shadow-sm transition-all cursor-pointer ${
+                      className={`flex-1 flex items-center justify-center gap-2 text-sm font-extrabold px-4 sm:px-5 py-2.5 rounded-xl shadow-sm transition-all cursor-pointer ${
                         nextDose.is_taken
                           ? 'bg-emerald-700 hover:bg-emerald-800 text-white'
                           : 'bg-[#E2A233] hover:bg-[#c88d28] text-slate-950 hover:shadow-md'
@@ -468,7 +468,7 @@ export const PatientHomePage = ({ setCurrentView, onOpenChat }) => {
                       type="button"
                       onClick={() => playWelcomeAudio()}
                       disabled={playingGreeting}
-                      className="flex items-center gap-2 bg-white dark:bg-slate-800 hover:bg-stone-100 dark:hover:bg-slate-700 border border-stone-300 dark:border-slate-600 text-slate-800 dark:text-slate-200 text-sm font-bold px-4 py-2.5 rounded-xl transition-all cursor-pointer shadow-2xs disabled:opacity-60"
+                      className="flex-1 sm:flex-initial flex items-center justify-center gap-2 bg-white dark:bg-slate-800 hover:bg-stone-100 dark:hover:bg-slate-700 border border-stone-300 dark:border-slate-600 text-slate-800 dark:text-slate-200 text-sm font-bold px-4 py-2.5 rounded-xl transition-all cursor-pointer shadow-2xs disabled:opacity-60"
                     >
                       <SpeakerIcon size={15} />
                       {playingGreeting ? 'Playing…' : `Listen (${activeLangObj.native})`}

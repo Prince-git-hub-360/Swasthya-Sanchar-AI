@@ -282,21 +282,21 @@ export const EmergencyPage = () => {
         {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
             2. TACTILE 1-TAP EMERGENCY HELPLINE DIALERS (4 BIG BUTTONS)
         ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
           
           {/* 112 National SOS */}
           <a
             href="tel:112"
-            className="group bg-gradient-to-br from-rose-500/10 via-rose-500/5 to-transparent hover:from-rose-500/20 border-2 border-rose-300 dark:border-rose-900/80 p-4 rounded-3xl flex items-center gap-3.5 transition-all shadow-xs hover:shadow-md cursor-pointer"
+            className="group bg-gradient-to-br from-rose-500/10 via-rose-500/5 to-transparent hover:from-rose-500/20 border-2 border-rose-300 dark:border-rose-900/80 p-3 sm:p-4 rounded-2xl sm:rounded-3xl flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3.5 transition-all shadow-xs hover:shadow-md cursor-pointer"
           >
-            <div className="w-12 h-12 rounded-2xl bg-rose-600 text-white flex items-center justify-center text-xl font-black shrink-0 shadow-md group-hover:scale-110 transition-transform">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-rose-600 text-white flex items-center justify-center text-lg sm:text-xl font-black shrink-0 shadow-md group-hover:scale-110 transition-transform">
               <PhoneIcon size={20} color="#ffffff" />
             </div>
-            <div className="min-w-0">
-              <div className="text-[10px] font-black text-rose-600 dark:text-rose-400 uppercase tracking-wider">
+            <div className="w-full min-w-0">
+              <div className="text-[9px] sm:text-[10px] font-black text-rose-600 dark:text-rose-400 uppercase tracking-wider">
                 NATIONAL SOS
               </div>
-              <div className="text-2xl font-black text-slate-900 dark:text-white leading-tight">
+              <div className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white leading-tight">
                 112
               </div>
               <div className="text-[10px] font-bold text-slate-500 dark:text-slate-400 truncate">
@@ -308,16 +308,16 @@ export const EmergencyPage = () => {
           {/* 108 Rural Ambulance */}
           <a
             href="tel:108"
-            className="group bg-gradient-to-br from-teal-500/10 via-teal-500/5 to-transparent hover:from-teal-500/20 border-2 border-teal-300 dark:border-teal-900/80 p-4 rounded-3xl flex items-center gap-3.5 transition-all shadow-xs hover:shadow-md cursor-pointer"
+            className="group bg-gradient-to-br from-teal-500/10 via-teal-500/5 to-transparent hover:from-teal-500/20 border-2 border-teal-300 dark:border-teal-900/80 p-3 sm:p-4 rounded-2xl sm:rounded-3xl flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3.5 transition-all shadow-xs hover:shadow-md cursor-pointer"
           >
-            <div className="w-12 h-12 rounded-2xl bg-[#0B4F42] text-white flex items-center justify-center text-xl font-black shrink-0 shadow-md group-hover:scale-110 transition-transform">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-[#0B4F42] text-white flex items-center justify-center text-lg sm:text-xl font-black shrink-0 shadow-md group-hover:scale-110 transition-transform">
               🚑
             </div>
-            <div className="min-w-0">
-              <div className="text-[10px] font-black text-teal-700 dark:text-teal-400 uppercase tracking-wider">
+            <div className="w-full min-w-0">
+              <div className="text-[9px] sm:text-[10px] font-black text-teal-700 dark:text-teal-400 uppercase tracking-wider">
                 RURAL AMBULANCE
               </div>
-              <div className="text-2xl font-black text-slate-900 dark:text-white leading-tight">
+              <div className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white leading-tight">
                 108
               </div>
               <div className="text-[10px] font-bold text-slate-500 dark:text-slate-400 truncate">
@@ -329,16 +329,16 @@ export const EmergencyPage = () => {
           {/* 104 Doctor Advice */}
           <a
             href="tel:104"
-            className="group bg-gradient-to-br from-amber-500/10 via-amber-500/5 to-transparent hover:from-amber-500/20 border-2 border-amber-300 dark:border-amber-900/80 p-4 rounded-3xl flex items-center gap-3.5 transition-all shadow-xs hover:shadow-md cursor-pointer"
+            className="group bg-gradient-to-br from-amber-500/10 via-amber-500/5 to-transparent hover:from-amber-500/20 border-2 border-amber-300 dark:border-amber-900/80 p-3 sm:p-4 rounded-2xl sm:rounded-3xl flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3.5 transition-all shadow-xs hover:shadow-md cursor-pointer"
           >
-            <div className="w-12 h-12 rounded-2xl bg-amber-600 text-white flex items-center justify-center text-xl font-black shrink-0 shadow-md group-hover:scale-110 transition-transform">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-amber-600 text-white flex items-center justify-center text-lg sm:text-xl font-black shrink-0 shadow-md group-hover:scale-110 transition-transform">
               🩺
             </div>
-            <div className="min-w-0">
-              <div className="text-[10px] font-black text-amber-700 dark:text-amber-400 uppercase tracking-wider">
+            <div className="w-full min-w-0">
+              <div className="text-[9px] sm:text-[10px] font-black text-amber-700 dark:text-amber-400 uppercase tracking-wider">
                 HEALTH ADVICE
               </div>
-              <div className="text-2xl font-black text-slate-900 dark:text-white leading-tight">
+              <div className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white leading-tight">
                 104
               </div>
               <div className="text-[10px] font-bold text-slate-500 dark:text-slate-400 truncate">
@@ -350,16 +350,16 @@ export const EmergencyPage = () => {
           {/* 1066 Poison Helpline */}
           <a
             href="tel:1066"
-            className="group bg-gradient-to-br from-indigo-500/10 via-indigo-500/5 to-transparent hover:from-indigo-500/20 border-2 border-indigo-300 dark:border-indigo-900/80 p-4 rounded-3xl flex items-center gap-3.5 transition-all shadow-xs hover:shadow-md cursor-pointer"
+            className="group bg-gradient-to-br from-indigo-500/10 via-indigo-500/5 to-transparent hover:from-indigo-500/20 border-2 border-indigo-300 dark:border-indigo-900/80 p-3 sm:p-4 rounded-2xl sm:rounded-3xl flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3.5 transition-all shadow-xs hover:shadow-md cursor-pointer"
           >
-            <div className="w-12 h-12 rounded-2xl bg-indigo-600 text-white flex items-center justify-center text-xl font-black shrink-0 shadow-md group-hover:scale-110 transition-transform">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-indigo-600 text-white flex items-center justify-center text-lg sm:text-xl font-black shrink-0 shadow-md group-hover:scale-110 transition-transform">
               ⚠️
             </div>
-            <div className="min-w-0">
-              <div className="text-[10px] font-black text-indigo-700 dark:text-indigo-400 uppercase tracking-wider">
+            <div className="w-full min-w-0">
+              <div className="text-[9px] sm:text-[10px] font-black text-indigo-700 dark:text-indigo-400 uppercase tracking-wider">
                 POISON HELPLINE
               </div>
-              <div className="text-2xl font-black text-slate-900 dark:text-white leading-tight">
+              <div className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white leading-tight">
                 1066
               </div>
               <div className="text-[10px] font-bold text-slate-500 dark:text-slate-400 truncate">

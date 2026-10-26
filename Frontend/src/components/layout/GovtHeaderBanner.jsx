@@ -19,68 +19,64 @@ export const GovtHeaderBanner = ({
     <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 shadow-xs">
       
       {/* 🏛️ 1. TOP OFFICIAL GOVERNMENT LOGOS STRIP */}
-      <div className="max-w-7xl mx-auto px-4 md:px-6 py-2.5 flex flex-wrap items-center justify-between gap-4">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 py-2 sm:py-2.5 flex flex-wrap items-center justify-between gap-3 sm:gap-4">
         
         {/* Left: 3 Official Government Logos + Swasthya Sanchar Dedicated Brand Logo */}
-        <div className="flex items-center gap-4 sm:gap-6 flex-wrap">
+        <div className="flex items-center gap-2.5 sm:gap-5 flex-wrap">
           
           {/* Logo 1: National Health Authority & Ministry of Health & Family Welfare (with Ashoka Lion) */}
           <div className="flex items-center gap-2">
             <img
               src="/images/nha_logo.jpg"
               alt="National Health Authority, Ministry of Health and Family Welfare, Government of India"
-              style={{ height: '64px' }}
-              className="w-auto object-contain drop-shadow-xs"
+              className="h-9 sm:h-12 md:h-14 w-auto object-contain drop-shadow-xs"
             />
           </div>
 
-          <div className="hidden sm:block h-12 w-[1.5px] bg-slate-200 dark:bg-slate-700" />
+          <div className="hidden sm:block h-10 md:h-12 w-[1.5px] bg-slate-200 dark:bg-slate-700" />
 
           {/* Logo 2: National Health Mission (NHM) */}
           <div className="flex items-center gap-2">
             <img
               src="/images/nhm_logo.png"
               alt="National Health Mission - राष्ट्रीय स्वास्थ्य मिशन"
-              style={{ height: '64px' }}
-              className="w-auto object-contain drop-shadow-xs"
+              className="h-9 sm:h-12 md:h-14 w-auto object-contain drop-shadow-xs"
             />
           </div>
 
-          <div className="hidden sm:block h-12 w-[1.5px] bg-slate-200 dark:bg-slate-700" />
+          <div className="hidden sm:block h-10 md:h-12 w-[1.5px] bg-slate-200 dark:bg-slate-700" />
 
           {/* Logo 3: Dedicated Swasthya Sanchar Brand Logo */}
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2 sm:gap-2.5">
             <img
               src="/assets/branding/swasthya-sanchar-mark.png"
               alt="Swasthya Sanchar Emblem"
-              style={{ height: '50px', width: 'auto' }}
-              className="object-contain drop-shadow-xs transition-transform hover:scale-105"
+              className="h-8 sm:h-10 md:h-12 w-auto object-contain drop-shadow-xs transition-transform hover:scale-105"
             />
             <div className="hidden md:block leading-tight">
               <div className="flex items-center gap-1.5">
-                <span className="font-extrabold text-base text-[#0B3B74] dark:text-sky-300 tracking-tight">Swasthya Sanchar</span>
+                <span className="font-extrabold text-sm sm:text-base text-[#0B3B74] dark:text-sky-300 tracking-tight">Swasthya Sanchar</span>
                 <span className="text-[10px] font-black bg-emerald-100 text-emerald-800 px-1.5 py-0.2 rounded border border-emerald-300">AI</span>
               </div>
               <div className="text-[10px] text-slate-500 font-bold">स्वास्थ संचार • National Health Portal</div>
             </div>
           </div>
 
-          <div className="hidden lg:block h-12 w-[1.5px] bg-slate-200 dark:bg-slate-700" />
+          <div className="hidden lg:block h-10 md:h-12 w-[1.5px] bg-slate-200 dark:bg-slate-700" />
 
           {/* Logo 4: Ayushman Bharat PM-JAY / Digital India */}
           <div className="hidden sm:flex items-center gap-2">
             <img
               src="/images/digital_india_logo.svg"
               alt="Digital India - Power to Empower"
-              style={{ height: '54px' }}
-              className="w-auto object-contain"
+              className="h-8 sm:h-11 md:h-12 w-auto object-contain"
             />
           </div>
 
         </div>
 
         {/* Right: Indian Flag Wave + Sister Lakshmi Devi Profile Badge */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
           <div className="hidden lg:block">
             <IndianFlagWaveSwoosh />
           </div>
@@ -88,16 +84,16 @@ export const GovtHeaderBanner = ({
           {rightCustomBadge ? (
             rightCustomBadge
           ) : showSisterProfile ? (
-            <div className="flex items-center gap-2.5 bg-slate-50 dark:bg-slate-800 p-1.5 pr-3.5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-xs">
+            <div className="flex items-center gap-2 sm:gap-2.5 bg-slate-50 dark:bg-slate-800 p-1 sm:p-1.5 pr-2.5 sm:pr-3.5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-xs">
               <img
                 src="/images/asha_sister_action.jpg"
                 alt="Sister Lakshmi Devi"
-                className="w-10 h-10 rounded-full object-cover border-2 border-emerald-500 shadow-xs"
+                className="w-8 h-8 sm:w-10 sm:h-10 rounded-full object-cover border-2 border-emerald-500 shadow-xs"
               />
               <div className="text-left leading-tight">
-                <div className="text-xs font-black text-slate-900 dark:text-white">Sister Lakshmi Devi</div>
-                <div className="text-[10px] text-emerald-700 dark:text-emerald-400 font-bold">ASHA Worker</div>
-                <div className="text-[9px] text-slate-500 dark:text-slate-400">PHC Mandya (Karnataka)</div>
+                <div className="text-[11px] sm:text-xs font-black text-slate-900 dark:text-white">Sister Lakshmi Devi</div>
+                <div className="text-[9px] sm:text-[10px] text-emerald-700 dark:text-emerald-400 font-bold">ASHA Worker</div>
+                <div className="text-[8px] sm:text-[9px] text-slate-500 dark:text-slate-400 hidden xs:block">PHC Mandya (KA)</div>
               </div>
             </div>
           ) : null}

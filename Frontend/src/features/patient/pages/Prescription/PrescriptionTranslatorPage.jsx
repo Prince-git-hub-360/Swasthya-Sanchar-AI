@@ -574,7 +574,7 @@ export const PrescriptionTranslatorPage = ({ setCurrentView }) => {
   const activeStageInfo = SCAN_STAGES.find((s) => s.step === scanStep) || SCAN_STAGES[0];
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 space-y-5 font-sans text-slate-900 dark:text-slate-100 transition-colors">
+    <div className="max-w-7xl mx-auto px-2.5 sm:px-6 lg:px-8 py-3 sm:py-5 space-y-4 sm:space-y-5 font-sans text-slate-900 dark:text-slate-100 transition-colors">
       
       {/* 1. TOP COMPACT HEADER & LANGUAGE SELECTOR */}
       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xs space-y-3 transition-colors">

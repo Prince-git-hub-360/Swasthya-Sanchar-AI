@@ -40,4 +40,25 @@ export const authApi = {
       method: 'POST',
     }).catch(() => ({}));
   },
+
+  async sendOtp(phoneOrEmail) {
+    const isEmail = String(phoneOrEmail).includes('@');
+    return request('/auth/otp/send/', {
+      method: 'POST',
+      body: JSON.stringify(isEmail ? { email: phoneOrEmail } : { phone: phoneOrEmail }),
+    });
+  },
+
+  async verifyOtp(otp, expectedOtp) {
+    return request('/auth/otp/verify/', {
+      method: 'POST',
+      body: JSON.stringify({ otp, expected_otp: expectedOtp }),
+    });
+  },
+
+  async checkUsername(username) {
+    return request(`/auth/check-username/?username=${encodeURIComponent(username)}`, {
+      method: 'GET',
+    });
+  },
 };

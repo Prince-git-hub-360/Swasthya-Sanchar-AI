@@ -21,6 +21,7 @@ import { MobileSwasthyaLogo } from '../../components/branding/MobileSwasthyaLogo
 import { UserRole } from '../../types';
 import { authApi } from '../../api';
 import { SafeStorage } from '../../services/safeStorage';
+import { useAppSafeArea } from '../../hooks/useAppSafeArea';
 
 // All 28 States + 8 Union Territories of India
 export const ALL_INDIAN_STATES_AND_UTS = [
@@ -63,6 +64,7 @@ export const ALL_INDIAN_STATES_AND_UTS = [
 ];
 
 export const RegisterScreen: React.FC<{ onNavigateToLogin: () => void }> = ({ onNavigateToLogin }) => {
+  const insets = useAppSafeArea();
   const { login } = useAuth();
   const { currentLanguage, setLanguage, languages } = useLanguage();
 
@@ -211,7 +213,10 @@ export const RegisterScreen: React.FC<{ onNavigateToLogin: () => void }> = ({ on
       style={styles.container}
     >
       <ScrollView
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[
+          styles.scrollContent,
+          { paddingTop: insets.top + SPACING.md, paddingBottom: insets.bottom + 40 },
+        ]}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
@@ -683,8 +688,6 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: SPACING.md,
-    paddingTop: SPACING.lg,
-    paddingBottom: 60,
   },
   topBar: {
     flexDirection: 'row',

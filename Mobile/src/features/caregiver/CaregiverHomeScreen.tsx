@@ -6,6 +6,7 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
+  Linking,
 } from 'react-native';
 import {
   Heart,
@@ -22,6 +23,8 @@ import {
   Sparkles,
   User,
   ShoppingBag,
+  ShieldAlert,
+  MapPin,
 } from 'lucide-react-native';
 import { COLORS, SPACING, TYPOGRAPHY, BORDER_RADIUS, SHADOWS } from '../../constants/theme';
 import { MOCK_PATIENT, MOCK_TODAY_MEDICINES } from '../../mock/healthData';
@@ -29,6 +32,7 @@ import { Header } from '../../components/common/Header';
 import { MobileEmergencySosModal } from '../../components/emergency/MobileEmergencySosModal';
 import { SwasthyaMitrAiModal } from '../../components/ai/SwasthyaMitrAiModal';
 import { SafeStorage } from '../../services/safeStorage';
+import { EmergencySosService } from '../../services/emergencySosService';
 
 export const CaregiverHomeScreen: React.FC<{ navigation?: any }> = () => {
   const [selectedDependent, setSelectedDependent] = useState<'mother' | 'father'>('mother');
@@ -36,6 +40,15 @@ export const CaregiverHomeScreen: React.FC<{ navigation?: any }> = () => {
   const [sosModalVisible, setSosModalVisible] = useState(false);
   const [aiModalVisible, setAiModalVisible] = useState(false);
   const [todayMeds, setTodayMeds] = useState<any[]>(MOCK_TODAY_MEDICINES);
+  const [activeSos, setActiveSos] = useState<any | null>(null);
+
+  useEffect(() => {
+    const checkSos = async () => {
+      const alert = await EmergencySosService.getActiveSosAlert();
+      setActiveSos(alert);
+    };
+    checkSos();
+  }, []);
 
   useEffect(() => {
     const loadMeds = async () => {
@@ -104,6 +117,54 @@ export const CaregiverHomeScreen: React.FC<{ navigation?: any }> = () => {
           <Text style={styles.greeting}>Family Caregiver Portal</Text>
           <Text style={styles.subGreeting}>Remote Chronic Care & Medication Monitor</Text>
         </View>
+
+        {/* Active Emergency SOS Distress Banner */}
+        {activeSos && (
+          <View style={styles.emergencySosBanner}>
+            <View style={styles.emergencySosHeaderRow}>
+              <View style={styles.sosAlertCircle}>
+                <ShieldAlert size={22} color="#DC2626" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.emergencySosTitle}>🚨 ACTIVE SOS DISTRESS BEACON!</Text>
+                <Text style={styles.emergencySosSub}>
+                  {activeSos.patientName || 'Lakshmi Devi'} triggered an emergency distress alert from {activeSos.village || 'Rampur Gram'}!
+                </Text>
+              </View>
+            </View>
+
+            <View style={styles.sosActionRow}>
+              <TouchableOpacity
+                style={styles.sosCallBtn}
+                onPress={() => Linking.openURL('tel:9008802105')}
+                activeOpacity={0.85}
+              >
+                <PhoneCall size={14} color="#FFFFFF" />
+                <Text style={styles.sosCallBtnText}>Call Patient</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.sosMapBtn}
+                onPress={() => Linking.openURL(`https://maps.google.com/?q=${activeSos.latitude || 25.3176},${activeSos.longitude || 82.9739}`)}
+                activeOpacity={0.85}
+              >
+                <MapPin size={14} color="#FFFFFF" />
+                <Text style={styles.sosMapBtnText}>Live GPS Map</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.sosDismissBtn}
+                onPress={async () => {
+                  await EmergencySosService.clearActiveSosAlert();
+                  setActiveSos(null);
+                }}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.sosDismissText}>Dismiss</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
 
         {/* Dependent Switcher Tabs */}
         <View style={styles.dependentSwitcher}>
@@ -546,5 +607,89 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '900',
     color: '#FFFFFF',
+  },
+  emergencySosBanner: {
+    backgroundColor: '#FEF2F2',
+    borderWidth: 2,
+    borderColor: '#F87171',
+    borderRadius: BORDER_RADIUS.lg,
+    padding: SPACING.md,
+    marginBottom: SPACING.md,
+    ...SHADOWS.card,
+  },
+  emergencySosHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginBottom: SPACING.sm,
+  },
+  sosAlertCircle: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#FEE2E2',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emergencySosTitle: {
+    fontSize: 13,
+    fontWeight: '900',
+    color: '#DC2626',
+    letterSpacing: 0.3,
+  },
+  emergencySosSub: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#7F1D1D',
+    marginTop: 2,
+  },
+  sosActionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 4,
+  },
+  sosCallBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+    backgroundColor: '#DC2626',
+    paddingVertical: 9,
+    borderRadius: 8,
+  },
+  sosCallBtnText: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#FFFFFF',
+  },
+  sosMapBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+    backgroundColor: '#0284C7',
+    paddingVertical: 9,
+    borderRadius: 8,
+  },
+  sosMapBtnText: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#FFFFFF',
+  },
+  sosDismissBtn: {
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#FECACA',
+    borderRadius: 8,
+  },
+  sosDismissText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#7F1D1D',
   },
 });

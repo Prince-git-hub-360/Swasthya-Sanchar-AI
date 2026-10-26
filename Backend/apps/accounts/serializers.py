@@ -56,6 +56,8 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
+    first_name = serializers.CharField(required=False, allow_blank=True, default='')
+    last_name = serializers.CharField(required=False, allow_blank=True, default='')
     role = serializers.ChoiceField(
         choices=RoleChoices.choices,
         default=RoleChoices.PATIENT,
@@ -82,6 +84,12 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
 
     password = serializers.CharField(write_only=True, required=True, style={'input_type': 'password'})
     profile = UserProfileSerializer(read_only=True)
+
+    def validate_username(self, value):
+        val = value.strip()
+        if User.objects.filter(username__iexact=val).exists():
+            raise serializers.ValidationError(f"Username '{val}' is already registered. Please choose another username or log in.")
+        return val
 
     class Meta:
         model = User
@@ -134,9 +142,11 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         emergency_contact_phone = validated_data.pop('emergency_contact_phone', '')
         password = validated_data.pop('password')
 
-        # Ensure email has default if not provided
+        # Ensure email and first_name have defaults if not provided
         if not validated_data.get('email'):
             validated_data['email'] = f"{validated_data.get('username', 'user')}@swasthya.ai"
+        if not validated_data.get('first_name'):
+            validated_data['first_name'] = str(validated_data.get('username', 'Citizen')).capitalize()
 
         # Create base User account
         user = User(**validated_data)

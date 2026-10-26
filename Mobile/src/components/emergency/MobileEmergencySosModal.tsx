@@ -9,6 +9,7 @@ import {
   Alert,
   Platform,
   Linking,
+  TextInput,
 } from 'react-native';
 import {
   ShieldAlert,
@@ -24,11 +25,17 @@ import {
   Pill,
   Activity,
   HeartPulse,
+  MessageSquare,
+  Send,
+  Users,
+  Edit3,
+  CheckCircle2,
 } from 'lucide-react-native';
 import { COLORS, SPACING, TYPOGRAPHY, BORDER_RADIUS, SHADOWS } from '../../constants/theme';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
 import { VoiceAssistantService } from '../../services/speechService';
+import { EmergencySosService, EmergencyContact, DEFAULT_EMERGENCY_CONTACT } from '../../services/emergencySosService';
 
 export interface HealthcareFacility {
   id: string;
@@ -165,6 +172,30 @@ export const MobileEmergencySosModal: React.FC<{
   const [selectedTopic, setSelectedTopic] = useState<string>('snakebite');
   const [isPlayingAudio, setIsPlayingAudio] = useState<boolean>(false);
 
+  // Real Family Emergency Contact State
+  const [contact, setContact] = useState<EmergencyContact>(DEFAULT_EMERGENCY_CONTACT);
+  const [coords, setCoords] = useState<{ latitude: number; longitude: number } | null>(null);
+  const [editModalVisible, setEditModalVisible] = useState(false);
+  const [editName, setEditName] = useState(DEFAULT_EMERGENCY_CONTACT.name);
+  const [editPhone, setEditPhone] = useState(DEFAULT_EMERGENCY_CONTACT.phone);
+  const [editRelation, setEditRelation] = useState(DEFAULT_EMERGENCY_CONTACT.relationship);
+
+  const patientName = user?.first_name || (user?.username && !/^\d+$/.test(user.username) ? user.username : 'Prince Kumar');
+  const village = user?.village_or_town || 'Rampur Gram, Ward 3';
+
+  // Load Contact and Location
+  React.useEffect(() => {
+    if (visible) {
+      EmergencySosService.getEmergencyContact().then((c) => {
+        setContact(c);
+        setEditName(c.name);
+        setEditPhone(c.phone);
+        setEditRelation(c.relationship);
+      });
+      EmergencySosService.getLiveLocation().then((loc) => setCoords(loc));
+    }
+  }, [visible]);
+
   const filteredFacilities = NEARBY_FACILITIES.filter((f) => {
     if (activeFilter === 'ALL') return true;
     return f.type === activeFilter;
@@ -191,12 +222,78 @@ export const MobileEmergencySosModal: React.FC<{
     );
   };
 
-  const handleBroadcastSos = () => {
-    const village = user?.village_or_town || 'Rampur Gram, Ward 3';
-    const patientName = user?.first_name || 'Prince Kumar';
+  const handleSendSms = async () => {
+    const loc = coords || (await EmergencySosService.getLiveLocation());
+    const msg = EmergencySosService.generateDistressMessage({
+      patientName,
+      village,
+      latitude: loc.latitude,
+      longitude: loc.longitude,
+    });
+    EmergencySosService.broadcastToBackendAndCaregiver({
+      patientName,
+      village,
+      latitude: loc.latitude,
+      longitude: loc.longitude,
+    });
+    await EmergencySosService.sendNativeSms(contact.phone, msg);
+  };
+
+  const handleSendWhatsApp = async () => {
+    const loc = coords || (await EmergencySosService.getLiveLocation());
+    const msg = EmergencySosService.generateDistressMessage({
+      patientName,
+      village,
+      latitude: loc.latitude,
+      longitude: loc.longitude,
+    });
+    EmergencySosService.broadcastToBackendAndCaregiver({
+      patientName,
+      village,
+      latitude: loc.latitude,
+      longitude: loc.longitude,
+    });
+    await EmergencySosService.sendWhatsApp(contact.phone, msg);
+  };
+
+  const handleCallFamily = async () => {
+    await EmergencySosService.callFamily(contact.phone);
+  };
+
+  const handleSaveContact = async () => {
+    if (!editPhone || editPhone.trim().length < 10) {
+      Alert.alert('Invalid Number', 'Please enter a valid 10-digit mobile number.');
+      return;
+    }
+    const updated: EmergencyContact = {
+      name: editName.trim() || 'Family Member',
+      phone: editPhone.trim(),
+      relationship: editRelation.trim() || 'Caregiver',
+    };
+    await EmergencySosService.saveEmergencyContact(updated);
+    setContact(updated);
+    setEditModalVisible(false);
+    Alert.alert('Contact Updated 🎉', `Emergency contact set to ${updated.name} (${updated.phone}).`);
+  };
+
+  const handleBroadcastSos = async () => {
+    const loc = coords || (await EmergencySosService.getLiveLocation());
+    await EmergencySosService.broadcastToBackendAndCaregiver({
+      patientName,
+      village,
+      latitude: loc.latitude,
+      longitude: loc.longitude,
+    });
+
     Alert.alert(
-      'SOS Broadcasted! 🚨',
-      `High-Priority Emergency Signal Sent!\n\nPatient: ${patientName}\nLocation: ${village}, Varanasi\nGPS: 25.3176° N, 82.9739° E\n\nASHA Worker (Sunita Bai), 108 Dispatch, and Emergency Contacts have been alerted with live tracking.`
+      '🚨 Emergency Beacon Broadcasted! / आपातकालीन सूचना',
+      `High-Priority Emergency Signal Recorded for ${patientName} at ${village}.\n\nASHA Worker and Caregiver Portals have received your live GPS beacon!\n\nChoose how to dispatch directly to ${contact.name}:`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: '💬 Send Native SMS', onPress: handleSendSms },
+        { text: '🟢 Send WhatsApp SOS', onPress: handleSendWhatsApp },
+        { text: `📞 Call ${contact.name.split(' ')[0]}`, onPress: handleCallFamily },
+      ]
     );
   };
 
@@ -525,6 +622,46 @@ export const MobileEmergencySosModal: React.FC<{
               </View>
             )}
 
+            {/* Real Family Emergency Contact Card */}
+            <Text style={styles.sosSectionHeader}>Emergency Family Member / परिवार आपातकालीन संपर्क</Text>
+            <View style={styles.familyContactCard}>
+              <View style={styles.familyContactTop}>
+                <View style={styles.familyAvatar}>
+                  <Users size={18} color="#047857" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.familyName}>{contact.name} ({contact.relationship})</Text>
+                  <Text style={styles.familyPhone}>+91 {contact.phone}</Text>
+                </View>
+                <TouchableOpacity
+                  style={styles.editContactBtn}
+                  onPress={() => setEditModalVisible(true)}
+                  activeOpacity={0.8}
+                >
+                  <Edit3 size={13} color="#047857" />
+                  <Text style={styles.editContactText}>Change</Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* 1-Tap Real Action Buttons */}
+              <View style={styles.familyActionsRow}>
+                <TouchableOpacity style={styles.familySmsAction} onPress={handleSendSms} activeOpacity={0.85}>
+                  <MessageSquare size={16} color="#047857" />
+                  <Text style={styles.familyActionText}>SMS with GPS</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity style={styles.familyWaAction} onPress={handleSendWhatsApp} activeOpacity={0.85}>
+                  <Send size={16} color="#15803D" />
+                  <Text style={styles.familyActionWaText}>WhatsApp</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity style={styles.familyCallAction} onPress={handleCallFamily} activeOpacity={0.85}>
+                  <PhoneCall size={16} color="#0284C7" />
+                  <Text style={styles.familyActionCallText}>Call Now</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+
             {/* 1-Tap National Emergency Dialers */}
             <Text style={styles.sosSectionHeader}>National Emergency Hotlines / आपातकालीन नंबर</Text>
             <View style={styles.dialerGrid}>
@@ -584,6 +721,51 @@ export const MobileEmergencySosModal: React.FC<{
               <Text style={styles.sendDistressText}>BROADCAST DISTRESS SIGNAL TO ASHA & FAMILY</Text>
             </TouchableOpacity>
           </ScrollView>
+
+          {/* Edit Emergency Contact Modal */}
+          <Modal visible={editModalVisible} transparent animationType="fade">
+            <View style={styles.editModalOverlay}>
+              <View style={styles.editModalCard}>
+                <View style={styles.editModalHeader}>
+                  <Text style={styles.editModalTitle}>Update Emergency Contact</Text>
+                  <TouchableOpacity onPress={() => setEditModalVisible(false)}>
+                    <X size={20} color="#64748B" />
+                  </TouchableOpacity>
+                </View>
+
+                <Text style={styles.inputLabel}>Contact Name / नाम</Text>
+                <TextInput
+                  style={styles.textInput}
+                  value={editName}
+                  onChangeText={setEditName}
+                  placeholder="e.g. Ramesh Kumar"
+                />
+
+                <Text style={styles.inputLabel}>Relationship / रिश्ता</Text>
+                <TextInput
+                  style={styles.textInput}
+                  value={editRelation}
+                  onChangeText={setEditRelation}
+                  placeholder="e.g. Son, Daughter, Brother"
+                />
+
+                <Text style={styles.inputLabel}>10-Digit Mobile Number / मोबाइल नंबर</Text>
+                <TextInput
+                  style={styles.textInput}
+                  value={editPhone}
+                  onChangeText={setEditPhone}
+                  placeholder="e.g. 9008802105"
+                  keyboardType="phone-pad"
+                  maxLength={13}
+                />
+
+                <TouchableOpacity style={styles.saveContactBtn} onPress={handleSaveContact}>
+                  <CheckCircle2 size={18} color="#FFFFFF" />
+                  <Text style={styles.saveContactText}>Save Emergency Contact</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </Modal>
         </View>
       </View>
     </Modal>
@@ -1184,5 +1366,165 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     color: '#FFFFFF',
     letterSpacing: 0.3,
+  },
+  familyContactCard: {
+    backgroundColor: '#F0FDF4',
+    borderWidth: 1.5,
+    borderColor: '#BBF7D0',
+    borderRadius: 14,
+    padding: SPACING.md,
+    marginBottom: SPACING.xs,
+  },
+  familyContactTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginBottom: SPACING.sm,
+  },
+  familyAvatar: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#DCFCE7',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  familyName: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#065F46',
+  },
+  familyPhone: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#047857',
+  },
+  editContactBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    backgroundColor: '#DCFCE7',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  editContactText: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: '#047857',
+  },
+  familyActionsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  familySmsAction: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#86EFAC',
+    paddingVertical: 9,
+    borderRadius: 8,
+  },
+  familyActionText: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: '#047857',
+  },
+  familyWaAction: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#4ADE80',
+    paddingVertical: 9,
+    borderRadius: 8,
+  },
+  familyActionWaText: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: '#15803D',
+  },
+  familyCallAction: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#BAE6FD',
+    paddingVertical: 9,
+    borderRadius: 8,
+  },
+  familyActionCallText: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: '#0284C7',
+  },
+  editModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.65)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: SPACING.lg,
+  },
+  editModalCard: {
+    width: '100%',
+    maxWidth: 380,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    padding: SPACING.lg,
+    ...SHADOWS.elevated,
+  },
+  editModalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: SPACING.md,
+  },
+  editModalTitle: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: '#0F172A',
+  },
+  inputLabel: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#475569',
+    marginBottom: 4,
+    marginTop: 8,
+  },
+  textInput: {
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    fontSize: 13,
+    color: '#0F172A',
+  },
+  saveContactBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    backgroundColor: COLORS.primary,
+    paddingVertical: 12,
+    borderRadius: 12,
+    marginTop: SPACING.lg,
+  },
+  saveContactText: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#FFFFFF',
   },
 });

@@ -5,6 +5,7 @@ import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
 import { Globe, LogOut, CheckCircle2 } from 'lucide-react-native';
 import { MobileSwasthyaLogo } from '../branding/MobileSwasthyaLogo';
+import { useAppSafeArea } from '../../hooks/useAppSafeArea';
 
 export const Header: React.FC<{
   title?: string;
@@ -14,6 +15,7 @@ export const Header: React.FC<{
   const { currentLanguage, setLanguage, languages, t } = useLanguage();
   const { user, logout } = useAuth();
   const [modalVisible, setModalVisible] = useState(false);
+  const insets = useAppSafeArea();
 
   const activeLangObj = languages.find((l) => l.code === currentLanguage) || languages[0];
 
@@ -29,7 +31,7 @@ export const Header: React.FC<{
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingTop: insets.top + 8, paddingBottom: 10 }]}>
       <View style={styles.leftRow}>
         <MobileSwasthyaLogo variant="full" height={36} />
       </View>
@@ -113,7 +115,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: SPACING.md,
-    paddingVertical: SPACING.sm,
     backgroundColor: COLORS.surface,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.border,

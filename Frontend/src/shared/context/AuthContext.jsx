@@ -231,7 +231,16 @@ export const AuthProvider = ({ children }) => {
     setLoading(true);
     try {
       const res = await api.register(userData);
+      if (res && res.tokens) {
+        localStorage.setItem('access_token', res.tokens.access);
+        localStorage.setItem('refresh_token', res.tokens.refresh);
+        setToken(res.tokens.access);
+        const userObj = res.user || {};
+        userObj.role = userObj.profile?.role || userObj.role || userData.role || 'patient';
+        setUser(userObj);
+      }
       setLoading(false);
+      showToast(`Account created successfully! Welcome, ${userData.username || 'User'}.`, 'success');
       return res;
     } catch (err) {
       setLoading(false);
