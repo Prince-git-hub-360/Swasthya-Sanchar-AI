@@ -14,19 +14,19 @@ export const RegisterForm = ({ onNavigateLogin, onSuccess, initialUsername = '' 
     last_name: '',
     email: '',
     password: '',
-    gender: 'M',
-    preferred_language: 'hi',
+    gender: '',
+    preferred_language: '',
     date_of_birth: '',
     age: '',
     phone_number: '',
-    state: 'Karnataka',
-    district: 'Mandya',
+    state: '',
+    district: '',
     village_or_town: '',
     pincode: '',
     
     // Doctor Specific
     medical_reg_no: '',
-    specialization: 'General Medicine / MBBS',
+    specialization: '',
     hospital_name: '',
 
     // ASHA Specific
@@ -34,7 +34,7 @@ export const RegisterForm = ({ onNavigateLogin, onSuccess, initialUsername = '' 
     sub_centre: '',
 
     // Caregiver Specific
-    relationship_to_patient: 'Son',
+    relationship_to_patient: '',
     linked_patient_name: '',
     linked_patient_phone: '',
   });
@@ -45,7 +45,7 @@ export const RegisterForm = ({ onNavigateLogin, onSuccess, initialUsername = '' 
     }
   }, [initialUsername]);
 
-  const availableDistricts = getDistrictsForState(formData.state);
+  const availableDistricts = formData.state ? getDistrictsForState(formData.state) : [];
 
   const handleRoleChange = (role) => {
     setSelectedRole(role);
@@ -72,8 +72,7 @@ export const RegisterForm = ({ onNavigateLogin, onSuccess, initialUsername = '' 
         }
       }
       if (name === 'state') {
-        const districts = getDistrictsForState(value);
-        updated.district = districts.length > 0 ? districts[0] : '';
+        updated.district = '';
       }
       return updated;
     });
@@ -321,6 +320,7 @@ export const RegisterForm = ({ onNavigateLogin, onSuccess, initialUsername = '' 
               onChange={handleChange}
               className="w-full bg-white dark:bg-slate-800 border border-stone-300 dark:border-slate-700 text-stone-900 dark:text-white text-xs rounded-xl px-3 py-2.5 outline-none focus:border-[#0F766E] dark:focus:border-teal-400 shadow-2xs"
             >
+              <option value="">Select Gender (लिंग चुनें)</option>
               <option value="M">Male (पुरुष)</option>
               <option value="F">Female (महिला)</option>
               <option value="O">Other (अन्य)</option>
@@ -336,6 +336,7 @@ export const RegisterForm = ({ onNavigateLogin, onSuccess, initialUsername = '' 
               onChange={handleChange}
               className="w-full bg-white dark:bg-slate-800 border border-stone-300 dark:border-slate-700 text-stone-900 dark:text-white text-xs rounded-xl px-3 py-2.5 outline-none focus:border-[#0F766E] dark:focus:border-teal-400 shadow-2xs"
             >
+              <option value="">Select Language (भाषा चुनें)</option>
               {LANGUAGES.map((lang) => (
                 <option key={lang.code} value={lang.code}>
                   {lang.flag} {lang.native} ({lang.name})
@@ -377,6 +378,7 @@ export const RegisterForm = ({ onNavigateLogin, onSuccess, initialUsername = '' 
                   onChange={handleChange}
                   className="w-full bg-white dark:bg-slate-800 border border-teal-300 dark:border-teal-700 text-stone-900 dark:text-white text-xs rounded-xl px-3 py-2 outline-none"
                 >
+                  <option value="">Select Specialization</option>
                   <option value="General Medicine / MBBS">General Medicine / MBBS</option>
                   <option value="Cardiology">Cardiology</option>
                   <option value="Obstetrics & Gynecology (OBGYN)">Obstetrics & Gynecology (OBGYN)</option>
@@ -456,6 +458,7 @@ export const RegisterForm = ({ onNavigateLogin, onSuccess, initialUsername = '' 
                   onChange={handleChange}
                   className="w-full bg-white dark:bg-slate-800 border border-blue-300 dark:border-blue-700 text-stone-900 dark:text-white text-xs rounded-xl px-3 py-2 outline-none"
                 >
+                  <option value="">Select Relationship</option>
                   <option value="Son">Son (बेटा / ಮಗ)</option>
                   <option value="Daughter">Daughter (बेटी / ಮಗಳು)</option>
                   <option value="Spouse">Spouse (पति/पत्नी / ಗಂಡ/ಹೆಂಡತಿ)</option>
@@ -494,6 +497,7 @@ export const RegisterForm = ({ onNavigateLogin, onSuccess, initialUsername = '' 
               className="w-full bg-white dark:bg-slate-800 border border-stone-300 dark:border-slate-700 text-stone-900 dark:text-white text-xs font-bold rounded-xl px-3 py-2.5 outline-none focus:border-[#0F766E] dark:focus:border-teal-400 shadow-2xs cursor-pointer"
               required
             >
+              <option value="">Select State (राज्य चुनें)</option>
               {INDIAN_STATES_LIST.map((st) => (
                 <option key={st} value={st}>
                   {st}
@@ -512,16 +516,14 @@ export const RegisterForm = ({ onNavigateLogin, onSuccess, initialUsername = '' 
               onChange={handleChange}
               className="w-full bg-white dark:bg-slate-800 border border-stone-300 dark:border-slate-700 text-stone-900 dark:text-white text-xs font-bold rounded-xl px-3 py-2.5 outline-none focus:border-[#0F766E] dark:focus:border-teal-400 shadow-2xs cursor-pointer"
               required
+              disabled={!formData.state}
             >
-              {availableDistricts.length > 0 ? (
-                availableDistricts.map((dist) => (
-                  <option key={dist} value={dist}>
-                    {dist}
-                  </option>
-                ))
-              ) : (
-                <option value="">Select State First</option>
-              )}
+              <option value="">{formData.state ? 'Select District (जिला चुनें)' : 'Select State First'}</option>
+              {availableDistricts.map((dist) => (
+                <option key={dist} value={dist}>
+                  {dist}
+                </option>
+              ))}
             </select>
           </div>
         </div>

@@ -73,18 +73,18 @@ export const RegisterScreen: React.FC<{ onNavigateToLogin: () => void }> = ({ on
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [role, setRole] = useState<UserRole>('PATIENT');
-  const [dob, setDob] = useState('15/08/1996');
-  const [age, setAge] = useState('28');
-  const [gender, setGender] = useState<'Female' | 'Male'>('Male');
+  const [dob, setDob] = useState('');
+  const [age, setAge] = useState('');
+  const [gender, setGender] = useState<'Female' | 'Male' | ''>('');
 
   // DOB Calendar Picker State
   const [dobModalVisible, setDobModalVisible] = useState(false);
-  const [birthDay, setBirthDay] = useState(15);
-  const [birthMonth, setBirthMonth] = useState(8);
-  const [birthYear, setBirthYear] = useState(1996);
+  const [birthDay, setBirthDay] = useState(1);
+  const [birthMonth, setBirthMonth] = useState(1);
+  const [birthYear, setBirthYear] = useState(2000);
   
   // Location details
-  const [selectedState, setSelectedState] = useState('Uttar Pradesh');
+  const [selectedState, setSelectedState] = useState('');
   const [district, setDistrict] = useState('');
   const [pincode, setPincode] = useState('');
   const [village, setVillage] = useState('');
@@ -424,8 +424,8 @@ export const RegisterScreen: React.FC<{ onNavigateToLogin: () => void }> = ({ on
               activeOpacity={0.8}
             >
               <MapPin size={16} color={COLORS.primary} style={{ marginRight: 6 }} />
-              <Text style={[styles.input, { paddingTop: Platform.OS === 'ios' ? 4 : 0 }]}>
-                {selectedState}
+              <Text style={[styles.input, { paddingTop: Platform.OS === 'ios' ? 4 : 0 }, !selectedState && { color: COLORS.textMuted }]}>
+                {selectedState || 'Select State / राज्य चुनें'}
               </Text>
               <ChevronDown size={18} color="#64748B" />
             </TouchableOpacity>
