@@ -249,6 +249,38 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const loginWithGoogle = async (credential, role = 'patient') => {
+    setLoading(true);
+    try {
+      const res = await api.googleAuth(credential, role, currentLang);
+      if (res && res.tokens) {
+        localStorage.setItem('access_token', res.tokens.access);
+        localStorage.setItem('refresh_token', res.tokens.refresh);
+        setToken(res.tokens.access);
+        let userData = res.user?.profile ? res.user : await refreshProfile();
+        if (!userData) {
+          userData = res.user;
+        }
+        if (userData) {
+          userData.role = userData.profile?.role || userData.role || role || 'patient';
+        }
+        setUser(userData);
+        if (userData?.profile?.preferred_language) {
+          setCurrentLang(userData.profile.preferred_language);
+          localStorage.setItem('app_lang', userData.profile.preferred_language);
+        }
+        showToast(`Welcome, ${userData?.first_name || userData?.username || 'User'}! 🎉`, 'success');
+        setLoading(false);
+        return userData;
+      }
+      throw new Error(res?.message || 'Google Sign-In failed.');
+    } catch (err) {
+      setLoading(false);
+      showToast(err.message || 'Google Sign-In failed.', 'error');
+      throw err;
+    }
+  };
+
   const logout = async () => {
     try {
       await api.logout();
@@ -291,6 +323,7 @@ export const AuthProvider = ({ children }) => {
         toast,
         backendHealthy,
         login,
+        loginWithGoogle,
         register,
         logout,
         refreshProfile,

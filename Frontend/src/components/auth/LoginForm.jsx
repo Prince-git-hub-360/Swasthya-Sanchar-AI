@@ -1,3 +1,4 @@
+import GoogleSignInButton from './GoogleSignInButton';
 import React, { useState } from 'react';
 import { useAuth } from '../../shared/context/AuthContext';
 import { ROUTES, navigateTo, getRoleDefaultRoute } from '../../utils/routes';
@@ -233,6 +234,21 @@ export const LoginForm = ({ onNavigateRegister, onSuccess, initialUsername = '' 
           {loading ? 'Authenticating...' : `Sign In as ${selectedRole === 'doctor' ? 'Doctor' : selectedRole === 'healthcare_worker' ? 'ASHA Worker' : selectedRole === 'caregiver' ? 'Caregiver' : 'Patient'} →`}
         </button>
       </form>
+
+      {/* Google OAuth 2.0 Sign In */}
+      <div className="relative my-4 flex items-center justify-center">
+        <div className="border-t border-stone-200 dark:border-slate-700 w-full" />
+        <span className="bg-white dark:bg-slate-900 px-3 text-[11px] font-semibold text-stone-400 dark:text-slate-500 uppercase tracking-wider absolute">
+          Or continue with
+        </span>
+      </div>
+
+      <GoogleSignInButton
+        role={selectedRole}
+        onSuccess={onSuccess}
+        text="signin_with"
+      />
+
 
       <div className="text-center mt-6 text-xs text-stone-600 dark:text-slate-400">
         Don't have an account?{' '}

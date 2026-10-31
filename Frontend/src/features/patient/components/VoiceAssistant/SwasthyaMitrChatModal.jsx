@@ -17,6 +17,8 @@ export const SwasthyaMitrChatModal = ({ isOpen, onClose, initialMedicine = null 
   const [attachedImage, setAttachedImage] = useState(null);
   const [speakingMsgId, setSpeakingMsgId] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [autoSpeakEnabled, setAutoSpeakEnabled] = useState(true);
+  const [lastAiMsg, setLastAiMsg] = useState(null);
 
   const [messages, setMessages] = useState([]);
 
@@ -53,7 +55,15 @@ export const SwasthyaMitrChatModal = ({ isOpen, onClose, initialMedicine = null 
 
     const langName = LANGUAGES.find(l => l.code === selectedLang)?.name || 'your language';
     
-    let welcomeText = `Namaste! 🙏 I am Swasthya Mitr, your AI Medicine Assistant. Ask me anything about your medicines in ${langName}!`;
+    const GREETINGS = {
+      kn: "ನಮಸ್ಕಾರ! 🙏 ನಾನು ಸ್ವಾಸ್ಥ್ಯ ಮಿತ್ರ, ನಿಮ್ಮ AI ಆರೋಗ್ಯ ಸಹಾಯಕ. ನಿಮ್ಮ ಔಷಧಿಗಳ ಬಗ್ಗೆ ಕನ್ನಡದಲ್ಲಿ ಏನಾದರೂ ಕೇಳಿ!",
+      te: "నమస్కారం! 🙏 నేను స్వాస్థ్య మిత్ర, మీ AI ఆరోగ్య సహాయకుడిని. మీ మందుల గురించి తెలుగులో ఏదైనా అడగండి!",
+      ta: "வணக்கம்! 🙏 நான் ஸ்வஸ்த்ய மித்ரா, உங்கள் AI மருத்துவ உதவியாளர். உங்கள் மருந்துகள் பற்றி தமிழில் எதையும் கேளுங்கள்!",
+      hi: "नमस्ते! 🙏 मैं आपका स्वास्थ्य मित्र हूँ। अपनी दवाओं के बारे में मुझसे हिंदी में कुछ भी पूछें!",
+      en: "Hello! 🙏 I am Swasthya Mitr, your AI Health Assistant. Ask me anything about your medicines in English!"
+    };
+
+    let welcomeText = GREETINGS[selectedLang] || `Namaste! 🙏 I am Swasthya Mitr, your AI Medicine Assistant. Ask me anything about your medicines in ${langName}!`;
     if (selectedMedicine && selectedMedicine.name) {
       welcomeText = `Namaste! 🙏 I am ready to answer your questions about **${selectedMedicine.name}** (${selectedMedicine.dosage || 'Prescribed dose'} • ${selectedMedicine.frequency || 'As directed'}). What would you like to know?`;
     }
@@ -113,8 +123,12 @@ export const SwasthyaMitrChatModal = ({ isOpen, onClose, initialMedicine = null 
 
       recognition.onresult = (event) => {
         const transcript = event.results[0][0].transcript;
-        setInputQuery(transcript);
         setIsListening(false);
+        if (transcript && transcript.trim()) {
+          setInputQuery(transcript);
+          // Auto-send immediately for natural voice conversation
+          handleSendMessage(null, transcript.trim());
+        }
       };
 
       recognition.onerror = () => {
@@ -255,8 +269,10 @@ export const SwasthyaMitrChatModal = ({ isOpen, onClose, initialMedicine = null 
 
     setMessages((prev) => [...prev, aiMsg]);
 
-    // Automatically speak aloud if proactive check-in
-    if (isProactive) {
+    setLastAiMsg(aiMsg);
+
+    // Automatically speak aloud in native audio for non-literate rural patients
+    if (autoSpeakEnabled || isProactive) {
       handleToggleSpeech(aiMsg);
     }
   };
@@ -313,15 +329,15 @@ export const SwasthyaMitrChatModal = ({ isOpen, onClose, initialMedicine = null 
             </div>
           </div>
 
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
             {/* PROACTIVE CHECK-IN DEMO BUTTON */}
             <button
               type="button"
               onClick={() => handleSendMessage(null, '', true)}
-              className="bg-amber-400 hover:bg-amber-300 active:scale-95 text-slate-950 text-[11px] font-black px-3 py-1.5 rounded-xl shadow-xs flex items-center gap-1.5 transition-all cursor-pointer"
+              className="hidden sm:flex bg-amber-400 hover:bg-amber-300 active:scale-95 text-slate-950 text-[11px] font-black px-2.5 py-1.5 rounded-xl shadow-xs items-center gap-1 transition-all cursor-pointer"
               title="Simulate 8:30 AM autonomous voice check-in"
             >
-              <span>⚡ Proactive Check-In</span>
+              <span>⚡ Check-In</span>
             </button>
 
             {/* GLOBAL STOP AUDIO BUTTON WHEN SPEAKING */}
@@ -332,16 +348,36 @@ export const SwasthyaMitrChatModal = ({ isOpen, onClose, initialMedicine = null 
                   stopNativeAudio();
                   setSpeakingMsgId(null);
                 }}
-                className="bg-rose-600 hover:bg-rose-700 active:scale-95 text-white text-[11px] font-extrabold px-3 py-1.5 rounded-xl shadow-sm flex items-center gap-1.5 transition-all cursor-pointer animate-pulse"
-                title="Stop speech playback immediately"
+                className="bg-rose-600 hover:bg-rose-700 text-white text-[11px] font-extrabold px-2.5 py-1.5 rounded-xl shadow-sm flex items-center gap-1 transition-all cursor-pointer animate-pulse"
+                title="Stop speech playback"
               >
-                <span>🛑 Stop Audio</span>
+                <span>🛑 Stop</span>
               </button>
             )}
 
+            {/* AUTO-SPEAK ICON TOGGLE */}
+            <button
+              type="button"
+              onClick={() => {
+                if (autoSpeakEnabled) {
+                  stopNativeAudio();
+                  setSpeakingMsgId(null);
+                }
+                setAutoSpeakEnabled(!autoSpeakEnabled);
+              }}
+              className={`p-1.5 sm:px-2 sm:py-1.5 rounded-xl text-xs font-extrabold flex items-center gap-1 transition-all cursor-pointer ${
+                autoSpeakEnabled
+                  ? 'bg-teal-700 text-emerald-300 ring-1 ring-emerald-400/40 shadow-xs'
+                  : 'bg-teal-900/60 text-slate-300 hover:bg-teal-900'
+              }`}
+              title={autoSpeakEnabled ? "Auto-Voice ON: Speaks answers aloud" : "Auto-Voice OFF"}
+            >
+              <span>{autoSpeakEnabled ? '🔊 ON' : '🔈 OFF'}</span>
+            </button>
+
             {/* LANGUAGE SELECTOR */}
             <select
-              className="bg-teal-900/90 border border-teal-700/80 text-white text-xs font-semibold px-2.5 py-1.5 rounded-xl outline-none cursor-pointer hover:bg-teal-900"
+              className="bg-teal-900/90 border border-teal-700/80 text-white text-xs font-semibold px-2 py-1.5 rounded-xl outline-none cursor-pointer hover:bg-teal-900 max-w-[110px] sm:max-w-none"
               value={selectedLang}
               onChange={(e) => setSelectedLang(e.target.value)}
             >
@@ -506,28 +542,131 @@ export const SwasthyaMitrChatModal = ({ isOpen, onClose, initialMedicine = null 
         </div>
 
         {/* QUICK CONTEXTUAL SUGGESTION CHIPS */}
-        <div className="px-4 py-2 bg-slate-100 dark:bg-slate-800/80 border-t border-slate-200 dark:border-slate-700 flex items-center gap-2 overflow-x-auto text-[11px] shrink-0 scrollbar-none">
+        <div className="px-3 py-1.5 bg-slate-100/90 dark:bg-slate-800/80 border-t border-slate-200 dark:border-slate-700 flex items-center gap-1.5 overflow-x-auto text-[11px] shrink-0 scrollbar-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
           <span className="font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider shrink-0">
             ACTIONS:
           </span>
-          <button
-            onClick={() => handleSendMessage(null, '', true)}
-            className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-black px-3 py-1 rounded-full whitespace-nowrap cursor-pointer transition-colors shadow-2xs"
-          >
-            ⚡ 8:30 AM Morning Check-In
-          </button>
-          <button
-            onClick={() => handleSendMessage(null, 'हाँ, नाश्ते के बाद Augmentin दवा ले ली')}
-            className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3 py-1 rounded-full whitespace-nowrap cursor-pointer transition-colors shadow-2xs"
-          >
-            ✅ हाँ, नाश्ते के बाद ले ली
-          </button>
-          <button
-            onClick={() => handleSendMessage(null, 'चक्कर आ रहे हैं और बहुत तेज दर्द है')}
-            className="bg-rose-600 hover:bg-rose-700 text-white font-bold px-3 py-1 rounded-full whitespace-nowrap cursor-pointer transition-colors shadow-2xs"
-          >
-            🚨 चक्कर आ रहे हैं (Emergency SOS)
-          </button>
+          {selectedLang === 'kn' ? (
+            <>
+              <button
+                type="button"
+                onClick={() => handleSendMessage(null, '', true)}
+                className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-black px-3 py-1 rounded-full whitespace-nowrap cursor-pointer transition-colors shadow-2xs"
+              >
+                ⚡ 8:30 AM ಮುಂಜಾನೆ ಪರಿಶೀಲನೆ
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSendMessage(null, 'ಹೌದು, ನಾನು ಊಟದ ನಂತರ Augmentin ಮಾತ್ರೆ ತೆಗೆದುಕೊಂಡಿದ್ದೇನೆ')}
+                className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3 py-1 rounded-full whitespace-nowrap cursor-pointer transition-colors shadow-2xs"
+              >
+                ✅ ಹೌದು, ಮಾತ್ರೆ ತೆಗೆದುಕೊಂಡಿದ್ದೇನೆ
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSendMessage(null, 'ನನಗೆ ತಲೆಸುತ್ತು ಬರುತ್ತಿದೆ ಮತ್ತು ತುಂಬಾ ನೋವಿದೆ')}
+                className="bg-rose-600 hover:bg-rose-700 text-white font-bold px-3 py-1 rounded-full whitespace-nowrap cursor-pointer transition-colors shadow-2xs"
+              >
+                🚨 ತಲೆಸುತ್ತು (ತುರ್ತು SOS)
+              </button>
+            </>
+          ) : selectedLang === 'te' ? (
+            <>
+              <button
+                type="button"
+                onClick={() => handleSendMessage(null, '', true)}
+                className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-black px-3 py-1 rounded-full whitespace-nowrap cursor-pointer transition-colors shadow-2xs"
+              >
+                ⚡ 8:30 AM ఉదయం చెక్-ఇన్
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSendMessage(null, 'అవును, నేను టిఫిన్ తర్వాత Augmentin మాత్ర వేసుకున్నాను')}
+                className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3 py-1 rounded-full whitespace-nowrap cursor-pointer transition-colors shadow-2xs"
+              >
+                ✅ అవును, మాత్ర వేసుకున్నాను
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSendMessage(null, 'నాకు చాలా కళ్ళు తిరుగుతున్నాయి, అత్యవసర సహాయం కావాలి')}
+                className="bg-rose-600 hover:bg-rose-700 text-white font-bold px-3 py-1 rounded-full whitespace-nowrap cursor-pointer transition-colors shadow-2xs"
+              >
+                🚨 అత్యవసర సహాయం (SOS)
+              </button>
+            </>
+          ) : selectedLang === 'ta' ? (
+            <>
+              <button
+                type="button"
+                onClick={() => handleSendMessage(null, '', true)}
+                className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-black px-3 py-1 rounded-full whitespace-nowrap cursor-pointer transition-colors shadow-2xs"
+              >
+                ⚡ 8:30 AM காலை பரிசோதனை
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSendMessage(null, 'ஆம், காலை உணவுக்குப் பிறகு Augmentin மாத்திரை சாப்பிட்டேன்')}
+                className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3 py-1 rounded-full whitespace-nowrap cursor-pointer transition-colors shadow-2xs"
+              >
+                ✅ ஆம், மாத்திரை சாப்பிட்டேன்
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSendMessage(null, 'எனக்கு மயக்கம் வருகிறது, அவசர உதவி தேவை')}
+                className="bg-rose-600 hover:bg-rose-700 text-white font-bold px-3 py-1 rounded-full whitespace-nowrap cursor-pointer transition-colors shadow-2xs"
+              >
+                🚨 அவசர உதவி (SOS)
+              </button>
+            </>
+          ) : selectedLang === 'en' ? (
+            <>
+              <button
+                type="button"
+                onClick={() => handleSendMessage(null, '', true)}
+                className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-black px-3 py-1 rounded-full whitespace-nowrap cursor-pointer transition-colors shadow-2xs"
+              >
+                ⚡ 8:30 AM Morning Check-In
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSendMessage(null, 'Yes, I took Augmentin after breakfast')}
+                className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3 py-1 rounded-full whitespace-nowrap cursor-pointer transition-colors shadow-2xs"
+              >
+                ✅ Yes, took after breakfast
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSendMessage(null, 'I am feeling severe dizziness and pain')}
+                className="bg-rose-600 hover:bg-rose-700 text-white font-bold px-3 py-1 rounded-full whitespace-nowrap cursor-pointer transition-colors shadow-2xs"
+              >
+                🚨 Severe Dizziness (Emergency SOS)
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                type="button"
+                onClick={() => handleSendMessage(null, '', true)}
+                className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-black px-3 py-1 rounded-full whitespace-nowrap cursor-pointer transition-colors shadow-2xs"
+              >
+                ⚡ 8:30 AM Morning Check-In
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSendMessage(null, 'हाँ, नाश्ते के बाद Augmentin दवा ले ली')}
+                className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3 py-1 rounded-full whitespace-nowrap cursor-pointer transition-colors shadow-2xs"
+              >
+                ✅ हाँ, नाश्ते के बाद ले ली
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSendMessage(null, 'चक्कर आ रहे हैं और बहुत तेज दर्द है')}
+                className="bg-rose-600 hover:bg-rose-700 text-white font-bold px-3 py-1 rounded-full whitespace-nowrap cursor-pointer transition-colors shadow-2xs"
+              >
+                🚨 चक्कर आ रहे हैं (Emergency SOS)
+              </button>
+            </>
+          )}
           {medicineQuestions.slice(0, 2).map((q, idx) => (
             <button
               key={idx}
@@ -539,8 +678,28 @@ export const SwasthyaMitrChatModal = ({ isOpen, onClose, initialMedicine = null 
           ))}
         </div>
 
-        {/* INPUT FORM */}
-        <form onSubmit={(e) => handleSendMessage(e)} className="p-3 md:p-4 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 flex items-center gap-2 shrink-0">
+        {/* LIVE SPEAKING AUDIO NOTIFICATION BAR (Only shows while audio is playing) */}
+        {speakingMsgId && (
+          <div className="mx-3 my-1 p-2 px-3.5 rounded-2xl bg-gradient-to-r from-teal-800 to-emerald-800 text-white flex items-center justify-between text-xs shadow-md shrink-0 animate-in fade-in">
+            <div className="flex items-center gap-2 font-bold">
+              <span className="h-2 w-2 rounded-full bg-emerald-400 animate-ping" />
+              <span>🔊 {selectedLang === 'kn' ? 'ಉತ್ತರವನ್ನು ಮಾತನಾಡುತ್ತಿದೆ...' : selectedLang === 'hi' ? 'उत्तर बोलकर सुना रहा हूँ...' : 'Speaking reply aloud...'}</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                stopNativeAudio();
+                setSpeakingMsgId(null);
+              }}
+              className="px-2.5 py-0.5 bg-rose-600 hover:bg-rose-700 active:scale-95 text-white rounded-xl text-[11px] font-black cursor-pointer transition-colors shadow-xs"
+            >
+              🛑 {selectedLang === 'kn' ? 'ನಿಲ್ಲಿಸಿ' : 'Stop'}
+            </button>
+          </div>
+        )}
+
+        {/* INPUT FORM: SINGLE UNIFIED VOICE-FIRST DOCK */}
+        <form onSubmit={(e) => handleSendMessage(e)} className="p-2.5 sm:p-3 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 flex items-center gap-2 shrink-0">
           <input
             type="file"
             ref={fileInputRef}
@@ -551,7 +710,7 @@ export const SwasthyaMitrChatModal = ({ isOpen, onClose, initialMedicine = null 
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className={`p-2.5 rounded-2xl border transition-colors cursor-pointer ${
+            className={`p-2.5 rounded-2xl border transition-colors cursor-pointer shrink-0 ${
               attachedImage 
                 ? 'bg-amber-100 dark:bg-amber-950 border-amber-400 text-amber-900 dark:text-amber-200' 
                 : 'bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300'
@@ -561,48 +720,68 @@ export const SwasthyaMitrChatModal = ({ isOpen, onClose, initialMedicine = null 
             <CameraIcon size={20} />
           </button>
 
-          <button
-            type="button"
-            onClick={handleMicToggle}
-            className={`p-2.5 rounded-2xl border transition-all cursor-pointer ${
-              isListening
-                ? 'bg-red-600 text-white border-red-600 animate-bounce'
-                : 'bg-teal-50 dark:bg-teal-950 hover:bg-teal-100 dark:hover:bg-teal-900 border-teal-200 dark:border-teal-800 text-[#0F766E] dark:text-teal-300'
-            }`}
-            title="Speak in your Native Language"
-          >
-            <MicIcon size={20} color={isListening ? '#ffffff' : '#0F766E'} />
-          </button>
-
-          <div className="flex-1 relative">
+          <div className="relative flex-1">
             <input
               type="text"
-              placeholder={
-                isListening 
-                  ? "Listening... Speak now!" 
-                  : selectedMedicine 
-                    ? `Ask about ${selectedMedicine.name}...` 
-                    : "Ask medicine question or type query..."
-              }
-              className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-2xl px-4 py-2.5 text-xs sm:text-sm text-slate-900 dark:text-white outline-none focus:border-[#0F766E] dark:focus:border-teal-400 focus:bg-white dark:focus:bg-slate-900"
               value={inputQuery}
               onChange={(e) => setInputQuery(e.target.value)}
               disabled={isProcessing}
+              placeholder={
+                isListening
+                  ? (selectedLang === 'kn' ? "ಆಲಿಸುತ್ತಿದೆ... ಮಾತನಾಡಿ! 🎙️" : "Listening... Speak now! 🎙️")
+                  : (selectedLang === 'kn' ? "ಪ್ರಶ್ನೆ ಕೇಳಿ ಅಥವಾ ಮಾತನಾಡಿ..." : `Ask medicine question in ${LANGUAGES.find(l => l.code === selectedLang)?.name || 'English'}...`)
+              }
+              className={`w-full px-3.5 py-2.5 bg-slate-100 dark:bg-slate-800 border rounded-2xl text-sm focus:outline-none focus:ring-2 transition-all ${
+                isListening 
+                  ? 'border-rose-500 ring-2 ring-rose-400/40 animate-pulse text-rose-600 font-bold'
+                  : 'border-slate-200 dark:border-slate-700 focus:ring-teal-500 text-slate-900 dark:text-white'
+              }`}
             />
-            {attachedImage && (
-              <span className="absolute right-2 top-2 bg-amber-500 text-white text-[9px] font-extrabold px-2 py-0.5 rounded-md">
-                Photo Ready 📷
-              </span>
-            )}
           </div>
 
-          <button
-            type="submit"
-            disabled={isProcessing || (!inputQuery.trim() && !attachedImage)}
-            className="bg-[#0F766E] hover:bg-teal-700 disabled:opacity-50 text-white p-2.5 rounded-2xl shadow-md transition-all cursor-pointer active:scale-95"
-          >
-            <SendIcon size={20} color="#ffffff" />
-          </button>
+          {/* DYNAMIC PRIMARY ACTION: If text typed -> Send; If empty -> Big 1-Tap Voice Button */}
+          {inputQuery.trim() || attachedImage ? (
+            <button
+              type="submit"
+              disabled={isProcessing}
+              className="p-2.5 px-4 bg-[#0F766E] hover:bg-teal-800 text-white rounded-2xl font-bold flex items-center gap-1.5 shadow-md active:scale-95 transition-all cursor-pointer shrink-0"
+              title="Send Query"
+            >
+              <span>Send</span>
+              <SendIcon size={18} />
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={handleMicToggle}
+              disabled={isProcessing}
+              className={`p-2.5 px-4 rounded-2xl font-bold text-xs sm:text-sm flex items-center gap-2 shadow-md active:scale-95 transition-all cursor-pointer shrink-0 ${
+                isListening
+                  ? 'bg-rose-600 text-white ring-4 ring-rose-300 animate-pulse'
+                  : 'bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white ring-2 ring-teal-400/30'
+              }`}
+              title="Tap to speak in your language"
+            >
+              <MicIcon size={20} className={isListening ? 'animate-bounce' : ''} />
+              <span className="font-extrabold whitespace-nowrap">
+                {isListening
+                  ? (selectedLang === 'kn' ? 'ಆಲಿಸುತ್ತಿದೆ...' : 'Listening...')
+                  : (selectedLang === 'kn' ? '🎙️ ಮಾತನಾಡಿ' : selectedLang === 'hi' ? '🎙️ बोलिए' : selectedLang === 'te' ? '🎙️ మాట్లాడండి' : selectedLang === 'ta' ? '🎙️ பேசுங்கள்' : '🎙️ Speak')}
+              </span>
+            </button>
+          )}
+
+          {/* REPLAY LAST AUDIO BUTTON */}
+          {lastAiMsg && !isListening && (
+            <button
+              type="button"
+              onClick={() => handleToggleSpeech(lastAiMsg)}
+              className="p-2.5 rounded-2xl border border-teal-200 dark:border-teal-800 bg-teal-50 dark:bg-teal-950 text-teal-800 dark:text-teal-300 hover:bg-teal-100 transition-colors cursor-pointer shrink-0"
+              title="Replay Voice Audio"
+            >
+              <SpeakerIcon size={18} />
+            </button>
+          )}
         </form>
       </div>
     </div>

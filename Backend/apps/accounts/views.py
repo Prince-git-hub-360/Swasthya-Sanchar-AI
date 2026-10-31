@@ -13,8 +13,13 @@ from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
+from google.oauth2 import id_token
+from google.auth.transport import requests as google_requests
+from django.conf import settings
+import random
 
-from .models import UserProfile
+
+from .models import UserProfile, RoleChoices, LanguageChoices
 from .serializers import (
     LoginSerializer,
     UserProfileSerializer,
@@ -382,3 +387,137 @@ class CheckUsernameView(APIView):
         }, status=status.HTTP_200_OK)
 
 
+
+
+@extend_schema(tags=['01. Authentication & User Profile'])
+class GoogleAuthView(APIView):
+    """
+    Google OAuth 2.0 Sign-In and Registration.
+    Accepts Google ID Token (credential) and role from frontend,
+    verifies it with Google, and returns JWT tokens + user profile.
+    """
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request, *args, **kwargs):
+        credential = request.data.get('credential')
+        role = request.data.get('role', RoleChoices.PATIENT)
+
+        if not credential:
+            return Response(
+                {'status': 'error', 'message': 'Google credential (ID token) is required.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        client_id = getattr(settings, 'GOOGLE_CLIENT_ID', '194215168561-qmr5tm1n8dud53po23jab6et2ptp1c0p.apps.googleusercontent.com')
+
+        try:
+            id_info = id_token.verify_oauth2_token(
+                credential,
+                google_requests.Request(),
+                client_id
+            )
+        except ValueError as e:
+            return Response(
+                {'status': 'error', 'message': f'Invalid Google ID token: {str(e)}'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except Exception as e:
+            return Response(
+                {'status': 'error', 'message': f'Google token verification error: {str(e)}'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+        email = id_info.get('email', '').strip().lower()
+        if not email:
+            return Response(
+                {'status': 'error', 'message': 'Google account did not provide an email address.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        user = User.objects.filter(email__iexact=email).first()
+
+        if not user:
+            base_user = email.split('@')[0][:25].replace('.', '_').replace('-', '_')
+            username = base_user
+            counter = 1
+            while User.objects.filter(username__iexact=username).exists():
+                username = f"{base_user}_{random.randint(100, 9999)}"
+                counter += 1
+                if counter > 20:
+                    username = f"user_{random.randint(100000, 999999)}"
+                    break
+
+            given_name = id_info.get('given_name') or id_info.get('name', 'User')
+            family_name = id_info.get('family_name', '')
+            picture = id_info.get('picture', '')
+
+            user = User.objects.create(
+                username=username,
+                email=email,
+                first_name=given_name,
+                last_name=family_name,
+                is_active=True
+            )
+            user.set_unusable_password()
+            user.save()
+
+            valid_roles = [c[0] for c in RoleChoices.choices]
+            if role not in valid_roles:
+                role = RoleChoices.PATIENT
+
+            abha_id = f"91-{random.randint(1000, 9999)}-{random.randint(1000, 9999)}-{random.randint(1000, 9999)}"
+            abha_number = f"ABHA-RURAL-IND-{random.randint(1000, 9999)}"
+
+            lang_req = str(request.data.get('language', '')).lower()
+            if 'kn' in lang_req:
+                pref_lang = LanguageChoices.KANNADA
+            elif 'te' in lang_req:
+                pref_lang = LanguageChoices.TELUGU
+            elif 'ta' in lang_req:
+                pref_lang = LanguageChoices.TAMIL
+            elif 'en' in lang_req:
+                pref_lang = LanguageChoices.ENGLISH
+            else:
+                pref_lang = LanguageChoices.HINDI
+
+            profile = UserProfile.objects.create(
+                user=user,
+                role=role,
+                preferred_language=pref_lang,
+                profile_photo=picture,
+                abha_id=abha_id if role == RoleChoices.PATIENT else '',
+                abha_number=abha_number if role == RoleChoices.PATIENT else '',
+                is_phone_verified=True
+            )
+
+            if role == RoleChoices.PATIENT:
+                try:
+                    from patients.models import Patient
+                    Patient.objects.get_or_create(
+                        user=user,
+                        defaults={
+                            'phone': '',
+                            'address': '',
+                            'preferred_language': pref_lang,
+                            'abha_id': abha_id,
+                        }
+                    )
+                except Exception:
+                    pass
+        else:
+            picture = id_info.get('picture', '')
+            if hasattr(user, 'profile') and picture and not user.profile.profile_photo:
+                user.profile.profile_photo = picture
+                user.profile.save(update_fields=['profile_photo'])
+
+        refresh = RefreshToken.for_user(user)
+
+        return Response({
+            'status': 'ok',
+            'message': 'Google authentication successful.',
+            'tokens': {
+                'access': str(refresh.access_token),
+                'refresh': str(refresh),
+            },
+            'user': UserSerializer(user, context={'request': request}).data,
+        }, status=status.HTTP_200_OK)

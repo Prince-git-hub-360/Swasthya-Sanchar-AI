@@ -61,4 +61,11 @@ export const authApi = {
       method: 'GET',
     });
   },
+
+  async googleAuth(credential, role = 'patient', language = 'en') {
+    return request('/auth/google/', {
+      method: 'POST',
+      body: JSON.stringify({ credential, role, language }),
+    });
+  },
 };

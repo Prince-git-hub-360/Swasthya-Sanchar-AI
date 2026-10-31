@@ -64,6 +64,8 @@ INSTALLED_APPS = [
 ]
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
+GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "194215168561-qmr5tm1n8dud53po23jab6et2ptp1c0p.apps.googleusercontent.com")
+
 
 
 MIDDLEWARE = [

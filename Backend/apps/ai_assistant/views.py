@@ -122,3 +122,75 @@ class AgenticAssistantView(APIView):
                 },
                 status=status.HTTP_200_OK
             )
+
+
+class StrandsSwarmAssistantView(APIView):
+    """
+    POST /api/v1/ai-assistant/swarm/
+    POST /api/ai-assistant/swarm/
+
+    Production AWS Strands Agents SDK Swarm Endpoint:
+    Orchestrates the 4-Agent Collaborative Swarm:
+      1. RxVisionAgent (OCR & Physician Header Extraction)
+      2. RxPharmacologyAgent (Drug Parsing & 5-Day Visual Pillbox Calendar)
+      3. RxSafetySentinel (Critic-Refiner Pattern, Dosage Caps & Emergency SOS)
+      4. RxVernacularCommunicator (Indic Voice Guidance & Visual Pill Badges)
+
+    Directly populates PostgreSQL Medication and Reminder records for the patient.
+    """
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request, *args, **kwargs):
+        from .services.swarm_service import SwasthyaSwarmService
+
+        prescription_text = request.data.get("prescription_text", "")
+        if not prescription_text:
+            prescription_text = request.data.get("text", "") or request.data.get("message", "")
+
+        language = request.data.get("language", "hi")
+        acute_symptoms = request.data.get("acute_symptoms", "")
+        save_to_db = bool(request.data.get("save_to_db", True))
+        patient_id = request.data.get("patient_id")
+
+        # Resolve authenticated or specified patient
+        patient = None
+        if request.user and request.user.is_authenticated:
+            try:
+                patient = getattr(request.user, "patient_profile", None) or getattr(request.user, "patient", None)
+            except Exception:
+                pass
+
+        if not patient and patient_id:
+            try:
+                from patients.models import Patient
+                patient = Patient.objects.filter(id=patient_id).first()
+            except Exception:
+                pass
+
+        # Fallback to demo patient if available and patient is None
+        if not patient and save_to_db:
+            try:
+                from patients.models import Patient
+                patient = Patient.objects.first()
+            except Exception:
+                pass
+
+        try:
+            result = SwasthyaSwarmService.run_live_swarm(
+                prescription_text=prescription_text or "Tab Dolo 650 mg 1-0-1 after meals, Tab Pantocid 40 mg 1-0-0",
+                target_language=language,
+                patient=patient,
+                acute_symptoms=acute_symptoms,
+                save_to_db=save_to_db
+            )
+            return Response(result, status=status.HTTP_200_OK)
+        except Exception as e:
+            logger.error("Error in StrandsSwarmAssistantView: %s", e, exc_info=True)
+            return Response(
+                {
+                    "success": False,
+                    "error": str(e),
+                    "message": "Swarm processing temporarily unavailable."
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
