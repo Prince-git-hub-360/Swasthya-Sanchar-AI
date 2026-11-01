@@ -13,8 +13,6 @@ from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
-from google.oauth2 import id_token
-from google.auth.transport import requests as google_requests
 from django.conf import settings
 import random
 
@@ -389,6 +387,34 @@ class CheckUsernameView(APIView):
 
 
 
+def verify_google_id_token(credential: str, client_id: str):
+    """
+    Verifies a Google ID token.
+    Tries google-auth if installed, and seamlessly falls back to
+    Google's official tokeninfo API endpoint using requests.
+    """
+    try:
+        from google.oauth2 import id_token
+        from google.auth.transport import requests as google_requests
+        return id_token.verify_oauth2_token(credential, google_requests.Request(), client_id)
+    except (ImportError, Exception):
+        pass
+
+    import requests
+    resp = requests.get(
+        'https://oauth2.googleapis.com/tokeninfo',
+        params={'id_token': credential},
+        timeout=10
+    )
+    if resp.status_code != 200:
+        raise ValueError(f"Google token verification failed: {resp.text}")
+    payload = resp.json()
+    token_aud = payload.get('aud')
+    if token_aud != client_id:
+        raise ValueError(f"Google token audience mismatch: expected {client_id}, got {token_aud}")
+    return payload
+
+
 @extend_schema(tags=['01. Authentication & User Profile'])
 class GoogleAuthView(APIView):
     """
@@ -411,11 +437,7 @@ class GoogleAuthView(APIView):
         client_id = getattr(settings, 'GOOGLE_CLIENT_ID', '194215168561-qmr5tm1n8dud53po23jab6et2ptp1c0p.apps.googleusercontent.com')
 
         try:
-            id_info = id_token.verify_oauth2_token(
-                credential,
-                google_requests.Request(),
-                client_id
-            )
+            id_info = verify_google_id_token(credential, client_id)
         except ValueError as e:
             return Response(
                 {'status': 'error', 'message': f'Invalid Google ID token: {str(e)}'},
